@@ -1,0 +1,451 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style>
+<title>Rate Limiter Visualizer · Arman Ajabkhani</title>
+<meta name="description" content="Fixed window, sliding log, sliding counter and token bucket rate limiters get the same traffic side by side.">
+<meta property="og:title" content="Rate Limiter Visualizer">
+<meta property="og:description" content="Fixed window, sliding log, sliding counter and token bucket rate limiters get the same traffic side by side.">
+<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+<script src="../assets/theme.js"></script>
+<style>
+/* armantik.com bar: links this guide back to the site */
+.aa-labbar { --aa-ink: #16211F; --aa-muted: #4A5855; --aa-line: #DCE3E0; --aa-accent: #0F5C55;
+  max-width: 1160px; margin: 0 auto 14px; padding: 0 0 10px; border-bottom: 1px solid var(--aa-line);
+  display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 6px 18px;
+  font: 500 13px/1.4 "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .aa-labbar { --aa-ink: #E3EAE7; --aa-muted: #A3B1AD; --aa-line: #2B3633; --aa-accent: #5BB8AA; } }
+:root[data-theme="dark"] .aa-labbar { --aa-ink: #E3EAE7; --aa-muted: #A3B1AD; --aa-line: #2B3633; --aa-accent: #5BB8AA; }
+.aa-labbar a { color: var(--aa-muted); text-decoration: none; display: inline-flex; align-items: center; gap: 8px; min-height: 32px; }
+.aa-labbar a:hover { color: var(--aa-accent); }
+.aa-labbar .aa-home { color: var(--aa-ink); font-weight: 600; }
+.aa-labbar.aa-pad { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-top: 12px; }
+.aa-right { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 6px 16px; }
+.aa-labbar .aa-crumb { color: var(--aa-muted); }
+.aa-labbar button { display: inline-flex; align-items: center; gap: 6px; min-height: 32px; padding: 0 10px; border: 1px solid var(--aa-line); border-radius: 999px;
+  background: transparent; color: var(--aa-muted); font: inherit; cursor: pointer; }
+.aa-labbar button:hover { color: var(--aa-accent); border-color: var(--aa-accent); }
+.aa-prob { max-width: 1160px; margin: -4px auto 16px; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px;
+  font: 500 13px/1.5 "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace; color: var(--aa-muted, #4A5855); }
+.aa-prob { --aa-muted: #4A5855; --aa-accent: #0F5C55; --aa-line: #DCE3E0; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .aa-prob { --aa-muted: #A3B1AD; --aa-accent: #5BB8AA; --aa-line: #2B3633; } }
+:root[data-theme="dark"] .aa-prob { --aa-muted: #A3B1AD; --aa-accent: #5BB8AA; --aa-line: #2B3633; }
+.aa-prob b { font-weight: 600; color: var(--aa-accent); text-transform: uppercase; letter-spacing: .06em; font-size: 11.5px; }
+.aa-prob a { color: var(--aa-accent); }
+.aa-prob span.aa-own { color: var(--aa-muted); }
+</style>
+</head>
+<body>
+<nav class="aa-labbar" aria-label="armantik.com"><a class="aa-home" href="../index.html"><svg viewBox="0 0 64 64" width="20" height="20" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#0F5C55"/><path d="M18 49 L32 15 L46 49 M23.5 37 H40.5" fill="none" stroke="#FAFBF9" stroke-width="6.5" stroke-linecap="square"/></svg>Arman Ajabkhani</a><span class="aa-right"><a class="aa-crumb" href="index.html#system-design">Lab / System design</a><a href="index.html">← All Lab guides</a><button type="button" data-theme-toggle aria-label="Switch theme">Theme</button></span></nav>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap">
+<style>
+  /* Layout: header, control bar with clock, four limiter lanes (timeline + live state) in a 2x2 grid, comparison table */
+  :root {
+    --bg: #f3f5f7;
+    --surface: #ffffff;
+    --ink: #171d24;
+    --muted: #5a6573;
+    --line: #d7dde4;
+    --line-strong: #9aa6b4;
+    --accent: #2457d6;
+    --accent-soft: #e3eafc;
+    --shade: rgba(36, 87, 214, 0.09);
+    --ok: #1d8455;
+    --ok-soft: #ddf2e6;
+    --bad: #c23d2b;
+    --bad-soft: #fbe6e2;
+    --code-bg: #eef1f4;
+    --display: "Bricolage Grotesque", "Avenir Next", system-ui, sans-serif;
+    --body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+    --mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0f1318; --surface: #171d24; --ink: #e5eaf0; --muted: #96a2b1;
+      --line: #29313b; --line-strong: #4e5a68; --accent: #84a5ff; --accent-soft: #1d2a4d;
+      --shade: rgba(132, 165, 255, 0.12); --ok: #52c98f; --ok-soft: #15362a; --bad: #ff7d69; --bad-soft: #3d1f1a;
+      --code-bg: #12171d; color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0f1318; --surface: #171d24; --ink: #e5eaf0; --muted: #96a2b1;
+    --line: #29313b; --line-strong: #4e5a68; --accent: #84a5ff; --accent-soft: #1d2a4d;
+    --shade: rgba(132, 165, 255, 0.12); --ok: #52c98f; --ok-soft: #15362a; --bad: #ff7d69; --bad-soft: #3d1f1a;
+    --code-bg: #12171d; color-scheme: dark;
+  }
+
+  * { box-sizing: border-box; }
+  body { background: var(--bg); color: var(--ink); font: 15px/1.55 var(--body); padding: 28px 20px 48px; }
+  .wrap { max-width: 1120px; margin: 0 auto; display: grid; gap: 18px; }
+  header { display: grid; gap: 6px; }
+  h1 { font: 700 clamp(28px, 5vw, 40px)/1.1 var(--display); letter-spacing: -0.02em; margin: 0; text-wrap: balance; }
+  .lede { color: var(--muted); margin: 0; max-width: 68ch; }
+  code { font: 500 0.88em var(--mono); color: var(--ink); }
+
+  .bar { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; }
+  .grp { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .pick-label { font: 600 12px var(--body); letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+  .seg { display: inline-flex; flex-wrap: wrap; border: 1px solid var(--line-strong); border-radius: 8px; overflow: hidden; }
+  .seg button { appearance: none; border: 0; background: var(--surface); color: var(--muted); font: 600 13.5px var(--body); padding: 6px 12px; cursor: pointer; }
+  .seg button + button { border-left: 1px solid var(--line-strong); }
+  .seg button[aria-pressed="true"] { background: var(--ink); color: var(--bg); }
+  .btn { appearance: none; font: 600 14px var(--body); padding: 7px 13px; border-radius: 8px; cursor: pointer; border: 1px solid var(--line-strong); background: var(--surface); color: var(--ink); }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: var(--surface); min-width: 72px; }
+  button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .clock { margin-left: auto; font: 700 20px var(--mono); font-variant-numeric: tabular-nums; }
+  .clock small { font: 500 12px var(--body); color: var(--muted); margin-right: 6px; }
+  .scenario { margin: 0; color: var(--muted); font-size: 14px; max-width: 80ch; }
+  .rule { font: 500 13px var(--mono); color: var(--ink); background: var(--code-bg); padding: 2px 6px; border-radius: 4px; }
+
+  .lanes { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+  @media (max-width: 900px) { .lanes { grid-template-columns: minmax(0, 1fr); } }
+  .lane { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 16px; display: grid; gap: 10px; min-width: 0; }
+  .lane-head { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 6px 10px; align-items: baseline; }
+  .lane h2 { margin: 0; font: 700 19px/1.2 var(--display); }
+  .lane h2 small { display: block; font: 500 12px var(--mono); color: var(--muted); margin-top: 2px; }
+  .tally { display: flex; gap: 6px; }
+  .pill { font: 600 12.5px var(--mono); padding: 3px 9px; border-radius: 999px; font-variant-numeric: tabular-nums; }
+  .pill.ok { color: var(--ok); background: var(--ok-soft); }
+  .pill.bad { color: var(--bad); background: var(--bad-soft); }
+  canvas { display: block; width: 100%; height: 96px; border-radius: 8px; background: var(--code-bg); }
+  .state { display: grid; gap: 6px; }
+  .state-text { font: 500 13px var(--mono); }
+  .meter { height: 8px; border-radius: 99px; background: var(--code-bg); overflow: hidden; }
+  .meter i { display: block; height: 100%; width: 0; background: var(--accent); border-radius: 99px; transition: width 0.15s linear; }
+  .meter.full i { background: var(--bad); }
+  .how { margin: 0; font-size: 13.5px; color: var(--muted); }
+  .cx { font: 500 12px var(--mono); color: var(--muted); border-top: 1px solid var(--line); padding-top: 8px; display: flex; flex-wrap: wrap; gap: 4px 14px; }
+  .cx b { color: var(--ink); font-weight: 600; }
+
+  .legend { display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 13px; color: var(--muted); }
+  .legend i { display: inline-block; vertical-align: -2px; margin-right: 6px; }
+  .lg-ok { width: 10px; height: 10px; border-radius: 50%; background: var(--ok); }
+  .lg-bad { width: 10px; height: 10px; position: relative; }
+  .lg-bad::before, .lg-bad::after { content: ""; position: absolute; left: 4px; top: -1px; width: 2px; height: 12px; background: var(--bad); }
+  .lg-bad::before { transform: rotate(45deg); } .lg-bad::after { transform: rotate(-45deg); }
+  .lg-shade { width: 16px; height: 12px; background: var(--shade); border: 1px solid var(--accent); }
+  .lg-now { width: 2px; height: 13px; background: var(--accent); }
+
+  .cmp { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 16px; display: grid; gap: 10px; }
+  .cmp h3 { margin: 0; font: 700 19px var(--display); }
+  .cmp-scroll { overflow-x: auto; }
+  table { border-collapse: collapse; width: 100%; font-size: 13.5px; min-width: 680px; }
+  th, td { text-align: left; padding: 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { font: 600 12px var(--body); color: var(--muted); letter-spacing: 0.03em; }
+  td.mono { font: 500 13px var(--mono); white-space: nowrap; }
+  td.num { font: 600 13px var(--mono); font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+  @media (max-width: 480px) {
+    body { padding: 20px 16px 40px; }
+    .lane, .cmp { padding: 13px; }
+    .clock { margin-left: 0; width: 100%; }
+  }
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>Rate Limiter Visualizer</h1>
+    <p class="lede">The four limiters from <code>org.example.ratelimiter</code> receive the same requests at the same moments. Every limiter allows <span class="rule">5 requests per 1 s</span>; the token bucket holds 5 tokens and refills 5 per second.</p>
+  </header>
+
+  <div class="bar">
+    <div class="grp">
+      <span class="pick-label">Traffic</span>
+      <div class="seg" role="group" aria-label="Traffic pattern" id="scen"></div>
+    </div>
+    <div class="grp">
+      <span class="pick-label">Speed</span>
+      <div class="seg" role="group" aria-label="Playback speed" id="speed"></div>
+    </div>
+    <div class="grp">
+      <button class="btn primary" id="b-play">Play</button>
+      <button class="btn" id="b-reset">Restart</button>
+      <button class="btn" id="b-one">Send 1</button>
+      <button class="btn" id="b-five">Send 5 at once</button>
+    </div>
+    <div class="clock"><small>time</small><span id="clock">0.000 s</span></div>
+  </div>
+  <p class="scenario" id="scen-text"></p>
+  <div class="legend">
+    <span><i class="lg-ok"></i>allowed</span>
+    <span><i class="lg-bad"></i>rejected (429)</span>
+    <span><i class="lg-shade"></i>what the limiter counts right now</span>
+    <span><i class="lg-now"></i>now</span>
+    <span>Gridlines mark whole seconds, which are also the fixed windows.</span>
+  </div>
+
+  <div class="lanes" id="lanes"></div>
+
+  <div class="cmp">
+    <h3>Complexity and behaviour</h3>
+    <div class="cmp-scroll">
+      <table>
+        <thead><tr><th>Limiter</th><th>Time per request</th><th>Space per client</th><th>Bursts</th><th>Accuracy</th><th>This run</th></tr></thead>
+        <tbody id="cmp"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+(() => {
+  const LIMIT = 5, WINDOW = 1000, RATE = 5 / 1000, SPAN = 4000;
+
+  /* ---------- the four limiters, same logic as the Java classes ---------- */
+  class Fixed {
+    constructor() { this.start = 0; this.count = 0; }
+    allow(now) {
+      const s = now - (now % WINDOW);
+      if (s !== this.start) { this.start = s; this.count = 0; }
+      if (this.count < LIMIT) { this.count++; return true; }
+      return false;
+    }
+    view(now) {
+      const s = now - (now % WINDOW), count = s === this.start ? this.count : 0;
+      return { shade: [s, s + WINDOW], fill: count / LIMIT,
+        text: `window ${(s / 1000).toFixed(0)} s to ${((s + WINDOW) / 1000).toFixed(0)} s · count ${count} / ${LIMIT}` };
+    }
+  }
+  class Log {
+    constructor() { this.log = []; }
+    allow(now) {
+      while (this.log.length && this.log[0] <= now - WINDOW) this.log.shift();
+      if (this.log.length < LIMIT) { this.log.push(now); return true; }
+      return false;
+    }
+    view(now) {
+      const inWin = this.log.filter(x => x > now - WINDOW);
+      return { shade: [now - WINDOW, now], fill: inWin.length / LIMIT,
+        text: `${inWin.length} / ${LIMIT} in last 1 s · log [${inWin.map(x => (x / 1000).toFixed(2)).join(', ')}]` };
+    }
+  }
+  class Counter {
+    constructor() { this.cs = 0; this.cur = 0; this.prev = 0; }
+    roll(now) {
+      const s = now - (now % WINDOW);
+      if (s !== this.cs) return { s, cur: 0, prev: s - this.cs === WINDOW ? this.cur : 0 };
+      return { s, cur: this.cur, prev: this.prev };
+    }
+    allow(now) {
+      const r = this.roll(now);
+      this.cs = r.s; this.cur = r.cur; this.prev = r.prev;
+      const overlap = 1 - (now - r.s) / WINDOW;
+      if (this.cur + this.prev * overlap < LIMIT) { this.cur++; return true; }
+      return false;
+    }
+    view(now) {
+      const r = this.roll(now), overlap = 1 - (now - r.s) / WINDOW, est = r.cur + r.prev * overlap;
+      return { shade: [now - WINDOW, now], fill: est / LIMIT,
+        text: `${r.cur} + ${r.prev} × ${overlap.toFixed(2)} = ${est.toFixed(1)} / ${LIMIT}` };
+    }
+  }
+  class Bucket {
+    constructor() { this.tokens = LIMIT; this.last = 0; }
+    allow(now) {
+      this.tokens = Math.min(LIMIT, this.tokens + (now - this.last) * RATE);
+      this.last = now;
+      if (this.tokens >= 1) { this.tokens -= 1; return true; }
+      return false;
+    }
+    view(now) {
+      const tk = Math.min(LIMIT, this.tokens + (now - this.last) * RATE);
+      return { shade: null, fill: tk / LIMIT, meterIsLevel: true,
+        text: `${tk.toFixed(2)} / ${LIMIT} tokens · +1 token every 0.2 s` };
+    }
+  }
+
+  const LANES = [
+    { name: 'Fixed window', cls: 'FixedWindowRateLimiter', make: () => new Fixed(),
+      how: 'Counts requests in the current whole second and resets the count when the next second starts.',
+      time: 'O(1)', space: 'O(1)', burst: 'Up to 2 × limit around a window boundary', acc: 'Approximate' },
+    { name: 'Sliding window log', cls: 'SlidingWindowLogRateLimiter', make: () => new Log(),
+      how: 'Keeps the time of every allowed request and counts the ones in the last 1 s. Old times drop off the front.',
+      time: 'O(1) amortised', space: 'O(limit)', burst: 'None', acc: 'Exact' },
+    { name: 'Sliding window counter', cls: 'SlidingWindowCounterRateLimiter', make: () => new Counter(),
+      how: 'Adds the current second’s count to the part of the previous second that still overlaps the last 1 s.',
+      time: 'O(1)', space: 'O(1)', burst: 'Small, assumes even traffic', acc: 'Close approximation' },
+    { name: 'Token bucket', cls: 'TokenBucketRateLimiter', make: () => new Bucket(),
+      how: 'Each request spends a token. Tokens refill continuously up to 5, so a full bucket allows one burst of 5.',
+      time: 'O(1)', space: 'O(1)', burst: 'Up to capacity, then the steady rate', acc: 'Exact for its rule' }
+  ];
+
+  /* ---------- traffic patterns ---------- */
+  const SCEN = [
+    { id: 'burst', label: 'Boundary burst', end: 3600,
+      text: 'Same pattern as RateLimiterDemo: 5 requests at 0.9 s, 5 at 1.0 s, 5 at 1.6 s and 5 at 2.6 s. The first two bursts straddle a window boundary.',
+      times: () => [900, 1000, 1600, 2600].flatMap(t => Array(5).fill(t)) },
+    { id: 'steady', label: 'Steady 8/s', end: 6000,
+      text: 'One request every 125 ms, so 8 per second against a limit of 5. Watch which requests each limiter lets through.',
+      times: () => Array.from({ length: 47 }, (_, i) => 125 * (i + 1)) },
+    { id: 'random', label: 'Random bursts', end: 8500,
+      text: 'Random clumps of 1 to 4 requests. Press Restart for a new pattern.',
+      times: () => { const out = []; let t = 150; while (t < 8000) { const n = 1 + Math.floor(Math.random() * 4); for (let k = 0; k < n; k++) out.push(Math.round(t)); t += 120 + Math.random() * 600; } return out; } }
+  ];
+  const SPEEDS = [0.25, 0.5, 1];
+
+  /* ---------- state ---------- */
+  const $ = id => document.getElementById(id);
+  let scen = SCEN[0], speed = 0.5, now = 0, schedule = [], next = 0, running = false, lastFrame = 0;
+  let lanes = [];
+
+  function buildLanes() {
+    $('lanes').innerHTML = LANES.map((L, i) => `
+      <section class="lane" aria-label="${L.name}">
+        <div class="lane-head">
+          <h2>${L.name}<small>${L.cls}</small></h2>
+          <div class="tally"><span class="pill ok" id="ok${i}">0 allowed</span><span class="pill bad" id="bad${i}">0 rejected</span></div>
+        </div>
+        <canvas id="cv${i}" role="img" aria-label="Timeline of requests for ${L.name}"></canvas>
+        <div class="state">
+          <div class="state-text" id="st${i}"></div>
+          <div class="meter" id="mt${i}"><i></i></div>
+        </div>
+        <p class="how">${L.how}</p>
+        <div class="cx"><span>time <b>${L.time}</b> per request</span><span>space <b>${L.space}</b> per client</span></div>
+      </section>`).join('');
+  }
+
+  function reset() {
+    now = 0; next = 0;
+    schedule = scen.times().sort((a, b) => a - b);
+    lanes = LANES.map(L => ({ lim: L.make(), events: [], ok: 0, bad: 0 }));
+  }
+
+  function fire(t) {
+    for (const lane of lanes) {
+      const ok = lane.lim.allow(t);
+      const stack = lane.events.filter(e => e.t === t).length;
+      lane.events.push({ t, ok, k: stack });
+      ok ? lane.ok++ : lane.bad++;
+    }
+  }
+
+  function advanceTo(target) {
+    while (next < schedule.length && schedule[next] <= target) fire(schedule[next++]);
+    now = target;
+  }
+
+  /* ---------- drawing ---------- */
+  function colors() {
+    const cs = getComputedStyle(document.documentElement);
+    const g = n => cs.getPropertyValue(n).trim();
+    return { ok: g('--ok'), bad: g('--bad'), accent: g('--accent'), muted: g('--muted'), line: g('--line-strong'), shade: g('--shade'), font: g('--mono') };
+  }
+
+  function drawLane(i, c) {
+    const cv = $('cv' + i), dpr = window.devicePixelRatio || 1;
+    const w = cv.clientWidth, h = cv.clientHeight;
+    if (cv.width !== Math.round(w * dpr) || cv.height !== Math.round(h * dpr)) { cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr); }
+    const ctx = cv.getContext('2d');
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, w, h);
+
+    const viewEnd = Math.max(now + 300, SPAN), viewStart = viewEnd - SPAN;
+    const X = t => (t - viewStart) / SPAN * w;
+    const base = h - 20;
+    const v = lanes[i].lim.view(now);
+
+    if (v.shade) {
+      ctx.fillStyle = c.shade;
+      const x0 = Math.max(0, X(v.shade[0])), x1 = Math.min(w, X(v.shade[1]));
+      ctx.fillRect(x0, 0, x1 - x0, h - 16);
+      ctx.strokeStyle = c.accent; ctx.lineWidth = 1; ctx.setLineDash([3, 3]);
+      ctx.beginPath(); ctx.moveTo(x0 + 0.5, 0); ctx.lineTo(x0 + 0.5, h - 16); ctx.stroke();
+      ctx.setLineDash([]);
+    }
+
+    ctx.strokeStyle = c.line; ctx.lineWidth = 1; ctx.fillStyle = c.muted;
+    ctx.font = `500 10px ${c.font}`; ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
+    for (let s = Math.ceil(viewStart / 1000) * 1000; s <= viewEnd; s += 1000) {
+      const x = Math.round(X(s)) + 0.5;
+      ctx.globalAlpha = 0.55; ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, h - 16); ctx.stroke(); ctx.globalAlpha = 1;
+      ctx.fillText(`${s / 1000} s`, Math.min(Math.max(x, 14), w - 14), h - 2);
+    }
+    ctx.globalAlpha = 0.55; ctx.beginPath(); ctx.moveTo(0, base + 6.5); ctx.lineTo(w, base + 6.5); ctx.stroke(); ctx.globalAlpha = 1;
+
+    for (const e of lanes[i].events) {
+      if (e.t < viewStart - 50) continue;
+      const x = X(e.t), y = base - e.k * 10;
+      if (e.ok) {
+        ctx.fillStyle = c.ok; ctx.beginPath(); ctx.arc(x, y, 4, 0, Math.PI * 2); ctx.fill();
+      } else {
+        ctx.strokeStyle = c.bad; ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.moveTo(x - 3.5, y - 3.5); ctx.lineTo(x + 3.5, y + 3.5); ctx.moveTo(x + 3.5, y - 3.5); ctx.lineTo(x - 3.5, y + 3.5); ctx.stroke();
+      }
+    }
+
+    const xn = Math.round(X(now)) + 0.5;
+    ctx.strokeStyle = c.accent; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(xn, 0); ctx.lineTo(xn, h - 16); ctx.stroke();
+
+    $('st' + i).textContent = v.text;
+    const m = $('mt' + i);
+    m.querySelector('i').style.width = Math.min(100, v.fill * 100) + '%';
+    m.classList.toggle('full', v.meterIsLevel ? v.fill < 0.2 : v.fill >= 1);
+    $('ok' + i).textContent = `${lanes[i].ok} allowed`;
+    $('bad' + i).textContent = `${lanes[i].bad} rejected`;
+  }
+
+  function draw() {
+    const c = colors();
+    lanes.forEach((_, i) => drawLane(i, c));
+    $('clock').textContent = (now / 1000).toFixed(3) + ' s';
+    $('cmp').innerHTML = LANES.map((L, i) => `<tr><td>${L.name}</td><td class="mono">${L.time}</td><td class="mono">${L.space}</td><td>${L.burst}</td><td>${L.acc}</td><td class="num">${lanes[i].ok} / ${lanes[i].ok + lanes[i].bad}</td></tr>`).join('');
+  }
+
+  /* ---------- playback ---------- */
+  function frame(ts) {
+    if (!running) return;
+    const dt = Math.min(100, ts - lastFrame); lastFrame = ts;
+    const target = Math.min(scen.end, now + dt * speed);
+    advanceTo(target);
+    draw();
+    if (now >= scen.end) { setRunning(false); return; }
+    requestAnimationFrame(frame);
+  }
+  function setRunning(on) {
+    running = on;
+    $('b-play').textContent = on ? 'Pause' : 'Play';
+    if (on) { lastFrame = performance.now(); requestAnimationFrame(frame); }
+  }
+
+  $('b-play').onclick = () => {
+    if (running) return setRunning(false);
+    if (now >= scen.end) { reset(); draw(); }
+    setRunning(true);
+  };
+  $('b-reset').onclick = () => { setRunning(false); reset(); draw(); setRunning(true); };
+  $('b-one').onclick = () => { fire(now); draw(); };
+  $('b-five').onclick = () => { for (let k = 0; k < 5; k++) fire(now); draw(); };
+
+  function renderPickers() {
+    $('scen').replaceChildren(...SCEN.map(s => {
+      const b = document.createElement('button');
+      b.textContent = s.label; b.setAttribute('aria-pressed', s === scen);
+      b.onclick = () => { scen = s; renderPickers(); setRunning(false); reset(); draw(); setRunning(true); };
+      return b;
+    }));
+    $('speed').replaceChildren(...SPEEDS.map(v => {
+      const b = document.createElement('button');
+      b.textContent = v + '×'; b.setAttribute('aria-pressed', v === speed);
+      b.onclick = () => { speed = v; renderPickers(); };
+      return b;
+    }));
+    $('scen-text').textContent = scen.text;
+  }
+
+  new ResizeObserver(() => draw()).observe($('lanes'));
+  matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => draw());
+  new MutationObserver(() => draw()).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+
+  buildLanes(); renderPickers(); reset();
+  advanceTo(1300);   // open just after the boundary burst so every lane already shows a difference
+  draw();
+})();
+</script>
+
+</body></html>

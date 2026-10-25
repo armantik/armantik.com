@@ -1,0 +1,229 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Arman Ajabkhani</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="Arman Ajabkhani, Senior Backend Engineer in Malmö. Twenty years of Java and Go backends, now bringing LLMs into real services. Interactive guides on system design, algorithms and Java.">
+<meta property="og:title" content="Arman Ajabkhani, Senior Backend Engineer">
+<meta property="og:description" content="Twenty years of Java and Go backends. Interactive guides on system design, algorithms and Java.">
+<meta property="og:url" content="https://armantik.com/">
+<meta property="og:type" content="website">
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<script src="assets/theme.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Schibsted+Grotesk:wght@400;500;600;700;800&display=swap">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body data-root="">
+
+<div class="wrap">
+  <header class="site-head">
+    <a class="wordmark" href="index.html">
+      <svg viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="14" style="fill:var(--petrol)"/><path d="M18 49 L32 15 L46 49 M23.5 37 H40.5" style="fill:none;stroke:var(--on-petrol)" stroke-width="6.5" stroke-linecap="square"/></svg>
+      Arman Ajabkhani
+    </a>
+    <nav class="site-nav" aria-label="Main">
+      <a href="lab/index.html">Lab</a>
+      <a href="#about">About</a>
+      <a href="#experience">Experience</a>
+      <a href="#services" data-show="services">Services</a>
+      <a href="writing/index.html" data-show="writing">Writing</a>
+      <a href="#contact">Contact</a>
+      <button class="theme-btn" type="button" data-theme-toggle aria-label="Switch theme">Theme</button>
+    </nav>
+  </header>
+
+  <!-- ===================== HERO ===================== -->
+  <section class="hero" aria-labelledby="name">
+    <h1 id="name">Arman<br><span class="surname">Ajabkhani</span></h1>
+    <p class="role">Senior Backend Engineer · Java and Go · AI engineering</p>
+    <p class="lede">I build and run backend services where privacy, correctness and uptime matter: banking channels, payments, and today a device network at very large scale. On the side I build with LLMs, MCP and agents, and I turn what I learn into interactive guides anyone can use.</p>
+    <p class="coords"><span>Malmö, Sweden</span><span>55.60°N 13.00°E</span><span>Writing backend code since 2006</span></p>
+    <div class="links">
+      <a class="btn primary" href="lab/index.html">Explore the Lab <span class="arrow" aria-hidden="true">→</span></a>
+      <a class="btn" data-link="linkedin" href="#" target="_blank" rel="noopener">LinkedIn <span class="arrow" aria-hidden="true">↗</span></a>
+      <a class="btn" data-link="github" href="#" target="_blank" rel="noopener">GitHub <span class="arrow" aria-hidden="true">↗</span></a>
+      <a class="btn" data-link="medium" href="#" target="_blank" rel="noopener">Medium <span class="arrow" aria-hidden="true">↗</span></a>
+    </div>
+  </section>
+
+  <!-- ===================== LAB (three category cards, built from content.js) ===================== -->
+  <section class="sec" id="lab" aria-labelledby="lab-h">
+    <p class="sec-label">/lab</p>
+    <div class="sec-body">
+      <div class="group-head">
+        <h2 id="lab-h">The Learning Lab</h2>
+        <a class="more-link" href="lab/index.html">All <span data-lab-count>14</span> guides →</a>
+      </div>
+      <p class="intro">Interactive guides in three tracks. Each one runs the real logic step by step, often next to the Java code, so you can see why it works. Made for new team members, mentees, and anyone who wants a refresher.</p>
+      <div class="cats" data-lab="categories">
+        <noscript><a href="lab/index.html">Open the Learning Lab</a></noscript>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== ABOUT ===================== -->
+  <section class="sec" id="about" aria-labelledby="about-h">
+    <p class="sec-label">/about</p>
+    <div class="sec-body prose">
+      <h2 id="about-h">Twenty years of backends where mistakes are expensive</h2>
+      <p>I've been building backend systems since 2006. My first fifteen years were in Iran: internet and mobile banking channels used by several banks, a cryptocurrency exchange, and a fintech platform where I led the move from a PHP monolith to Java and Go services handling payments, credit and top ups.</p>
+      <p>Since 2021 I've worked in Sweden. At Klarna in Stockholm I helped design and build an automated Right to be Forgotten platform and worked on a decision engine used across the company. Today I'm in Malmö, working on the backend behind Apple's Find My.</p>
+      <p>What ties it together is systems where correctness, privacy and availability are not optional. In my own time I work on the newer half of modern backends, putting LLMs to work inside real services with MCP, RAG, agents and proper evaluation.</p>
+    </div>
+  </section>
+
+  <!-- ===================== EXPERIENCE ===================== -->
+  <section class="sec" id="experience" aria-labelledby="exp-h">
+    <p class="sec-label">/experience</p>
+    <div class="sec-body">
+      <h2 id="exp-h">Where I've gone deep</h2>
+      <ol class="rows">
+        <li class="row">
+          <span class="when">2023 to now</span>
+          <span class="what">
+            <span class="title">Apple · Find My</span>
+            <span class="sub">Backend Engineer · Malmö</span>
+            <span class="note">Design, build and run JVM and Go services in a small team that owns its work from design document to production. Performance and reliability work on services used by a very large device population.</span>
+          </span>
+        </li>
+        <li class="row">
+          <span class="when">2021 to 2023</span>
+          <span class="what">
+            <span class="title">Klarna · Privacy Experience and Decision Engine</span>
+            <span class="sub">Senior Backend Engineer · Stockholm</span>
+            <span class="note">Co-designed and built an automated Right to be Forgotten platform that coordinates GDPR deletion across many internal systems. Delivered core features in JaDE, a widely used internal decision library, and its managed services.</span>
+          </span>
+        </li>
+        <li class="row">
+          <span class="when">2019 to 2021</span>
+          <span class="what">
+            <span class="title">Snapp · Fintech</span>
+            <span class="sub">Senior Software Engineer and Team Lead · Tehran</span>
+            <span class="note">Led a backend team moving financial services from a PHP monolith to Java and Go microservices for high volume payments, credit and top up flows. Owned design reviews, mentoring and hiring.</span>
+          </span>
+        </li>
+        <li class="row">
+          <span class="when">2018 to 2019</span>
+          <span class="what">
+            <span class="title">Sava Arman Kish · Crypto exchange</span>
+            <span class="sub">Senior Developer and Team Lead · Tehran</span>
+            <span class="note">Designed exchange and notification microservices; found and fixed matching engine bottlenecks through load testing.</span>
+          </span>
+        </li>
+        <li class="row">
+          <span class="when">2011 to 2018</span>
+          <span class="what">
+            <span class="title">Tosan · Banking channels</span>
+            <span class="sub">Senior Software Engineer and Team Lead · Tehran</span>
+            <span class="note">Secure, high throughput APIs for internet and mobile banking used by several banks. Owned the authentication and authorization modules and API design agreements across teams.</span>
+          </span>
+        </li>
+        <li class="row">
+          <span class="when">2006 to 2011</span>
+          <span class="what">
+            <span class="title">.NET and ASP.NET roles</span>
+            <span class="note">Elmosanat, Danesh Rayan Arvin and Netbina.</span>
+          </span>
+        </li>
+      </ol>
+      <p class="intro">Since 2021 I've been a permanent engineer at <b>0+X</b>; my Klarna and Apple roles are through 0+X, where I also mentor in the Compass program and share AI-assisted development practices. B.Sc. in Software Engineering, Sheikh Bahaei University, Isfahan, 2006.</p>
+    </div>
+  </section>
+
+  <!-- ===================== SERVICES (cards come from content.js; switch: show.services) ===================== -->
+  <section class="sec" id="services" data-show="services" aria-labelledby="services-h">
+    <p class="sec-label">/services</p>
+    <div class="sec-body">
+      <h2 id="services-h">How I can help</h2>
+      <p class="intro">Twenty years of building and running backends, available to your team in focused pieces of work: a review, an audit, a workshop, or a few hours of advice a month. Tell me about your system and what you want to change, and I'll tell you honestly whether I'm the right person for it.</p>
+      <div class="svcs" data-services></div>
+      <div class="contact-line">
+        <a class="btn primary" href="#contact">Start a conversation <span class="arrow" aria-hidden="true">→</span></a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== NOW: KAIROS (switch: show.kairos in content.js) ===================== -->
+  <section class="sec" id="now" data-show="kairos" aria-labelledby="now-h">
+    <p class="sec-label">/now</p>
+    <div class="sec-body">
+      <h2 id="now-h">Now building: Kairos</h2>
+      <div class="now-card">
+        <span class="status">In progress · personal research</span>
+        <p>Kairos reads unstructured financial news and turns it into scored, structured signals. It combines LLMs with structured outputs, retrieval over a vector store, tool-using agents connected through MCP, and an evaluation harness that keeps the scores honest. Built in Java and Python.</p>
+        <p class="intro">A research project, not investment advice. Happy to talk about the architecture.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== TOOLBOX ===================== -->
+  <section class="sec" id="toolbox" aria-labelledby="tools-h">
+    <p class="sec-label">/toolbox</p>
+    <div class="sec-body">
+      <h2 id="tools-h">Toolbox</h2>
+      <dl class="rows">
+        <div class="row"><dt class="key">Languages</dt><dd class="what">Java (primary), Go, Python, Kotlin</dd></div>
+        <div class="row"><dt class="key">Backend</dt><dd class="what">Spring Boot, Netty and non-blocking IO, gRPC and Protobuf, REST, Kafka, event-driven design</dd></div>
+        <div class="row"><dt class="key">Data</dt><dd class="what">PostgreSQL, Cassandra, Redis, Memcached, MongoDB</dd></div>
+        <div class="row"><dt class="key">Platform</dt><dd class="what">Kubernetes, Docker, Terraform, AWS, GitHub Actions, Jenkins, Gradle, Maven</dd></div>
+        <div class="row"><dt class="key">Observability</dt><dd class="what">Grafana, Prometheus, OpenTelemetry, Datadog, Splunk</dd></div>
+        <div class="row"><dt class="key">AI engineering</dt><dd class="what">Anthropic and OpenAI APIs, Spring AI, LangChain, MCP servers, RAG with embeddings and vector stores, agents with tool use and structured outputs, evals and guardrails</dd></div>
+        <div class="row"><dt class="key">Daily workflow</dt><dd class="what">Claude Code and Codex for implementation, refactoring, tests and review; reusable agent skills and MCP integrations that keep AI changes reviewable</dd></div>
+        <div class="row"><dt class="key">Practices</dt><dd class="what">Design documents, threat-model-aware design, performance testing with Gatling, mentoring</dd></div>
+      </dl>
+    </div>
+  </section>
+
+  <!-- ===================== WRITING (switch: show.writing in content.js) ===================== -->
+  <section class="sec" id="writing" data-show="writing" aria-labelledby="writing-h">
+    <p class="sec-label">/writing</p>
+    <div class="sec-body">
+      <div class="group-head">
+        <h2 id="writing-h">Writing</h2>
+        <a class="more-link" href="writing/index.html">Everything →</a>
+      </div>
+      <ol class="rows" data-writing="5"></ol>
+    </div>
+  </section>
+
+  <!-- ===================== TALKS (switch: show.talks in content.js) ===================== -->
+  <section class="sec" id="talks" data-show="talks" aria-labelledby="talks-h">
+    <p class="sec-label">/talks</p>
+    <div class="sec-body">
+      <h2 id="talks-h">Talks</h2>
+      <ol class="rows" data-talks></ol>
+    </div>
+  </section>
+
+  <!-- ===================== CONTACT ===================== -->
+  <section class="sec" id="contact" aria-labelledby="contact-h">
+    <p class="sec-label">/contact</p>
+    <div class="sec-body">
+      <h2 id="contact-h">Let's talk</h2>
+      <p class="contact-lead" data-show="services"><b>Open to selected consulting engagements.</b> If your backend has to be fast, correct and private, I can help you design it, stress it and ship it.</p>
+      <ul class="topics" data-show="services" data-service-topics></ul>
+      <p class="contact-lead" data-show-off="services">Always happy to talk about system design, modern Java, Go and bringing LLMs into real backends.</p>
+      <div class="contact-line">
+        <span class="email" data-email>arman[at]armantik.com</span>
+        <button class="copy-btn" type="button" data-copy-email>Copy email</button>
+        <a class="btn primary" data-email-link href="#contact">Email me</a>
+        <a class="btn" data-link="linkedin" href="#" target="_blank" rel="noopener">LinkedIn <span class="arrow" aria-hidden="true">↗</span></a>
+        <a class="btn" data-link="medium" href="#" target="_blank" rel="noopener">Medium <span class="arrow" aria-hidden="true">↗</span></a>
+      </div>
+    </div>
+  </section>
+
+  <footer class="site-foot">
+    <span>© <span data-year>2026</span> Arman Ajabkhani · armantik.com</span>
+    <span class="fa" lang="fa" dir="rtl" data-show="persianName">آرمان عجب‌خانی</span>
+  </footer>
+</div>
+
+<script src="content.js"></script>
+<script src="assets/site.js"></script>
+</body>
+</html>

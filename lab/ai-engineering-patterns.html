@@ -1,0 +1,247 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>AI Engineering Patterns · Arman Ajabkhani</title>
+<meta name="description" content="A field guide to AI engineering patterns: when to use prompting, RAG, workflows, agents or several agents, what each costs, and a ticket to PR pipeline as a worked example.">
+<meta property="og:title" content="AI Engineering Patterns">
+<meta property="og:description" content="When to use prompting, RAG, workflows, agents or several agents, and what each one costs.">
+<meta property="og:type" content="article">
+<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+<script src="../assets/theme.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Schibsted+Grotesk:wght@400;500;600;700;800&display=swap">
+<link rel="stylesheet" href="../assets/style.css">
+<style>
+  /* the complexity ladder in "The golden rule" */
+  .ladder { list-style: none; padding: 0 !important; margin: 4px 0 26px; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; align-items: end; max-width: 100% !important; }
+  .ladder li { margin: 0; display: grid; gap: 6px; align-content: end; }
+  .ladder .bar { background: var(--wash); border-top: 3px solid var(--petrol); border-radius: 3px 3px 0 0; }
+  .ladder li:nth-child(1) .bar { height: 22px; } .ladder li:nth-child(2) .bar { height: 40px; }
+  .ladder li:nth-child(3) .bar { height: 58px; } .ladder li:nth-child(4) .bar { height: 76px; }
+  .ladder li:nth-child(5) .bar { height: 94px; }
+  .ladder .name { font: 600 14.5px/1.25 var(--body); }
+  .ladder .n { font: 400 12px/1 var(--mono); color: var(--ink-3); }
+  .ladder-axis { display: flex; justify-content: space-between; font: 400 12.5px/1.4 var(--mono); color: var(--ink-3); margin: -14px 0 26px; max-width: 100% !important; }
+  @media (max-width: 520px) { .ladder .name { font-size: 12.5px; } }
+  .stage-h { font-weight: 600; }
+</style>
+</head>
+<body data-root="../">
+
+<div class="wrap">
+  <header class="site-head">
+    <a class="wordmark" href="../index.html">
+      <svg viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="14" style="fill:var(--petrol)"/><path d="M18 49 L32 15 L46 49 M23.5 37 H40.5" style="fill:none;stroke:var(--on-petrol)" stroke-width="6.5" stroke-linecap="square"/></svg>
+      Arman Ajabkhani
+    </a>
+    <nav class="site-nav" aria-label="Main">
+      <a href="index.html">Lab</a>
+      <a href="../index.html#about">About</a>
+      <a href="../writing/index.html" data-show="writing">Writing</a>
+      <a href="../index.html#contact">Contact</a>
+      <button class="theme-btn" type="button" data-theme-toggle aria-label="Switch theme">Theme</button>
+    </nav>
+  </header>
+
+  <article class="article">
+    <header class="article-head">
+      <p class="crumb"><a href="../index.html">armantik.com</a> / <a href="index.html">lab</a> / system design</p>
+      <h1>AI Engineering Patterns</h1>
+      <p class="standfirst">A field guide for backend engineers: which pattern to reach for, what each one costs you, and how they combine in a real coding pipeline.</p>
+      <p class="meta"><span>Field guide</span><span>20 Sep 2026</span><span>9 min read</span></p>
+    </header>
+
+    <div class="article-body">
+
+      <h2>The golden rule</h2>
+      <p>Use the simplest pattern that solves the problem. Patterns stack in layers of increasing complexity and cost. Each step up adds capability, and also latency, cost and new ways to fail.</p>
+      <ol class="ladder" aria-label="Patterns from simplest to most complex">
+        <li><span class="bar"></span><span class="n">1</span><span class="name">Prompting</span></li>
+        <li><span class="bar"></span><span class="n">2</span><span class="name">RAG</span></li>
+        <li><span class="bar"></span><span class="n">3</span><span class="name">Workflows</span></li>
+        <li><span class="bar"></span><span class="n">4</span><span class="name">Agents</span></li>
+        <li><span class="bar"></span><span class="n">5</span><span class="name">Multi-agent</span></li>
+      </ol>
+      <p class="ladder-axis" aria-hidden="true"><span>cheap, predictable</span><span>capable, costly</span></p>
+
+      <div class="table-wrap"><table>
+        <thead><tr><th>Situation</th><th>Reach for</th></tr></thead>
+        <tbody>
+          <tr><td>The model already knows it</td><td>Prompting</td></tr>
+          <tr><td>The model lacks the knowledge</td><td>RAG</td></tr>
+          <tr><td>You know the steps</td><td>Workflow</td></tr>
+          <tr><td>You don't know the steps</td><td>Agent</td></tr>
+          <tr><td>One agent's context or focus breaks down</td><td>Multi-agent</td></tr>
+          <tr><td>It touches money, email or production</td><td>Human in the loop and guardrails</td></tr>
+        </tbody>
+      </table></div>
+
+      <h2>1. Prompting patterns</h2>
+      <p>The cheapest layer. Exhaust these before you add infrastructure.</p>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Pattern</th><th>When to use</th></tr></thead>
+        <tbody>
+          <tr><td>Zero-shot</td><td>The task is common and well defined ("summarize this")</td></tr>
+          <tr><td>Few-shot</td><td>Output format or style matters: show 2 to 5 examples</td></tr>
+          <tr><td>Chain of thought</td><td>Reasoning tasks: math, logic, multi-step analysis</td></tr>
+          <tr><td>Structured output</td><td>Code consumes the result: force JSON with tool use or JSON mode</td></tr>
+          <tr><td>Role or system prompt</td><td>A consistent persona, tone or set of constraints across a session</td></tr>
+        </tbody>
+      </table></div>
+
+      <h2>2. RAG patterns</h2>
+      <p>Use RAG when the model needs knowledge it doesn't have: private documents, fresh data, large corpora.</p>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Pattern</th><th>When to use</th></tr></thead>
+        <tbody>
+          <tr><td>Naive RAG</td><td>Embed → retrieve top k → put into the prompt. Fine for small, clean corpora</td></tr>
+          <tr><td>Hybrid search</td><td>Vector and keyword (BM25) together. When exact terms matter: IDs, names, code</td></tr>
+          <tr><td>Reranking</td><td>Retrieve 50, rerank to 5 with a cross-encoder. Fixes poor precision</td></tr>
+          <tr><td>Query rewriting, HyDE</td><td>Rewrite the question before retrieval. For vague or conversational queries</td></tr>
+          <tr><td>Semantic chunking</td><td>Structural or semantic chunks beat fixed-size chunks almost always</td></tr>
+          <tr><td>Agentic RAG</td><td>The model decides whether and what to retrieve, possibly in rounds. For complex questions across sources</td></tr>
+        </tbody>
+      </table></div>
+
+      <h2>3. Workflow patterns</h2>
+      <p>Fixed control flow with an LLM inside each step. Predictable and debuggable, so prefer these over agents whenever the steps are known.</p>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Pattern</th><th>Shape</th><th>When to use</th></tr></thead>
+        <tbody>
+          <tr><td>Prompt chaining</td><td>Step 1 output feeds step 2</td><td>A known sequence: outline → draft → edit</td></tr>
+          <tr><td>Routing</td><td>A classifier sends input to a specialised prompt or model</td><td>Support triage; cheap versus expensive model routing</td></tr>
+          <tr><td>Parallelization (fan-out)</td><td>Split → N parallel calls → aggregate</td><td>Independent subtasks, voting, per-document processing</td></tr>
+          <tr><td>Evaluator-optimizer</td><td>Generator and critic loop until accepted</td><td>Quality-critical output: code review, translation</td></tr>
+          <tr><td>Orchestrator-workers</td><td>A lead LLM decomposes and delegates</td><td>Subtasks you can't predict upfront, with one point of control</td></tr>
+        </tbody>
+      </table></div>
+
+      <h2>4. Agentic patterns</h2>
+      <p>The LLM controls the loop. Use them only when the path can't be decided in advance.</p>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Pattern</th><th>When to use</th></tr></thead>
+        <tbody>
+          <tr><td>Tool use, function calling</td><td>The foundation: the model picks tools and arguments</td></tr>
+          <tr><td>ReAct loop</td><td>Reason → act → observe → repeat. The default agent loop</td></tr>
+          <tr><td>Reflection</td><td>The agent reviews its own output and retries. Better quality at a latency cost</td></tr>
+          <tr><td>Planning</td><td>Write a plan first, then execute. For long multi-step tasks</td></tr>
+          <tr><td>Memory</td><td>Short term (the conversation) and long term (facts, preferences). When sessions must build on each other</td></tr>
+          <tr><td>Human in the loop</td><td>Approval gates before irreversible actions such as payments, emails and deletes. Required for high-stakes tools</td></tr>
+        </tbody>
+      </table></div>
+
+      <h2>5. Agent collaboration patterns</h2>
+      <p>"Multi-agent" is the umbrella term; the patterns below are specific shapes under it. Start with orchestrator-workers, the sensible default.</p>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Pattern</th><th>Structure</th><th>When to use</th><th>Main cost</th></tr></thead>
+        <tbody>
+          <tr><td>Orchestrator-workers (supervisor)</td><td>A lead agent delegates; workers never talk to each other</td><td>Unpredictable subtasks, one point of control</td><td>The supervisor's context grows with every result</td></tr>
+          <tr><td>Sequential pipeline</td><td>A → B → C, each owns a stage</td><td>Known ordered stages, each with its own tools or context</td><td>Errors compound downstream</td></tr>
+          <tr><td>Evaluator-optimizer</td><td>Generator and critic loop</td><td>Quality over latency, when "good" can be written down</td><td>2 to 5× cost; the critic needs a rubric, not "is this good?"</td></tr>
+          <tr><td>Debate, ensemble voting</td><td>N independent answers, then a judge or consensus</td><td>High stakes with no ground truth</td><td>Most expensive per answer; returns fall off after 3 to 5 agents</td></tr>
+          <tr><td>Hierarchical</td><td>Supervisors managing supervisors</td><td>Genuinely large scopes, which are rare</td><td>Failure modes multiply; hard to trace</td></tr>
+          <tr><td>Swarm</td><td>Peers; any agent hands off to any other, no boss</td><td>Conversations that shift domain (sales ↔ billing ↔ tech)</td><td>Lowest determinism and debuggability</td></tr>
+          <tr><td>Fan-out (map-reduce)</td><td>Parallel independent calls → aggregate</td><td>Independent chunks where latency matters</td><td>Almost none; use it freely, even inside other patterns</td></tr>
+        </tbody>
+      </table></div>
+
+      <h3>Fan-out, supervisor and swarm compared</h3>
+      <p>Fan-out is a concurrency pattern rather than collaboration: workers never interact and can be plain prompt calls. Swarm is decentralised: routing logic lives inside each agent, and a handoff transfers the whole conversation.</p>
+      <div class="table-wrap"><table>
+        <thead><tr><th></th><th>Fan-out</th><th>Supervisor</th><th>Swarm</th></tr></thead>
+        <tbody>
+          <tr><td>Who decides routing</td><td>You, in code</td><td>A central agent</td><td>Each agent, locally</td></tr>
+          <tr><td>Workers run</td><td>In parallel</td><td>Parallel or sequential</td><td>One at a time</td></tr>
+          <tr><td>Workers talk to each other</td><td>Never</td><td>Never (only via the supervisor)</td><td>Directly, via handoff</td></tr>
+          <tr><td>Control returns to a center</td><td>Yes (reduce step)</td><td>Yes (supervisor)</td><td>No, control wanders</td></tr>
+          <tr><td>Determinism</td><td>High</td><td>Medium</td><td>Low</td></tr>
+          <tr><td>Debuggability</td><td>Easy</td><td>Medium</td><td>Hard</td></tr>
+        </tbody>
+      </table></div>
+
+      <h3>How agents communicate</h3>
+      <p>This is a separate choice from the topology above.</p>
+      <ul>
+        <li><b>Handoff:</b> full control transfer; the receiving agent gets the conversation (OpenAI Agents SDK style).</li>
+        <li><b>Tool call:</b> a sub-agent is invoked as a function and returns a result, which keeps the parent context clean (Claude and LangGraph subagent style).</li>
+        <li><b>Shared state:</b> a graph state object or scratchpad that all agents read and write (LangGraph's core model).</li>
+        <li><b>Message passing:</b> async messages or events between agents (AutoGen style, MCP-based systems).</li>
+      </ul>
+      <p>The deciding factor is often isolation versus continuity. Supervisor sub-agents keep contexts isolated: the worker returns a conclusion and the parent stays clean. Swarm handoffs share the conversation history.</p>
+
+      <h2>6. Case study: a ticket to PR coding pipeline</h2>
+      <p>The shape that works is a sequential pipeline with fan-out inside the read-only stages and an evaluator loop at the end. Not a swarm, and not a free-form supervisor.</p>
+      <ol class="flow" aria-label="Pipeline from ticket to merged pull request">
+        <li><span class="step">Ticket</span></li>
+        <li class="arrow-down" aria-hidden="true">↓</li>
+        <li><span class="step">Investigate <small>fan-out, read-only</small></span></li>
+        <li class="arrow-down" aria-hidden="true">↓</li>
+        <li><span class="step">Plan</span></li>
+        <li class="arrow-down" aria-hidden="true">↓</li>
+        <li><span class="step gate">Human approves the plan</span></li>
+        <li class="arrow-down" aria-hidden="true">↓</li>
+        <li><span class="step">Implement <small>a single agent</small></span></li>
+        <li class="arrow-down" aria-hidden="true">↓ ↑ findings loop back, at most 2 or 3 rounds</li>
+        <li><span class="step">Verify <small>fresh evaluator agents</small></span></li>
+        <li class="arrow-down" aria-hidden="true">↓</li>
+        <li><span class="step">PR description</span></li>
+        <li class="arrow-down" aria-hidden="true">↓</li>
+        <li><span class="step gate">Human merges</span></li>
+      </ol>
+      <p><span class="stage-h">Investigate with fan-out, read-only sub-agents.</span> This stage is search-heavy and fills context quickly. One agent traces the bug area, one maps the affected tests, one checks conventions and related PRs. Each returns a conclusion instead of file dumps, which keeps the parent context clean. The output is a written investigation doc with the root cause, relevant files, approach options and risks.</p>
+      <p><span class="stage-h">Plan behind a human approval gate.</span> This is the highest-leverage place for a human: reviewing a plan is cheap, reviewing a wrong diff is expensive.</p>
+      <p><span class="stage-h">Implement with one agent.</span> Code changes are deeply interdependent, and two agents editing related files produce conflicts and inconsistent assumptions. Fan out implementation only when the ticket really splits (backend, frontend, docs), and then with strict file ownership that never overlaps.</p>
+      <p><span class="stage-h">Verify with a fresh evaluator, never the implementer.</span> An agent grading its own work is systematically lenient. Spawn fresh agents that get the ticket and the diff: one runs the tests, one reviews against conventions, one checks the acceptance criteria. Findings go back to the implementer for at most 2 or 3 rounds, then escalate to a human.</p>
+      <p>By ticket size: a small ticket gets a single agent plus a verify step, a medium ticket gets the full pipeline, and only truly parallel workstreams get fan-out implementation with strict file ownership.</p>
+
+      <h2>7. Concerns that apply to every pattern</h2>
+      <ul>
+        <li><b>Guardrails:</b> input and output validation, prompt injection defense, PII filtering.</li>
+        <li><b>Caching:</b> prompt caching for repeated context, semantic caching for repeated queries.</li>
+        <li><b>Evals:</b> automated test sets plus LLM as judge. Without evals, everything else is guesswork.</li>
+        <li><b>Fallbacks and retries:</b> model or provider fallback chains for reliability.</li>
+      </ul>
+      <h3>Hard-won warnings for multi-agent systems</h3>
+      <ol>
+        <li>A single agent with good tools beats multi-agent most of the time. Add agents only when one agent's context or focus clearly breaks down.</li>
+        <li>Context isolation is the real reason for sub-agents. If you're not getting that benefit, skip the pattern.</li>
+        <li>Every agent boundary loses information, so write explicit contracts for what goes in and what must come back.</li>
+        <li>Cost scales linearly with agents; reliability doesn't. Two agents that are each right 90% of the time, chained, are right about 81% of the time.</li>
+      </ol>
+
+      <h2>Framework notes</h2>
+      <p>How the patterns map to LangGraph in Python and Spring AI in Java.</p>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Concept</th><th>LangGraph</th><th>Spring AI (Java)</th></tr></thead>
+        <tbody>
+          <tr><td>Fan-out, map-reduce</td><td>Send API</td><td>Hand-rolled with <code>CompletableFuture</code> or structured concurrency</td></tr>
+          <tr><td>Orchestrator-workers</td><td>Subgraphs and Send</td><td>A hand-rolled supervisor loop, or a call out to a LangGraph service</td></tr>
+          <tr><td>Evaluator-optimizer</td><td>A conditional edge looping back</td><td>Advisor chain and a custom loop</td></tr>
+          <tr><td>Swarm</td><td>langgraph-swarm</td><td>Not native</td></tr>
+          <tr><td>Shared state</td><td>The State object</td><td>Managed by the application</td></tr>
+          <tr><td>RAG</td><td>Retriever nodes</td><td>RAG Advisors</td></tr>
+          <tr><td>Tool calling</td><td>Native</td><td>Native (<code>@Tool</code>, function callbacks)</td></tr>
+        </tbody>
+      </table></div>
+
+    </div>
+
+    <footer class="article-foot">
+      <a href="index.html">← All Lab guides</a>
+      <span>Questions or corrections? <a href="../index.html#contact">Get in touch</a></span>
+    </footer>
+  </article>
+
+  <footer class="site-foot">
+    <span>© <span data-year>2026</span> Arman Ajabkhani · <a href="../index.html">armantik.com</a></span>
+    <span class="fa" lang="fa" dir="rtl" data-show="persianName">آرمان عجب‌خانی</span>
+  </footer>
+</div>
+
+<script src="../content.js"></script>
+<script src="../assets/site.js"></script>
+</body>
+</html>

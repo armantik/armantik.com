@@ -1,0 +1,682 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style>
+<title>Two Sum Visualizer · Arman Ajabkhani</title>
+<meta name="description" content="Four Two Sum solutions in Java, step by step: brute force, two pointers and two hash map versions.">
+<meta property="og:title" content="Two Sum Visualizer">
+<meta property="og:description" content="Four Two Sum solutions in Java, step by step: brute force, two pointers and two hash map versions.">
+<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+<script src="../assets/theme.js"></script>
+<style>
+/* armantik.com bar: links this guide back to the site */
+.aa-labbar { --aa-ink: #16211F; --aa-muted: #4A5855; --aa-line: #DCE3E0; --aa-accent: #0F5C55;
+  max-width: 1160px; margin: 0 auto 14px; padding: 0 0 10px; border-bottom: 1px solid var(--aa-line);
+  display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 6px 18px;
+  font: 500 13px/1.4 "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .aa-labbar { --aa-ink: #E3EAE7; --aa-muted: #A3B1AD; --aa-line: #2B3633; --aa-accent: #5BB8AA; } }
+:root[data-theme="dark"] .aa-labbar { --aa-ink: #E3EAE7; --aa-muted: #A3B1AD; --aa-line: #2B3633; --aa-accent: #5BB8AA; }
+.aa-labbar a { color: var(--aa-muted); text-decoration: none; display: inline-flex; align-items: center; gap: 8px; min-height: 32px; }
+.aa-labbar a:hover { color: var(--aa-accent); }
+.aa-labbar .aa-home { color: var(--aa-ink); font-weight: 600; }
+.aa-labbar.aa-pad { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-top: 12px; }
+.aa-right { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 6px 16px; }
+.aa-labbar .aa-crumb { color: var(--aa-muted); }
+.aa-labbar button { display: inline-flex; align-items: center; gap: 6px; min-height: 32px; padding: 0 10px; border: 1px solid var(--aa-line); border-radius: 999px;
+  background: transparent; color: var(--aa-muted); font: inherit; cursor: pointer; }
+.aa-labbar button:hover { color: var(--aa-accent); border-color: var(--aa-accent); }
+.aa-prob { max-width: 1160px; margin: -4px auto 16px; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px;
+  font: 500 13px/1.5 "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace; color: var(--aa-muted, #4A5855); }
+.aa-prob { --aa-muted: #4A5855; --aa-accent: #0F5C55; --aa-line: #DCE3E0; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .aa-prob { --aa-muted: #A3B1AD; --aa-accent: #5BB8AA; --aa-line: #2B3633; } }
+:root[data-theme="dark"] .aa-prob { --aa-muted: #A3B1AD; --aa-accent: #5BB8AA; --aa-line: #2B3633; }
+.aa-prob b { font-weight: 600; color: var(--aa-accent); text-transform: uppercase; letter-spacing: .06em; font-size: 11.5px; }
+.aa-prob a { color: var(--aa-accent); }
+.aa-prob span.aa-own { color: var(--aa-muted); }
+</style>
+</head>
+<body>
+<nav class="aa-labbar" aria-label="armantik.com"><a class="aa-home" href="../index.html"><svg viewBox="0 0 64 64" width="20" height="20" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#0F5C55"/><path d="M18 49 L32 15 L46 49 M23.5 37 H40.5" fill="none" stroke="#FAFBF9" stroke-width="6.5" stroke-linecap="square"/></svg>Arman Ajabkhani</a><span class="aa-right"><a class="aa-crumb" href="index.html#algorithms">Lab / Algorithms</a><a href="index.html">← All Lab guides</a><button type="button" data-theme-toggle aria-label="Switch theme">Theme</button></span></nav>
+<p class="aa-prob"><b>Problem</b> <a href="https://leetcode.com/problems/two-sum/" target="_blank" rel="noopener">LeetCode 1. Two Sum ↗</a> · <a href="https://neetcode.io/problems/two-integer-sum" target="_blank" rel="noopener">NeetCode ↗</a><span class="aa-own">· The solutions on this page are my own.</span></p>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap">
+<style>
+  /* Layout: header, algorithm + input pickers, then the array with live counters on the left and the Java source on the right */
+  :root {
+    --bg: #f2f6f6;
+    --surface: #ffffff;
+    --ink: #162024;
+    --muted: #586a70;
+    --line: #d3dee0;
+    --line-strong: #98abb0;
+    --accent: #2457d6;
+    --accent-soft: #e3eafc;
+    --wait: #b06a00;
+    --wait-soft: #fbefdc;
+    --ok: #1d7a45;
+    --ok-soft: #dcf1e3;
+    --bad: #b3261e;
+    --cell-bg: #eef3f4;
+    --cell-line: #c9d6d9;
+    --code-bg: #edf2f3;
+    --display: "Bricolage Grotesque", "Avenir Next", system-ui, sans-serif;
+    --body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+    --mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0f1517; --surface: #172024; --ink: #e5eef0; --muted: #93a7ad;
+      --line: #29373b; --line-strong: #4f6469; --accent: #84a5ff; --accent-soft: #1d2a4d;
+      --wait: #f0b54d; --wait-soft: #3a2c12; --ok: #5fd08f; --ok-soft: #143524; --bad: #ff8a80;
+      --cell-bg: #1c282c; --cell-line: #33454a;
+      --code-bg: #121a1d;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0f1517; --surface: #172024; --ink: #e5eef0; --muted: #93a7ad;
+    --line: #29373b; --line-strong: #4f6469; --accent: #84a5ff; --accent-soft: #1d2a4d;
+    --wait: #f0b54d; --wait-soft: #3a2c12; --ok: #5fd08f; --ok-soft: #143524; --bad: #ff8a80;
+    --cell-bg: #1c282c; --cell-line: #33454a;
+    --code-bg: #121a1d;
+    color-scheme: dark;
+  }
+
+  * { box-sizing: border-box; }
+  body { background: var(--bg); color: var(--ink); font: 15px/1.55 var(--body); padding: 28px 20px 48px; margin: 0; }
+  .wrap { max-width: 1080px; margin: 0 auto; display: grid; gap: 18px; }
+  header { display: grid; gap: 6px; }
+  h1 { font: 700 clamp(28px, 5vw, 40px)/1.1 var(--display); letter-spacing: -0.02em; margin: 0; text-wrap: balance; }
+  .lede { color: var(--muted); margin: 0; max-width: 66ch; }
+  code { font: 500 0.88em var(--mono); color: var(--ink); }
+
+  .pickers { display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center; }
+  .pick-label { font: 600 12px var(--body); letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+  .seg { display: inline-flex; flex-wrap: wrap; border: 1px solid var(--line-strong); border-radius: 8px; overflow: hidden; }
+  .seg button { appearance: none; border: 0; background: var(--surface); color: var(--muted); font: 600 14px var(--body); padding: 7px 13px; cursor: pointer; }
+  .seg button + button { border-left: 1px solid var(--line-strong); }
+  .seg button[aria-pressed="true"] { background: var(--ink); color: var(--bg); }
+  button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .summary { margin: 0; color: var(--muted); font-size: 14px; max-width: 74ch; }
+
+  .inputs { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: end; }
+  .field { display: grid; gap: 3px; min-width: 0; }
+  .field.grow { flex: 1 1 220px; }
+  .field.small { flex: 0 1 110px; }
+  .field span { font: 600 12px var(--body); letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+  .field input { width: 100%; min-width: 0; font: 500 14px var(--mono); padding: 7px 10px; border-radius: 8px; border: 1px solid var(--line-strong); background: var(--surface); color: var(--ink); }
+  .input-err { margin: 0; font-size: 13px; color: var(--bad); min-height: 0; }
+  .input-err:empty { display: none; }
+
+  .grid2 { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 20px; align-items: start; }
+  @media (max-width: 880px) { .grid2 { grid-template-columns: minmax(0, 1fr); } }
+  .panel { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 18px; min-width: 0; display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; }
+
+  .stats { display: flex; flex-wrap: wrap; gap: 10px 26px; }
+  .stat { display: grid; gap: 0; }
+  .stat .n { font: 700 28px/1.1 var(--display); font-variant-numeric: tabular-nums; }
+  .stat .k { font-size: 12px; color: var(--muted); }
+  .stat.warn .n { color: var(--wait); }
+  .stat.ok .n { color: var(--ok); }
+
+  .row-head { display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; font-size: 12px; color: var(--muted); }
+  .row-head b { font: 600 12px var(--body); color: var(--ink); letter-spacing: 0.06em; text-transform: uppercase; }
+  .arr-scroll { overflow-x: auto; padding-bottom: 2px; }
+  .arr { --cell: 46px; display: flex; gap: 5px; width: max-content; margin: 0 auto; padding: 2px 4px; }
+  @media (max-width: 480px) { .arr { --cell: 40px; } }
+  .slot { display: grid; justify-items: center; gap: 3px; width: var(--cell); }
+  .mark { height: 18px; font: 700 12px var(--mono); color: var(--accent); display: flex; gap: 3px; }
+  .mark .m2 { color: var(--wait); }
+  .box {
+    width: var(--cell); height: var(--cell); border-radius: 7px; position: relative;
+    display: grid; place-items: center; font: 700 15px var(--mono); color: var(--ink);
+    background: var(--cell-bg); border: 1.5px solid var(--cell-line);
+    transition: background 0.3s, border-color 0.3s, opacity 0.3s, transform 0.2s;
+  }
+  .sub { font: 400 10.5px var(--mono); color: var(--muted); }
+  .box.cur { border: 3px solid var(--accent); background: var(--accent-soft); }
+  .box.probe { border: 2.5px dashed var(--wait); background: var(--wait-soft); }
+  .box.found { border: 3px solid var(--ok); background: var(--ok-soft); }
+  .box.done { opacity: 0.38; }
+  .box.pulse { animation: pulse 0.45s ease-out; }
+  @keyframes pulse { 40% { transform: scale(1.12); } }
+  .sorted-wrap[hidden], .map-wrap[hidden] { display: none; }
+
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; min-height: 40px; align-items: center; padding: 6px; border-radius: 8px; background: var(--code-bg); }
+  .chips .empty { font-size: 13px; color: var(--muted); padding: 0 6px; }
+  .chip { display: inline-flex; align-items: center; gap: 5px; height: 28px; padding: 0 9px; border-radius: 6px; font: 600 12.5px var(--mono); background: var(--surface); border: 1.5px solid var(--line-strong); }
+  .chip .arrow { color: var(--muted); font-weight: 400; }
+  .chip.hit { border-color: var(--ok); background: var(--ok-soft); }
+  .chip.miss { border-color: var(--wait); border-style: dashed; color: var(--muted); background: transparent; }
+  .chip.new { border-color: var(--accent); background: var(--accent-soft); animation: pop 0.35s ease-out; }
+  .chip.upd { border-color: var(--accent); background: var(--accent-soft); }
+  @keyframes pop { from { transform: translateY(-6px); opacity: 0; } }
+
+  .explain { margin: 0; min-height: 3.1em; max-width: 62ch; }
+  .controls { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .btn { appearance: none; font: 600 14px var(--body); padding: 8px 14px; border-radius: 8px; cursor: pointer; border: 1px solid var(--line-strong); background: var(--surface); color: var(--ink); }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: var(--surface); }
+  .btn:disabled { opacity: 0.4; cursor: default; }
+  .counter { margin-left: auto; font: 500 13px var(--mono); color: var(--muted); font-variant-numeric: tabular-nums; }
+
+  .legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 13px; color: var(--muted); }
+  .legend i { display: inline-block; width: 14px; height: 14px; border-radius: 4px; vertical-align: -2px; margin-right: 6px; border: 2px solid transparent; }
+  .l-cur { border-color: var(--accent) !important; background: var(--accent-soft); }
+  .l-probe { border-color: var(--wait) !important; border-style: dashed !important; background: var(--wait-soft); }
+  .l-found { border-color: var(--ok) !important; background: var(--ok-soft); }
+  .l-done { background: var(--cell-bg); border-color: var(--cell-line) !important; opacity: 0.4; }
+
+  .code-head { display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+  .code-head h3 { margin: 0; font: 600 14px var(--mono); }
+  .code-head span { font-size: 12px; color: var(--muted); }
+  pre.code { margin: 0; background: var(--code-bg); border-radius: 8px; padding: 10px 0; font: 400 12.5px/1.6 var(--mono); overflow-x: auto; }
+  pre.code .ln { display: block; padding: 0 14px; white-space: pre; border-left: 3px solid transparent; transition: background 0.25s; }
+  pre.code .ln.hl { background: var(--accent-soft); border-left-color: var(--accent); }
+  pre.code .ln.dim { color: var(--muted); }
+  .note { margin: 0; font-size: 14px; color: var(--muted); }
+  .note b { color: var(--ink); }
+
+  .cx { display: grid; gap: 10px; }
+  .cx h4, .cmp h4 { margin: 0; font: 600 12px var(--body); letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+  .cx-row { display: flex; flex-wrap: wrap; gap: 10px; }
+  .cx-box { flex: 1 1 140px; min-width: 0; border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; display: grid; gap: 2px; }
+  .cx-box .big { font: 700 18px var(--mono); }
+  .cx-box .k { font-size: 12px; color: var(--muted); }
+  .cx-box.warn { border-color: var(--wait); }
+  .cx-box.warn .big { color: var(--wait); }
+  .cx-box.good { border-color: var(--ok); }
+  .cx-box.good .big { color: var(--ok); }
+  .cx p { margin: 0; font-size: 14px; color: var(--muted); }
+  .cx p b { color: var(--ink); }
+
+  .cmp { display: grid; gap: 8px; }
+  .cmp-scroll { overflow-x: auto; }
+  .cmp table { border-collapse: collapse; width: 100%; font-size: 13px; min-width: 460px; }
+  .cmp th, .cmp td { text-align: left; padding: 7px 8px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+  .cmp th { font: 600 12px var(--body); color: var(--muted); }
+  .cmp td.mono { font: 500 12.5px var(--mono); }
+  .cmp tr.sel td { background: var(--accent-soft); }
+  .cmp tr.sel td:first-child { box-shadow: inset 3px 0 0 var(--accent); font-weight: 600; }
+  .cmp .bad { color: var(--wait); font-weight: 600; }
+  .cmp .best { color: var(--ok); font-weight: 600; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .box, pre.code .ln { transition: none !important; }
+    .box.pulse, .chip.new { animation: none !important; }
+  }
+  @media (max-width: 480px) {
+    body { padding: 20px 16px 40px; }
+    .panel { padding: 14px; }
+    .counter { margin-left: 0; width: 100%; }
+  }
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>Two Sum Visualizer</h1>
+    <p class="lede">The four Two Sum solutions from <code>org.example.twosum</code>, step by step: brute force, sort with two pointers, and the two hash map versions. Pick an input or type your own and every algorithm reruns on it.</p>
+  </header>
+
+  <div class="pickers">
+    <span class="pick-label">Algorithm</span>
+    <div class="seg" role="group" aria-label="Algorithm" id="algos"></div>
+  </div>
+  <div class="pickers">
+    <span class="pick-label">Input</span>
+    <div class="seg" role="group" aria-label="Input preset" id="presets"></div>
+  </div>
+  <form class="inputs" id="form">
+    <label class="field grow"><span>nums</span><input id="in-nums" inputmode="text" autocomplete="off" spellcheck="false" aria-describedby="in-err"></label>
+    <label class="field small"><span>target</span><input id="in-target" inputmode="numeric" autocomplete="off" spellcheck="false"></label>
+    <button class="btn" type="submit">Run</button>
+  </form>
+  <p class="input-err" id="in-err" role="status"></p>
+  <p class="summary" id="summary"></p>
+
+  <div class="grid2">
+    <div class="panel">
+      <div class="stats">
+        <div class="stat"><span class="n" id="s-comp">0</span><span class="k" id="s-comp-k">comparisons</span></div>
+        <div class="stat"><span class="n" id="s-mem">0</span><span class="k" id="s-mem-k">map size</span></div>
+        <div class="stat warn"><span class="n" id="s-aux">–</span><span class="k" id="s-aux-k">need</span></div>
+        <div class="stat ok"><span class="n" id="s-ans">–</span><span class="k">answer</span></div>
+      </div>
+
+      <div class="row-head"><b>nums</b><span id="target-show"></span></div>
+      <div class="arr-scroll"><div class="arr" id="arr" aria-label="Input array"></div></div>
+
+      <div class="sorted-wrap" id="sorted-wrap">
+        <div class="row-head"><b id="sorted-name">pairs (value, original index)</b><span>left → right</span></div>
+        <div class="arr-scroll"><div class="arr" id="sorted"></div></div>
+      </div>
+
+      <div class="map-wrap" id="map-wrap">
+        <div class="row-head"><b id="map-name">HashMap</b><span>value → index</span></div>
+        <div class="chips" id="map"></div>
+      </div>
+
+      <p class="explain" id="explain" aria-live="polite"></p>
+
+      <div class="controls">
+        <button class="btn" id="b-reset">Reset</button>
+        <button class="btn" id="b-back">Back</button>
+        <button class="btn primary" id="b-next">Next</button>
+        <button class="btn" id="b-play">Play</button>
+        <button class="btn" id="b-end">Skip to end</button>
+        <span class="counter" id="counter"></span>
+      </div>
+
+      <div class="legend">
+        <span><i class="l-cur"></i><span id="lg-cur">current (i)</span></span>
+        <span><i class="l-probe"></i><span id="lg-probe">partner (j)</span></span>
+        <span><i class="l-found"></i>answer pair</span>
+        <span><i class="l-done"></i><span id="lg-done">done</span></span>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="code-head"><h3 id="code-title"></h3><span>lines that run are highlighted</span></div>
+      <pre class="code" id="code"></pre>
+      <p class="note" id="note"></p>
+
+      <div class="cx">
+        <h4>Complexity · array of n numbers</h4>
+        <div class="cx-row">
+          <div class="cx-box" id="cx-time-box"><span class="big" id="cx-time"></span><span class="k">time</span></div>
+          <div class="cx-box" id="cx-space-box"><span class="big" id="cx-space"></span><span class="k">extra space</span></div>
+        </div>
+        <p id="cx-why"></p>
+      </div>
+
+      <div class="cmp">
+        <h4>All four compared</h4>
+        <div class="cmp-scroll">
+          <table>
+            <thead><tr><th>Algorithm</th><th>Time</th><th>Extra space</th><th>Passes</th><th>Idea</th></tr></thead>
+            <tbody id="cmp-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(() => {
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* ---------- inputs ---------- */
+  const PRESETS = [
+    { id: 'lc1', label: 'LeetCode 1', nums: [2, 7, 11, 15], target: 9 },
+    { id: 'lc2', label: 'LeetCode 2', nums: [3, 2, 4], target: 6 },
+    { id: 'lc3', label: 'LeetCode 3', nums: [3, 3], target: 6 },
+    { id: 'neg', label: 'Negatives', nums: [-6, 3, -2, 10, 7, -9, 5], target: -4 },
+    { id: 'random', label: 'Random', nums: null, target: null }
+  ];
+  const countPairs = (a, t) => { let c = 0; for (let i = 0; i < a.length; i++) for (let j = i + 1; j < a.length; j++) if (a[i] + a[j] === t) c++; return c; };
+  function randomInput() {
+    for (;;) {
+      const n = 7 + Math.floor(Math.random() * 3);
+      const nums = Array.from({ length: n }, () => Math.floor(Math.random() * 30) - 9);
+      const i = Math.floor(Math.random() * n);
+      let j = Math.floor(Math.random() * n);
+      if (j === i) continue;
+      const target = nums[i] + nums[j];
+      if (countPairs(nums, target) === 1) return { nums, target };
+    }
+  }
+
+  /* ---------- Java source shown per algorithm ---------- */
+  const CODE = {
+    brute: ['public int[] twoSum(int[] nums, int target) {', '    for (int i = 0; i < nums.length; i++) {', '        for (int j = i + 1; j < nums.length; j++) {', '            if (nums[i] + nums[j] == target) {', '                return new int[]{i, j};', '            }', '        }', '    }', '    throw new IllegalArgumentException("no pair");', '}'],
+    sort: ['public int[] twoSum(int[] nums, int target) {', '    int[][] pairs = new int[nums.length][];   // {value, originalIndex}', '    for (int i = 0; i < nums.length; i++) {', '        pairs[i] = new int[]{nums[i], i};', '    }', '    Arrays.sort(pairs, (a, b) -> Integer.compare(a[0], b[0]));', '', '    int left = 0;', '    int right = pairs.length - 1;', '    while (left < right) {', '        long sum = (long) pairs[left][0] + pairs[right][0];', '        if (sum == target) {', '            int a = pairs[left][1];', '            int b = pairs[right][1];', '            return new int[]{Math.min(a, b), Math.max(a, b)};', '        }', '        if (sum < target) {', '            left++;', '        } else {', '            right--;', '        }', '    }', '    throw new IllegalArgumentException("no pair");', '}'],
+    twopass: ['public int[] twoSum(int[] nums, int target) {', '    Map<Integer, Integer> indexOf = new HashMap<>();', '    for (int i = 0; i < nums.length; i++) {', '        indexOf.put(nums[i], i);', '    }', '    for (int i = 0; i < nums.length; i++) {', '        Integer j = indexOf.get(target - nums[i]);', '        if (j != null && j != i) {', '            return new int[]{i, j};', '        }', '    }', '    throw new IllegalArgumentException("no pair");', '}'],
+    onepass: ['public int[] twoSum(int[] nums, int target) {', '    Map<Integer, Integer> seen = new HashMap<>();   // value -> index', '    for (int i = 0; i < nums.length; i++) {', '        Integer j = seen.get(target - nums[i]);', '        if (j != null) {', '            return new int[]{j, i};', '        }', '        seen.put(nums[i], i);', '    }', '    throw new IllegalArgumentException("no pair");', '}']
+  };
+
+  /* ---------- simulations ---------- */
+  // Each returns { snaps, answer }. A snap is a full picture of one moment, so Back is free.
+  // answer uses the same index order as the Java version (null when no pair exists).
+  function snapper(snaps, st) {
+    return (text, lines, quick = false) => snaps.push({
+      text, lines, quick,
+      marks: { ...st.marks }, cls: { ...st.cls },
+      map: st.map ? [...st.map.entries()] : null, mapHit: st.mapHit, mapMiss: st.mapMiss, mapNew: st.mapNew, mapUpd: st.mapUpd,
+      sorted: st.sorted ? st.sorted.map(p => [...p]) : null, sMarks: { ...st.sMarks }, sCls: { ...st.sCls },
+      comps: st.comps, mem: st.mem, aux: st.aux, answer: st.answer ? [...st.answer] : null
+    });
+  }
+  const fresh = () => ({ marks: {}, cls: {}, map: null, mapHit: null, mapMiss: null, mapNew: null, mapUpd: null,
+    sorted: null, sMarks: {}, sCls: {}, comps: 0, mem: 0, aux: '–', answer: null });
+
+  function simBrute(nums, target) {
+    const snaps = [], st = fresh(), snap = snapper(snaps, st), n = nums.length;
+    snap('Try every pair (i, j) with j > i, so no element is paired with itself and no pair is checked twice.', [0]);
+    for (let i = 0; i < n; i++) {
+      for (let j = i + 1; j < n; j++) {
+        st.comps++;
+        const sum = nums[i] + nums[j];
+        st.aux = sum;
+        st.marks = { [i]: ['i'], [j]: ['j'] };
+        st.cls = {};
+        for (let k = 0; k < i; k++) st.cls[k] = 'done';
+        if (sum === target) {
+          st.cls[i] = 'found'; st.cls[j] = 'found';
+          st.answer = [i, j];
+          snap(`nums[${i}] + nums[${j}] = ${nums[i]} + ${nums[j]} = ${sum}, which is the target. Return [${i}, ${j}] after ${st.comps} pair checks.`, [1, 2, 3, 4]);
+          return { snaps, answer: st.answer };
+        }
+        st.cls[i] = 'cur'; st.cls[j] = 'probe';
+        snap(`nums[${i}] + nums[${j}] = ${nums[i]} + ${nums[j]} = ${sum}, not ${target}. Move j on${j === n - 1 ? '; j hit the end, so i moves on next' : ''}.`, [1, 2, 3], true);
+      }
+    }
+    st.marks = {}; st.cls = {};
+    for (let k = 0; k < n; k++) st.cls[k] = 'done';
+    snap(`All ${st.comps} pairs checked and none adds up to ${target}. The Java version throws here.`, [8]);
+    return { snaps, answer: null };
+  }
+
+  function simSort(nums, target) {
+    const snaps = [], st = fresh(), snap = snapper(snaps, st), n = nums.length;
+    snap('Sorting would lose the original positions, so first pair every value with its index.', [0]);
+    st.sorted = nums.map((v, i) => [v, i]);
+    st.mem = n;
+    snap(`Copy the ${n} values into pairs (value, original index). That is the O(n) extra space.`, [1, 2, 3, 4]);
+    st.sorted = [...st.sorted].sort((a, b) => a[0] - b[0]); // stable, like Arrays.sort on objects
+    snap('Sort the pairs by value. Each original index travels with its value, shown under the cell.', [5]);
+    let left = 0, right = n - 1;
+    const place = () => {
+      st.sMarks = { [left]: ['L'], [right]: ['R'] };
+      st.marks = { [st.sorted[left][1]]: ['L'], [st.sorted[right][1]]: ['R'] };
+      st.cls = { [st.sorted[left][1]]: 'cur', [st.sorted[right][1]]: 'probe' };
+      const sCls = {};
+      for (let k = 0; k < n; k++) if (k < left || k > right) sCls[k] = 'done';
+      sCls[left] = 'cur'; sCls[right] = 'probe';
+      st.sCls = sCls;
+    };
+    if (n >= 2) { place(); snap(`left starts at the smallest value (${st.sorted[left][0]}), right at the largest (${st.sorted[right][0]}).`, [7, 8]); }
+    while (left < right) {
+      st.comps++;
+      const lv = st.sorted[left][0], rv = st.sorted[right][0], sum = lv + rv;
+      st.aux = sum;
+      place();
+      if (sum === target) {
+        const a = st.sorted[left][1], b = st.sorted[right][1];
+        st.answer = [Math.min(a, b), Math.max(a, b)];
+        st.cls = { [a]: 'found', [b]: 'found' };
+        st.sCls[left] = 'found'; st.sCls[right] = 'found';
+        snap(`${lv} + ${rv} = ${sum}, the target. Their original indices are ${a} and ${b}, so return [${st.answer[0]}, ${st.answer[1]}].`, [9, 10, 11, 12, 13, 14]);
+        return { snaps, answer: st.answer };
+      }
+      if (sum < target) {
+        snap(`${lv} + ${rv} = ${sum} < ${target}. Even the largest value left cannot rescue ${lv}, so drop it: left++.`, [9, 10, 11, 16, 17]);
+        left++;
+      } else {
+        snap(`${lv} + ${rv} = ${sum} > ${target}. Even the smallest value left is too much with ${rv}, so drop it: right--.`, [9, 10, 11, 16, 18, 19]);
+        right--;
+      }
+    }
+    st.marks = {}; st.cls = {}; st.sMarks = {};
+    st.sCls = Object.fromEntries(st.sorted.map((_, k) => [k, 'done']));
+    snap(`The pointers met without finding ${target}. The Java version throws here.`, [9, 22]);
+    return { snaps, answer: null };
+  }
+
+  function simTwoPass(nums, target) {
+    const snaps = [], st = fresh(), snap = snapper(snaps, st), n = nums.length;
+    st.map = new Map();
+    snap('Pass 1 stores where every value lives (value → index). Pass 2 looks up each complement.', [0, 1]);
+    for (let i = 0; i < n; i++) {
+      const had = st.map.has(nums[i]);
+      st.map.set(nums[i], i);
+      st.mem = st.map.size;
+      st.marks = { [i]: ['i'] }; st.cls = { [i]: 'cur' };
+      for (let k = 0; k < i; k++) st.cls[k] = 'done';
+      st.mapNew = had ? null : nums[i]; st.mapUpd = had ? nums[i] : null; st.mapHit = null; st.mapMiss = null;
+      snap(had ? `Pass 1: ${nums[i]} is already in the map. Overwrite it with the later index ${i}.`
+               : `Pass 1: put ${nums[i]} → ${i}.`, [2, 3], true);
+    }
+    st.mapNew = null; st.mapUpd = null;
+    for (let i = 0; i < n; i++) {
+      st.comps++;
+      const need = target - nums[i];
+      st.aux = need;
+      const j = st.map.has(need) ? st.map.get(need) : null;
+      st.marks = { [i]: ['i'] }; st.cls = { [i]: 'cur' };
+      for (let k = 0; k < i; k++) st.cls[k] = 'done';
+      st.mapHit = null; st.mapMiss = null;
+      if (j === null) {
+        st.mapMiss = need;
+        snap(`Pass 2, i = ${i}: need ${target} − ${nums[i]} = ${need}. Not in the map.`, [5, 6, 7], true);
+      } else if (j === i) {
+        st.mapHit = need;
+        snap(`Pass 2, i = ${i}: need ${need}. The map says index ${i}, but that is nums[${i}] itself, so skip it.`, [5, 6, 7]);
+      } else {
+        st.mapHit = need;
+        st.marks[j] = [...(st.marks[j] || []), 'j'];
+        st.cls[i] = 'found'; st.cls[j] = 'found';
+        st.answer = [i, j];
+        snap(`Pass 2, i = ${i}: need ${need}, and the map has it at index ${j}. Return [${i}, ${j}].`, [5, 6, 7, 8]);
+        return { snaps, answer: st.answer };
+      }
+    }
+    st.marks = {}; st.cls = {}; st.mapHit = null; st.mapMiss = null;
+    snap(`No complement found for any value. The Java version throws here.`, [11]);
+    return { snaps, answer: null };
+  }
+
+  function simOnePass(nums, target) {
+    const snaps = [], st = fresh(), snap = snapper(snaps, st), n = nums.length;
+    st.map = new Map();
+    snap('One pass: for each value, first ask "have I already seen its complement?", then remember the value.', [0, 1]);
+    for (let i = 0; i < n; i++) {
+      st.comps++;
+      const need = target - nums[i];
+      st.aux = need;
+      st.marks = { [i]: ['i'] }; st.cls = { [i]: 'cur' };
+      for (let k = 0; k < i; k++) st.cls[k] = 'done';
+      st.mapNew = null; st.mapUpd = null; st.mapHit = null; st.mapMiss = null;
+      if (st.map.has(need)) {
+        const j = st.map.get(need);
+        st.mapHit = need;
+        st.marks[j] = ['j'];
+        st.cls[i] = 'found'; st.cls[j] = 'found';
+        st.answer = [j, i];
+        snap(`i = ${i}: need ${target} − ${nums[i]} = ${need}. Seen before at index ${j}, so return [${j}, ${i}].`, [2, 3, 4, 5]);
+        return { snaps, answer: st.answer };
+      }
+      st.mapMiss = need;
+      snap(`i = ${i}: need ${target} − ${nums[i]} = ${need}. Not seen yet.`, [2, 3, 4]);
+      const had = st.map.has(nums[i]);
+      st.map.set(nums[i], i);
+      st.mem = st.map.size;
+      st.mapMiss = null;
+      st.mapNew = had ? null : nums[i]; st.mapUpd = had ? nums[i] : null;
+      snap(`Only now store ${nums[i]} → ${i}, so a later value can find it. Checking first means nums[${i}] never pairs with itself.`, [7], true);
+    }
+    st.marks = {}; st.cls = {}; st.mapNew = null; st.mapUpd = null;
+    snap(`Reached the end without a match. The Java version throws here.`, [9]);
+    return { snaps, answer: null };
+  }
+  /* ---------- end simulations ---------- */
+
+  const ALGOS = [
+    { id: 'brute', label: 'Brute force', title: 'TwoSumBruteForce.java', run: simBrute,
+      compK: 'pair sums checked', memK: 'extra memory', auxK: 'current sum', cur: 'i', probe: 'j', done: 'i already finished',
+      summary: 'Two nested loops try every pair. Nothing to set up and no memory, but the work grows with the square of the input.',
+      note: '<b>j starts at i + 1:</b> that one detail both avoids using the same element twice and avoids checking (j, i) after (i, j).',
+      cx: { time: 'O(n²)', space: 'O(1)', passes: 'nested', idea: 'try every pair', tone: 'bad',
+        why: '<b>Time:</b> up to n(n−1)/2 pairs. 10,000 numbers means about 50 million checks. <b>Space:</b> just the two loop indices.' } },
+    { id: 'sort', label: 'Sort + two pointers', title: 'TwoSumSortTwoPointers.java', run: simSort,
+      compK: 'pair sums checked', memK: 'pairs stored', auxK: 'current sum', cur: 'left (L)', probe: 'right (R)', done: 'dropped',
+      summary: 'Sort (value, index) pairs, then squeeze two pointers inwards. Each step throws one value away for good.',
+      note: '<b>Why a value can be dropped:</b> if the smallest plus the largest is too small, the smallest can never reach the target with anything, so left moves up. Mirror image for right. The original index rides along with each value, because the answer must refer to the unsorted array.',
+      cx: { time: 'O(n log n)', space: 'O(n)', passes: 'sort + 1', idea: 'sorted squeeze',
+        why: '<b>Time:</b> the sort costs O(n log n); the pointer walk is only O(n) on top. <b>Space:</b> the n (value, index) pairs. If the input were already sorted and only values were needed (LeetCode 167), this would be O(n) time and O(1) space.' } },
+    { id: 'twopass', label: 'HashMap · two pass', title: 'TwoSumHashMapTwoPass.java', run: simTwoPass,
+      compK: 'map lookups', memK: 'map size', auxK: 'need', cur: 'i', probe: 'j (from map)', done: 'already visited',
+      summary: 'First pass fills a value → index map; second pass asks the map for each complement in O(1).',
+      note: '<b>j != i:</b> with nums = [3, 4] and target 6, value 3 would find itself. Duplicates still work: for [3, 3] the map keeps the later index, and i = 0 finds index 1.',
+      cx: { time: 'O(n)', space: 'O(n)', passes: '2',  idea: 'look up complement',
+        why: '<b>Time:</b> two linear passes, each map get/put is O(1) on average. <b>Space:</b> the map holds one entry per distinct value, up to n.' } },
+    { id: 'onepass', label: 'HashMap · one pass', title: 'TwoSumHashMapOnePass.java', run: simOnePass,
+      compK: 'map lookups', memK: 'map size', auxK: 'need', cur: 'i', probe: 'j (from map)', done: 'already stored',
+      summary: 'The optimal answer. Look up the complement among values already seen, then store the current value. Stops the moment the pair appears.',
+      note: '<b>Check, then insert:</b> because nums[i] goes into the map after its own lookup, it can never pair with itself, so no j != i test is needed. The second number of the pair is the one that discovers it.',
+      cx: { time: 'O(n)', space: 'O(n)', passes: '1', idea: 'check, then store', tone: 'good',
+        why: '<b>Time:</b> one pass with O(1) average map operations, and it can stop early. <b>Space:</b> at most n − 1 map entries. You cannot beat O(n) time: every number might be part of the answer, so each must be read.' } }
+  ];
+
+  /* ---------- player ---------- */
+  const $ = id => document.getElementById(id);
+  let algo = ALGOS[3], preset = PRESETS[3], input = { nums: PRESETS[3].nums, target: PRESETS[3].target };
+  let snaps = [], cur = 0, timer = null;
+
+  const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;');
+
+  function renderPickers() {
+    $('algos').replaceChildren(...ALGOS.map(a => {
+      const b = document.createElement('button');
+      b.textContent = a.label; b.setAttribute('aria-pressed', a === algo);
+      b.onclick = () => { algo = a; renderPickers(); run(); };
+      return b;
+    }));
+    $('presets').replaceChildren(...PRESETS.map(p => {
+      const b = document.createElement('button');
+      b.textContent = p.label; b.setAttribute('aria-pressed', p === preset);
+      b.onclick = () => { preset = p; input = p.nums ? { nums: p.nums, target: p.target } : randomInput(); syncFields(); renderPickers(); run(); };
+      return b;
+    }));
+  }
+  function syncFields() {
+    $('in-nums').value = input.nums.join(', ');
+    $('in-target').value = input.target;
+    $('in-err').textContent = '';
+  }
+
+  $('form').addEventListener('submit', e => {
+    e.preventDefault();
+    const parts = $('in-nums').value.replace(/[\[\]]/g, '').split(/[\s,]+/).filter(Boolean);
+    const nums = parts.map(Number);
+    const target = Number($('in-target').value.trim());
+    let err = '';
+    if (nums.length < 2 || nums.length > 16) err = 'Enter between 2 and 16 numbers, separated by commas.';
+    else if (nums.some(x => !Number.isInteger(x) || Math.abs(x) > 1e9)) err = 'nums must be whole numbers between −1,000,000,000 and 1,000,000,000.';
+    else if ($('in-target').value.trim() === '' || !Number.isInteger(target) || Math.abs(target) > 1e9) err = 'target must be a whole number.';
+    if (err) { $('in-err').textContent = err; return; }
+    $('in-err').textContent = countPairs(nums, target) === 0 ? `No pair adds up to ${target}; the walk-through shows every algorithm giving up.` : '';
+    input = { nums, target }; preset = null; renderPickers(); run();
+  });
+
+  function run(at) {
+    stop();
+    snaps = algo.run(input.nums, input.target).snaps;
+    $('code').innerHTML = CODE[algo.id].map(l => `<span class="ln">${esc(l) || ' '}</span>`).join('');
+    $('code-title').textContent = algo.title;
+    $('summary').textContent = algo.summary;
+    $('note').innerHTML = algo.note;
+    $('s-comp-k').textContent = algo.compK;
+    $('s-mem-k').textContent = algo.memK;
+    $('s-aux-k').textContent = algo.auxK;
+    $('lg-cur').textContent = algo.cur;
+    $('lg-probe').textContent = algo.probe;
+    $('lg-done').textContent = algo.done;
+    $('target-show').textContent = `target = ${input.target}`;
+    $('sorted-wrap').hidden = algo.id !== 'sort';
+    $('map-wrap').hidden = !algo.id.endsWith('pass');
+    $('map-name').textContent = algo.id === 'onepass' ? 'seen (HashMap)' : 'indexOf (HashMap)';
+    $('cx-time').textContent = algo.cx.time;
+    $('cx-space').textContent = algo.cx.space;
+    $('cx-time-box').className = 'cx-box' + (algo.cx.tone === 'bad' ? ' warn' : algo.cx.tone === 'good' ? ' good' : '');
+    $('cx-why').innerHTML = algo.cx.why;
+    $('cmp-body').innerHTML = ALGOS.map(a => `<tr class="${a === algo ? 'sel' : ''}">
+      <td>${a.label}</td><td class="mono ${a.cx.tone === 'bad' ? 'bad' : a.cx.tone === 'good' ? 'best' : ''}">${a.cx.time}</td><td class="mono">${a.cx.space}</td>
+      <td>${a.cx.passes}</td><td>${a.cx.idea}${a.cx.tone === 'good' ? ' (optimal)' : ''}</td></tr>`).join('');
+    cur = -1;
+    render(at === undefined ? Math.floor((snaps.length - 1) / 2) : Math.min(at, snaps.length - 1), false);
+  }
+
+  function slots(el, values, subs, marks, cls, prevCls, animate) {
+    el.innerHTML = values.map((v, k) => {
+      const m = (marks[k] || []).map((t, q) => `<span class="${q ? 'm2' : ''}">${t}</span>`).join('');
+      const c = cls[k] || '';
+      const pulse = animate && !reduced && c && c !== 'done' && c !== (prevCls[k] || '') ? ' pulse' : '';
+      return `<div class="slot"><span class="mark">${m}</span><span class="box ${c}${pulse}">${esc(v)}</span><span class="sub">${esc(subs[k])}</span></div>`;
+    }).join('');
+  }
+
+  function render(i, animate = true) {
+    const s = snaps[i], p = snaps[i - 1];
+    const forward = animate && p && i === cur + 1;
+    slots($('arr'), input.nums, input.nums.map((_, k) => k), s.marks, s.cls, forward ? p.cls : {}, forward);
+    if (algo.id === 'sort') {
+      const sorted = s.sorted || [];
+      slots($('sorted'), sorted.map(x => x[0]), sorted.map(x => 'idx ' + x[1]), s.sMarks, s.sCls, forward ? p.sCls : {}, forward);
+      if (!sorted.length) $('sorted').innerHTML = '<span class="sub">not built yet</span>';
+    }
+    if (s.map) {
+      const box = $('map');
+      const chips = s.map.map(([k, v]) => {
+        const c = ['chip'];
+        if (k === s.mapHit) c.push('hit');
+        if (k === s.mapNew && forward) c.push('new');
+        else if (k === s.mapNew || k === s.mapUpd) c.push('upd');
+        return `<span class="${c.join(' ')}">${k}<span class="arrow">→</span>${v}</span>`;
+      });
+      if (s.mapMiss !== null) chips.push(`<span class="chip miss">${s.mapMiss}?<span class="arrow">not found</span></span>`);
+      box.innerHTML = chips.length ? chips.join('') : '<span class="empty">empty</span>';
+    }
+
+    $('s-comp').textContent = s.comps;
+    $('s-mem').textContent = s.mem;
+    $('s-aux').textContent = s.aux;
+    $('s-ans').textContent = s.answer ? `[${s.answer.join(', ')}]` : '–';
+    $('explain').textContent = s.text;
+
+    const hl = new Set(s.lines);
+    [...$('code').children].forEach((ln, n) => {
+      ln.classList.toggle('hl', hl.has(n));
+      ln.classList.toggle('dim', hl.size > 0 && !hl.has(n));
+    });
+
+    const last = snaps.length - 1;
+    $('counter').textContent = `step ${i + 1} of ${last + 1}`;
+    $('b-back').disabled = i === 0;
+    $('b-next').disabled = i === last;
+    $('b-end').disabled = i === last;
+    cur = i;
+  }
+
+  function stop() { clearTimeout(timer); timer = null; $('b-play').textContent = 'Play'; }
+  function tick() {
+    if (cur >= snaps.length - 1) return stop();
+    render(cur + 1);
+    timer = setTimeout(tick, snaps[cur].quick ? 450 : 1000);
+  }
+  function play() {
+    if (timer) return stop();
+    if (cur === snaps.length - 1) render(0, false);
+    $('b-play').textContent = 'Pause';
+    timer = setTimeout(tick, 200);
+  }
+
+  $('b-next').onclick = () => { stop(); if (cur < snaps.length - 1) render(cur + 1); };
+  $('b-back').onclick = () => { stop(); if (cur > 0) render(cur - 1); };
+  $('b-reset').onclick = () => { stop(); render(0, false); };
+  $('b-end').onclick = () => { stop(); render(snaps.length - 1, false); };
+  $('b-play').onclick = play;
+  document.addEventListener('keydown', e => {
+    if (e.target.closest && e.target.closest('input, .seg, form')) return;
+    if (e.key === 'ArrowRight') $('b-next').click();
+    if (e.key === 'ArrowLeft') $('b-back').click();
+  });
+
+  renderPickers(); syncFields();
+  run(); // opens mid-way through the walk-through
+})();
+</script>
+
+</body></html>

@@ -1,0 +1,604 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style>
+<title>BFS &amp; DFS Visualizer · Arman Ajabkhani</title>
+<meta name="description" content="Breadth first and depth first search on a graph and a tree, step by step next to the Java code.">
+<meta property="og:title" content="BFS &amp; DFS Visualizer">
+<meta property="og:description" content="Breadth first and depth first search on a graph and a tree, step by step next to the Java code.">
+<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+<script src="../assets/theme.js"></script>
+<style>
+/* armantik.com bar: links this guide back to the site */
+.aa-labbar { --aa-ink: #16211F; --aa-muted: #4A5855; --aa-line: #DCE3E0; --aa-accent: #0F5C55;
+  max-width: 1160px; margin: 0 auto 14px; padding: 0 0 10px; border-bottom: 1px solid var(--aa-line);
+  display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 6px 18px;
+  font: 500 13px/1.4 "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .aa-labbar { --aa-ink: #E3EAE7; --aa-muted: #A3B1AD; --aa-line: #2B3633; --aa-accent: #5BB8AA; } }
+:root[data-theme="dark"] .aa-labbar { --aa-ink: #E3EAE7; --aa-muted: #A3B1AD; --aa-line: #2B3633; --aa-accent: #5BB8AA; }
+.aa-labbar a { color: var(--aa-muted); text-decoration: none; display: inline-flex; align-items: center; gap: 8px; min-height: 32px; }
+.aa-labbar a:hover { color: var(--aa-accent); }
+.aa-labbar .aa-home { color: var(--aa-ink); font-weight: 600; }
+.aa-labbar.aa-pad { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-top: 12px; }
+.aa-right { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 6px 16px; }
+.aa-labbar .aa-crumb { color: var(--aa-muted); }
+.aa-labbar button { display: inline-flex; align-items: center; gap: 6px; min-height: 32px; padding: 0 10px; border: 1px solid var(--aa-line); border-radius: 999px;
+  background: transparent; color: var(--aa-muted); font: inherit; cursor: pointer; }
+.aa-labbar button:hover { color: var(--aa-accent); border-color: var(--aa-accent); }
+.aa-prob { max-width: 1160px; margin: -4px auto 16px; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px;
+  font: 500 13px/1.5 "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace; color: var(--aa-muted, #4A5855); }
+.aa-prob { --aa-muted: #4A5855; --aa-accent: #0F5C55; --aa-line: #DCE3E0; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .aa-prob { --aa-muted: #A3B1AD; --aa-accent: #5BB8AA; --aa-line: #2B3633; } }
+:root[data-theme="dark"] .aa-prob { --aa-muted: #A3B1AD; --aa-accent: #5BB8AA; --aa-line: #2B3633; }
+.aa-prob b { font-weight: 600; color: var(--aa-accent); text-transform: uppercase; letter-spacing: .06em; font-size: 11.5px; }
+.aa-prob a { color: var(--aa-accent); }
+.aa-prob span.aa-own { color: var(--aa-muted); }
+</style>
+</head>
+<body>
+<nav class="aa-labbar" aria-label="armantik.com"><a class="aa-home" href="../index.html"><svg viewBox="0 0 64 64" width="20" height="20" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#0F5C55"/><path d="M18 49 L32 15 L46 49 M23.5 37 H40.5" fill="none" stroke="#FAFBF9" stroke-width="6.5" stroke-linecap="square"/></svg>Arman Ajabkhani</a><span class="aa-right"><a class="aa-crumb" href="index.html#algorithms">Lab / Algorithms</a><a href="index.html">← All Lab guides</a><button type="button" data-theme-toggle aria-label="Switch theme">Theme</button></span></nav>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap">
+<style>
+  /* Layout: header, two selectors, then graph + queue/stack + visit order on the left, Java source on the right */
+  :root {
+    --bg: #f3f6f5;
+    --surface: #ffffff;
+    --ink: #17201c;
+    --muted: #5b6862;
+    --line: #d6ddd9;
+    --line-strong: #9fada6;
+    --accent: #2457d6;
+    --accent-soft: #e3eafc;
+    --wait: #a86a12;
+    --wait-soft: #fbf0dc;
+    --done: #1d8455;
+    --done-soft: #ddf2e6;
+    --code-bg: #eef2f0;
+    --display: "Bricolage Grotesque", "Avenir Next", system-ui, sans-serif;
+    --body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+    --mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #101513; --surface: #182019; --ink: #e6ece9; --muted: #95a39c;
+      --line: #2b3631; --line-strong: #52625a; --accent: #84a5ff; --accent-soft: #1d2a4d;
+      --wait: #e7b24f; --wait-soft: #3a2c12; --done: #52c98f; --done-soft: #15362a;
+      --code-bg: #141b17; color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #101513; --surface: #182019; --ink: #e6ece9; --muted: #95a39c;
+    --line: #2b3631; --line-strong: #52625a; --accent: #84a5ff; --accent-soft: #1d2a4d;
+    --wait: #e7b24f; --wait-soft: #3a2c12; --done: #52c98f; --done-soft: #15362a;
+    --code-bg: #141b17; color-scheme: dark;
+  }
+
+  * { box-sizing: border-box; }
+  body { background: var(--bg); color: var(--ink); font: 15px/1.55 var(--body); padding: 28px 20px 48px; }
+  .wrap { max-width: 1080px; margin: 0 auto; display: grid; gap: 20px; }
+
+  header { display: grid; gap: 6px; }
+  h1 { font: 700 clamp(28px, 5vw, 40px)/1.1 var(--display); letter-spacing: -0.02em; margin: 0; text-wrap: balance; }
+  .lede { color: var(--muted); margin: 0; max-width: 64ch; }
+  code { font: 500 0.88em var(--mono); color: var(--ink); }
+
+  .pickers { display: flex; flex-wrap: wrap; gap: 12px 16px; align-items: center; }
+  .seg { display: inline-flex; flex-wrap: wrap; border: 1px solid var(--line-strong); border-radius: 8px; overflow: hidden; }
+  .seg button {
+    appearance: none; border: 0; background: var(--surface); color: var(--muted);
+    font: 600 14px var(--body); padding: 7px 14px; cursor: pointer;
+  }
+  .seg button + button { border-left: 1px solid var(--line-strong); }
+  .seg button[aria-pressed="true"] { background: var(--ink); color: var(--bg); }
+  button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .summary { margin: 0; color: var(--muted); font-size: 14px; max-width: 70ch; }
+
+  .grid { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: 20px; align-items: start; }
+  @media (max-width: 860px) { .grid { grid-template-columns: minmax(0, 1fr); } }
+  .panel { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 18px; min-width: 0; display: grid; gap: 14px; }
+
+  .stage svg { display: block; width: 100%; max-width: 520px; height: auto; margin: 0 auto; }
+  .hint { font-size: 13px; color: var(--muted); text-align: center; margin: -6px 0 0; }
+
+  .edge { stroke: var(--line-strong); stroke-width: 2; transition: stroke 0.3s, stroke-width 0.3s; }
+  .edge.tree { stroke: var(--accent); stroke-width: 4.5; }
+  .edge.check { stroke: var(--wait); stroke-width: 3.5; stroke-dasharray: 7 6; animation: march 0.8s linear infinite; }
+  @keyframes march { to { stroke-dashoffset: -26; } }
+
+  .node .ring { fill: none; stroke: transparent; stroke-width: 2; stroke-dasharray: 4 4; }
+  .node.is-start .ring { stroke: var(--muted); }
+  .node .body { fill: var(--surface); stroke: var(--line-strong); stroke-width: 2.5; transition: fill 0.35s, stroke 0.35s; transform-box: fill-box; transform-origin: center; }
+  .node .lbl { fill: var(--ink); font: 700 17px var(--mono); text-anchor: middle; dominant-baseline: central; transition: fill 0.35s; pointer-events: none; }
+  .node.s-wait .body { fill: var(--wait-soft); stroke: var(--wait); }
+  .node.s-current .body { fill: var(--accent); stroke: var(--accent); }
+  .node.s-current .lbl { fill: var(--surface); }
+  .node.s-done .body { fill: var(--done-soft); stroke: var(--done); }
+  .node.pulse .body { animation: pulse 0.5s ease-out; }
+  @keyframes pulse { 40% { transform: scale(1.18); } }
+  .node .badge { opacity: 0; transition: opacity 0.3s; }
+  .node .badge circle { fill: var(--ink); }
+  .node .badge text { fill: var(--surface); font: 700 11px var(--mono); text-anchor: middle; dominant-baseline: central; }
+  .node.has-badge .badge { opacity: 1; }
+  .clickable .node { cursor: pointer; }
+  .clickable .node:hover .body { stroke-width: 3.5; }
+
+  .strip { display: grid; gap: 6px; }
+  .strip-head { display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; font-size: 12px; color: var(--muted); }
+  .strip-head b { font: 600 12px var(--body); color: var(--ink); letter-spacing: 0.06em; text-transform: uppercase; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; min-height: 38px; align-items: center; padding: 6px; border-radius: 8px; background: var(--code-bg); }
+  .chips .empty { font-size: 13px; color: var(--muted); padding: 0 6px; }
+  .chip {
+    display: inline-grid; place-items: center; min-width: 34px; height: 28px; padding: 0 8px; border-radius: 6px;
+    font: 700 14px var(--mono); background: var(--wait-soft); color: var(--ink); border: 1.5px solid var(--wait);
+  }
+  .chip.top { border-color: var(--accent); }
+  .chip.order { background: var(--done-soft); border-color: var(--done); }
+  .chip.order small { font: 500 10px var(--mono); color: var(--muted); margin-right: 4px; }
+  .chip.new { animation: pop 0.4s ease-out; }
+  @keyframes pop { from { transform: translateY(-8px); opacity: 0; } }
+
+  .explain { margin: 0; min-height: 3.1em; max-width: 62ch; }
+  .controls { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .btn {
+    appearance: none; font: 600 14px var(--body); padding: 8px 14px; border-radius: 8px; cursor: pointer;
+    border: 1px solid var(--line-strong); background: var(--surface); color: var(--ink);
+  }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: var(--surface); }
+  .btn:disabled { opacity: 0.4; cursor: default; }
+  .counter { margin-left: auto; font: 500 13px var(--mono); color: var(--muted); font-variant-numeric: tabular-nums; }
+
+  .legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 13px; color: var(--muted); }
+  .legend i { display: inline-block; width: 13px; height: 13px; border-radius: 50%; vertical-align: -2px; margin-right: 6px; border: 2px solid; }
+  .legend .l-idle { border-color: var(--line-strong); background: var(--surface); }
+  .legend .l-wait { border-color: var(--wait); background: var(--wait-soft); }
+  .legend .l-cur { border-color: var(--accent); background: var(--accent); }
+  .legend .l-done { border-color: var(--done); background: var(--done-soft); }
+  .legend .l-edge { width: 18px; height: 0; border-radius: 0; border: 0; border-top: 4px solid var(--accent); vertical-align: 3px; }
+
+  .code-head { display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+  .code-head h3 { margin: 0; font: 600 14px var(--mono); }
+  .code-head span { font-size: 12px; color: var(--muted); }
+  pre.code { margin: 0; background: var(--code-bg); border-radius: 8px; padding: 10px 0; font: 400 12.5px/1.6 var(--mono); overflow-x: auto; }
+  pre.code .ln { display: block; padding: 0 14px; white-space: pre; border-left: 3px solid transparent; transition: background 0.25s; }
+  pre.code .ln.hl { background: var(--accent-soft); border-left-color: var(--accent); }
+  pre.code .ln.dim { color: var(--muted); }
+
+  .compare { font-size: 14px; color: var(--muted); margin: 0; }
+  .compare b { color: var(--ink); }
+
+  @media (prefers-reduced-motion: reduce) {
+    .edge, .node .body, .node .lbl, .node .badge, pre.code .ln { transition: none !important; }
+    .edge.check, .node.pulse .body, .chip.new { animation: none !important; }
+  }
+  @media (max-width: 480px) {
+    body { padding: 20px 16px 40px; }
+    .panel { padding: 14px; }
+    .counter { margin-left: 0; width: 100%; }
+  }
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>BFS &amp; DFS Visualizer</h1>
+    <p class="lede">The same graph and tree as <code>Graph.java</code> and <code>BinarySearchTree.java</code>, one step at a time. Watch the queue or stack: it is the only real difference between the two searches.</p>
+  </header>
+
+  <div class="pickers">
+    <div class="seg" role="group" aria-label="Structure">
+      <button id="m-graph" aria-pressed="true">Graph</button>
+      <button id="m-tree" aria-pressed="false">Tree</button>
+    </div>
+    <div class="seg" role="group" aria-label="Algorithm" id="algos"></div>
+  </div>
+  <p class="summary" id="summary"></p>
+
+  <div class="grid">
+    <div class="panel">
+      <div class="stage" id="stage"></div>
+      <p class="hint" id="hint"></p>
+
+      <div class="strip">
+        <div class="strip-head"><b id="cont-name">Queue</b><span id="cont-dir"></span></div>
+        <div class="chips" id="cont"></div>
+      </div>
+      <div class="strip">
+        <div class="strip-head"><b>Visit order</b><span>what the method returns</span></div>
+        <div class="chips" id="order"></div>
+      </div>
+
+      <p class="explain" id="explain" aria-live="polite"></p>
+
+      <div class="controls">
+        <button class="btn" id="b-reset">Reset</button>
+        <button class="btn" id="b-back">Back</button>
+        <button class="btn primary" id="b-next">Next</button>
+        <button class="btn" id="b-play">Play</button>
+        <span class="counter" id="counter"></span>
+      </div>
+
+      <div class="legend">
+        <span><i class="l-idle"></i>not seen</span>
+        <span><i class="l-wait"></i><span id="wait-label">in queue</span></span>
+        <span><i class="l-cur"></i>current</span>
+        <span><i class="l-done"></i>finished</span>
+        <span><i class="l-edge"></i>edge used to reach a vertex</span>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="code-head"><h3 id="code-title"></h3><span>lines that run are highlighted</span></div>
+      <pre class="code" id="code"></pre>
+      <p class="compare" id="compare"></p>
+    </div>
+  </div>
+</div>
+
+<script>
+(() => {
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const ek = (a, b) => a < b ? `${a}-${b}` : `${b}-${a}`;
+
+  /* ---------- the two structures (same as the Java demos) ---------- */
+  const GRAPH = {
+    view: '0 0 480 270',
+    pos: { 1: [70, 60], 2: [240, 60], 5: [410, 60], 3: [70, 210], 4: [240, 210], 6: [410, 210] },
+    edges: [[1, 2], [1, 3], [2, 4], [2, 5], [3, 4], [4, 6]]
+  };
+  GRAPH.adj = {};
+  for (const [a, b] of GRAPH.edges) { (GRAPH.adj[a] ||= []).push(b); (GRAPH.adj[b] ||= []).push(a); }
+
+  const TREE = {
+    view: '0 0 480 250',
+    pos: { 50: [240, 40], 30: [130, 120], 70: [350, 120], 20: [75, 205], 40: [185, 205], 60: [295, 205], 80: [405, 205] },
+    kids: { 50: [30, 70], 30: [20, 40], 70: [60, 80] },
+    root: 50
+  };
+  TREE.edges = Object.entries(TREE.kids).flatMap(([p, ks]) => ks.map(k => [Number(p), k]));
+
+  /* ---------- recorder: collects one snapshot per step ---------- */
+  function recorder(ids) {
+    const r = { st: Object.fromEntries(ids.map(i => [i, 'idle'])), edges: new Set(), checking: null, cont: [], order: [], snaps: [] };
+    r.snap = (text, lines) => r.snaps.push({
+      st: { ...r.st }, edges: new Set(r.edges), checking: r.checking,
+      cont: r.cont.map(x => typeof x === 'object' ? x.v : x), order: [...r.order], text, lines
+    });
+    return r;
+  }
+
+  /* ---------- graph algorithms, mirroring Graph.java ---------- */
+  function graphBfs(start) {
+    const adj = GRAPH.adj, r = recorder(Object.keys(GRAPH.pos).map(Number)), visited = new Set([start]);
+    r.cont.push(start); r.st[start] = 'wait';
+    r.snap(`Mark ${start} as visited and put it in the queue.`, [5, 6]);
+    let prev = null;
+    while (r.cont.length) {
+      const v = r.cont.shift();
+      if (prev !== null) r.st[prev] = 'done';
+      r.st[v] = 'current'; r.order.push(v); r.checking = null;
+      r.snap(`Take ${v} from the front of the queue and add it to the order.`, [7, 8, 9]);
+      for (const n of adj[v]) {
+        r.checking = ek(v, n);
+        if (!visited.has(n)) {
+          visited.add(n); r.cont.push(n); r.st[n] = 'wait'; r.edges.add(ek(v, n));
+          r.snap(`Neighbour ${n} is new: mark it visited and add it to the back of the queue.`, [10, 11, 12]);
+        } else {
+          r.snap(`Neighbour ${n} is already visited, so skip it.`, [10, 11]);
+        }
+      }
+      r.checking = null; prev = v;
+    }
+    r.st[prev] = 'done';
+    r.snap(`The queue is empty. Vertices came out in order of distance from ${start}.`, [16]);
+    return r.snaps;
+  }
+
+  function graphDfs(start) {
+    const adj = GRAPH.adj, r = recorder(Object.keys(GRAPH.pos).map(Number)), visited = new Set();
+    r.snap(`Start the recursion with dfs(${start}).`, [0, 1, 2]);
+    const go = (v, parent) => {
+      if (r.cont.length) r.st[r.cont.at(-1)] = 'wait';
+      r.cont.push(v); visited.add(v); r.order.push(v); r.st[v] = 'current'; r.checking = null;
+      if (parent !== null) r.edges.add(ek(parent, v));
+      r.snap(`Call dfs(${v}): mark it visited and add it to the order.`, [6, 7, 8]);
+      for (const n of adj[v]) {
+        r.checking = ek(v, n);
+        if (visited.has(n)) {
+          r.snap(`Neighbour ${n} is already visited, so skip it.`, [9, 10]);
+        } else {
+          r.snap(`Neighbour ${n} is not visited yet, so go deeper into it right away.`, [9, 10, 11]);
+          go(n, v);
+        }
+      }
+      r.checking = null; r.cont.pop(); r.st[v] = 'done';
+      if (r.cont.length) r.st[r.cont.at(-1)] = 'current';
+      r.snap(parent !== null
+        ? `Every neighbour of ${v} is handled. Return to dfs(${parent}) and continue its loop.`
+        : `Every neighbour of ${v} is handled. The first call returns.`, [13, 14]);
+    };
+    go(start, null);
+    r.snap(`Done. DFS went as deep as it could before backing up.`, [3]);
+    return r.snaps;
+  }
+
+  function graphDfsStack(start) {
+    const adj = GRAPH.adj, r = recorder(Object.keys(GRAPH.pos).map(Number)), visited = new Set();
+    r.cont.push({ v: start, from: null }); r.st[start] = 'wait';
+    r.snap(`Push ${start} onto the stack.`, [5]);
+    let prev = null;
+    while (r.cont.length) {
+      const { v, from } = r.cont.pop();
+      if (prev !== null && r.st[prev] === 'current') r.st[prev] = 'done';
+      r.checking = from !== null ? ek(from, v) : null;
+      if (visited.has(v)) {
+        r.snap(`Pop ${v} from the top. It was already visited by another path, so skip it.`, [6, 7, 8, 9]);
+        continue;
+      }
+      visited.add(v); r.st[v] = 'current'; r.order.push(v);
+      if (from !== null) r.edges.add(ek(from, v));
+      r.snap(`Pop ${v} from the top, mark it visited and add it to the order.`, [6, 7, 8, 11]);
+      const ns = adj[v];
+      for (let i = ns.length - 1; i >= 0; i--) {
+        r.cont.push({ v: ns[i], from: v });
+        if (!visited.has(ns[i])) r.st[ns[i]] = 'wait';
+      }
+      r.checking = null;
+      r.snap(`Push its neighbours ${ns.join(', ')} in reverse, so ${ns[0]} ends up on top and is popped next.`, [12, 13, 14]);
+      prev = v;
+    }
+    if (prev !== null) r.st[prev] = 'done';
+    r.checking = null;
+    r.snap(`The stack is empty. Same order as the recursive version.`, [17]);
+    return r.snaps;
+  }
+
+  /* ---------- tree algorithms, mirroring BinarySearchTree.java ---------- */
+  function treeLevel() {
+    const r = recorder(Object.keys(TREE.pos).map(Number));
+    r.cont.push(TREE.root); r.st[TREE.root] = 'wait';
+    r.snap(`Put the root ${TREE.root} in the queue.`, [3]);
+    let prev = null;
+    while (r.cont.length) {
+      const v = r.cont.shift();
+      if (prev !== null) r.st[prev] = 'done';
+      r.st[v] = 'current'; r.order.push(v);
+      const kids = TREE.kids[v] || [];
+      if (kids.length) {
+        r.snap(`Take ${v} from the front of the queue and add it to the result.`, [4, 5, 6]);
+        kids.forEach(k => { r.cont.push(k); r.st[k] = 'wait'; r.edges.add(ek(v, k)); });
+        r.snap(`Add its children ${kids.join(' and ')} to the back of the queue.`, [7, 8]);
+      } else {
+        r.snap(`Take ${v} from the front and add it to the result. It is a leaf, so nothing is added.`, [4, 5, 6, 7, 8]);
+      }
+      prev = v;
+    }
+    r.st[prev] = 'done';
+    r.snap(`The queue is empty. The tree was read level by level, top to bottom.`, [10]);
+    return r.snaps;
+  }
+
+  const TREE_DFS = {
+    pre:  { name: 'preOrder',  steps: ['visit', 'left', 'right'], add: 2, left: 3, right: 4 },
+    in:   { name: 'inOrder',   steps: ['left', 'visit', 'right'], add: 3, left: 2, right: 4 },
+    post: { name: 'postOrder', steps: ['left', 'right', 'visit'], add: 4, left: 2, right: 3 }
+  };
+  function treeDfs(kind) {
+    const k = TREE_DFS[kind], r = recorder(Object.keys(TREE.pos).map(Number));
+    const go = (v, parent, callLine, side) => {
+      if (r.cont.length) r.st[r.cont.at(-1)] = 'wait';
+      r.cont.push(v); r.st[v] = 'current';
+      if (parent !== null) r.edges.add(ek(parent, v));
+      r.snap(parent === null ? `Call ${k.name}(${v}) on the root.` : `Go ${side}: call ${k.name}(${v}).`,
+        callLine === null ? [0, 1] : [callLine, 0, 1]);
+      const [l, rt] = TREE.kids[v] || [];
+      for (const step of k.steps) {
+        if (step === 'visit') {
+          r.order.push(v);
+          r.snap(`Add ${v} to the result.`, [k.add]);
+        } else if (step === 'left' && l !== undefined) {
+          go(l, v, k.left, 'left');
+        } else if (step === 'right' && rt !== undefined) {
+          go(rt, v, k.right, 'right');
+        }
+      }
+      r.cont.pop(); r.st[v] = 'done';
+      if (r.cont.length) r.st[r.cont.at(-1)] = 'current';
+      r.snap(parent !== null ? `${v} is finished. Return to ${parent}.` : `${v} is finished. The traversal is complete.`, [5]);
+    };
+    go(TREE.root, null, null, null);
+    return r.snaps;
+  }
+
+  /* ---------- Java source per algorithm ---------- */
+  const CODE = {
+    bfs: ['public List<Integer> bfs(int start) {', '    List<Integer> order = new ArrayList<>();', '    Set<Integer> visited = new HashSet<>();', '    Queue<Integer> queue = new ArrayDeque<>();', '', '    visited.add(start);', '    queue.add(start);', '    while (!queue.isEmpty()) {', '        int vertex = queue.poll();', '        order.add(vertex);', '        for (int next : neighbours(vertex)) {', '            if (visited.add(next)) {', '                queue.add(next);', '            }', '        }', '    }', '    return order;', '}'],
+    dfs: ['public List<Integer> dfs(int start) {', '    List<Integer> order = new ArrayList<>();', '    dfs(start, new HashSet<>(), order);', '    return order;', '}', '', 'private void dfs(int vertex, Set<Integer> visited, List<Integer> order) {', '    visited.add(vertex);', '    order.add(vertex);', '    for (int next : neighbours(vertex)) {', '        if (!visited.contains(next)) {', '            dfs(next, visited, order);', '        }', '    }', '}'],
+    dfsi: ['public List<Integer> dfsIterative(int start) {', '    List<Integer> order = new ArrayList<>();', '    Set<Integer> visited = new HashSet<>();', '    Deque<Integer> stack = new ArrayDeque<>();', '', '    stack.push(start);', '    while (!stack.isEmpty()) {', '        int vertex = stack.pop();', '        if (!visited.add(vertex)) {', '            continue;', '        }', '        order.add(vertex);', '        List<Integer> next = neighbours(vertex);', '        for (int i = next.size() - 1; i >= 0; i--) {', '            stack.push(next.get(i));', '        }', '    }', '    return order;', '}'],
+    level: ['public List<Integer> levelOrder() {', '    List<Integer> result = new ArrayList<>();', '    Queue<Node> queue = new ArrayDeque<>();', '    queue.add(root);', '    while (!queue.isEmpty()) {', '        Node node = queue.poll();', '        result.add(node.value);', '        if (node.left != null) queue.add(node.left);', '        if (node.right != null) queue.add(node.right);', '    }', '    return result;', '}'],
+    pre: ['private void preOrder(Node node, List<Integer> result) {', '    if (node == null) return;', '    result.add(node.value);', '    preOrder(node.left, result);', '    preOrder(node.right, result);', '}'],
+    in: ['private void inOrder(Node node, List<Integer> result) {', '    if (node == null) return;', '    inOrder(node.left, result);', '    result.add(node.value);', '    inOrder(node.right, result);', '}'],
+    post: ['private void postOrder(Node node, List<Integer> result) {', '    if (node == null) return;', '    postOrder(node.left, result);', '    postOrder(node.right, result);', '    result.add(node.value);', '}']
+  };
+
+  const ALGOS = {
+    graph: [
+      { id: 'bfs', label: 'BFS', title: 'Graph.bfs', cont: 'Queue', dir: 'front → back', wait: 'in queue',
+        summary: 'Breadth-first: visits vertices in order of distance from the start, using a queue (first in, first out).',
+        run: s => graphBfs(s) },
+      { id: 'dfs', label: 'DFS · recursive', title: 'Graph.dfs', cont: 'Call stack', dir: 'bottom → top', wait: 'waiting on call stack',
+        summary: 'Depth-first: follows one path as deep as it goes, then backs up. Java’s call stack does the remembering.',
+        run: s => graphDfs(s) },
+      { id: 'dfsi', label: 'DFS · stack', title: 'Graph.dfsIterative', cont: 'Stack', dir: 'bottom → top', wait: 'on stack',
+        summary: 'Depth-first with an explicit stack (last in, first out). Same loop as BFS with the queue swapped for a stack.',
+        run: s => graphDfsStack(s) }
+    ],
+    tree: [
+      { id: 'level', label: 'Level order', title: 'BinarySearchTree.levelOrder', cont: 'Queue', dir: 'front → back', wait: 'in queue',
+        summary: 'BFS on a tree: reads it level by level. A tree has no cycles, so no visited set is needed.', run: () => treeLevel() },
+      { id: 'pre', label: 'Pre-order', title: 'BinarySearchTree.preOrder', cont: 'Call stack', dir: 'bottom → top', wait: 'waiting on call stack',
+        summary: 'DFS: node, then left, then right. The node is added on the way down.', run: () => treeDfs('pre') },
+      { id: 'in', label: 'In-order', title: 'BinarySearchTree.inOrder', cont: 'Call stack', dir: 'bottom → top', wait: 'waiting on call stack',
+        summary: 'DFS: left, then node, then right. On a binary search tree this gives the values sorted.', run: () => treeDfs('in') },
+      { id: 'post', label: 'Post-order', title: 'BinarySearchTree.postOrder', cont: 'Call stack', dir: 'bottom → top', wait: 'waiting on call stack',
+        summary: 'DFS: left, then right, then node. The node is added on the way back up.', run: () => treeDfs('post') }
+    ]
+  };
+
+  /* ---------- state ---------- */
+  const $ = id => document.getElementById(id);
+  let mode = 'graph', algo = ALGOS.graph[0], start = 1, snaps = [], cur = 0, timer = null;
+  let nodeEls = {}, edgeEls = {};
+
+  function buildSvg() {
+    const S = mode === 'graph' ? GRAPH : TREE;
+    const NS = 'http://www.w3.org/2000/svg';
+    const svg = document.createElementNS(NS, 'svg');
+    svg.setAttribute('viewBox', S.view);
+    svg.setAttribute('role', 'img');
+    svg.setAttribute('aria-label', mode === 'graph'
+      ? 'Graph with vertices 1 to 6. Edges: 1-2, 1-3, 2-4, 2-5, 3-4, 4-6.'
+      : 'Binary search tree: 50 at the root, children 30 and 70, leaves 20, 40, 60, 80.');
+    if (mode === 'graph') svg.classList.add('clickable');
+    nodeEls = {}; edgeEls = {};
+    for (const [a, b] of S.edges) {
+      const [x1, y1] = S.pos[a], [x2, y2] = S.pos[b];
+      const l = document.createElementNS(NS, 'line');
+      Object.entries({ x1, y1, x2, y2 }).forEach(([k, v]) => l.setAttribute(k, v));
+      l.setAttribute('class', 'edge');
+      svg.append(l);
+      edgeEls[ek(a, b)] = l;
+    }
+    for (const [id, [x, y]] of Object.entries(S.pos)) {
+      const g = document.createElementNS(NS, 'g');
+      g.setAttribute('class', 'node');
+      g.innerHTML = `<circle class="ring" cx="${x}" cy="${y}" r="32"/>
+        <circle class="body" cx="${x}" cy="${y}" r="25"/>
+        <text class="lbl" x="${x}" y="${y}">${id}</text>
+        <g class="badge"><circle cx="${x + 22}" cy="${y - 22}" r="10"/><text x="${x + 22}" y="${y - 22}"></text></g>`;
+      if (mode === 'graph') {
+        g.setAttribute('tabindex', '0');
+        g.setAttribute('aria-label', `Start from vertex ${id}`);
+        g.addEventListener('click', () => setStart(Number(id)));
+        g.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setStart(Number(id)); } });
+      }
+      svg.append(g);
+      nodeEls[id] = g;
+    }
+    $('stage').replaceChildren(svg);
+    $('hint').textContent = mode === 'graph' ? 'Click a vertex to start the search from there.' : 'Tree traversals always start at the root.';
+  }
+
+  function renderAlgoButtons() {
+    const box = $('algos');
+    box.innerHTML = '';
+    for (const a of ALGOS[mode]) {
+      const b = document.createElement('button');
+      b.textContent = a.label;
+      b.setAttribute('aria-pressed', a === algo);
+      b.onclick = () => { algo = a; renderAlgoButtons(); run(0); };
+      box.append(b);
+    }
+  }
+
+  function run(at) {
+    stop();
+    snaps = algo.run(start);
+    $('code').innerHTML = CODE[algo.id].map(l => `<span class="ln">${l.replace(/&/g, '&amp;').replace(/</g, '&lt;') || ' '}</span>`).join('');
+    $('code-title').textContent = algo.title;
+    $('summary').textContent = algo.summary;
+    $('cont-name').textContent = algo.cont;
+    $('cont-dir').textContent = algo.dir;
+    $('wait-label').textContent = algo.wait;
+    const final = snaps.at(-1).order;
+    $('compare').innerHTML = `Final order: <b>[${final.join(', ')}]</b>`;
+    Object.values(nodeEls).forEach(g => g.classList.remove('is-start'));
+    if (mode === 'graph') nodeEls[start].classList.add('is-start');
+    cur = -1;
+    render(Math.min(at, snaps.length - 1), false);
+  }
+
+  function chips(el, items, cls, markNew, topEnd) {
+    if (!items.length) { el.innerHTML = '<span class="empty">empty</span>'; return; }
+    el.innerHTML = items.map((v, i) => {
+      const classes = ['chip', cls];
+      if (markNew && i === items.length - 1) classes.push('new');
+      if (topEnd && i === items.length - 1) classes.push('top');
+      const prefix = cls === 'order' ? `<small>${i + 1}</small>` : '';
+      return `<span class="${classes.join(' ')}">${prefix}${v}</span>`;
+    }).join('');
+  }
+
+  function render(i, animate = true) {
+    const s = snaps[i], p = snaps[i - 1];
+    const forward = animate && i === cur + 1 && p;
+    for (const [id, g] of Object.entries(nodeEls)) {
+      const was = g.dataset.s;
+      const now = s.st[id];
+      g.classList.remove('s-idle', 's-wait', 's-current', 's-done', 'pulse');
+      g.classList.add('s-' + now);
+      if (now === 'current' && was !== 'current' && animate && !reduced) {
+        g.getBBox(); g.classList.add('pulse');
+      }
+      g.dataset.s = now;
+      const idx = s.order.indexOf(Number(id));
+      g.classList.toggle('has-badge', idx >= 0);
+      g.querySelector('.badge text').textContent = idx >= 0 ? idx + 1 : '';
+    }
+    for (const [key, l] of Object.entries(edgeEls)) {
+      l.classList.toggle('tree', s.edges.has(key));
+      l.classList.toggle('check', s.checking === key);
+    }
+    const isStack = algo.cont !== 'Queue';
+    chips($('cont'), s.cont, 'wait', forward && s.cont.length > p.cont.length, isStack);
+    chips($('order'), s.order, 'order', forward && s.order.length > p.order.length, false);
+    $('explain').textContent = s.text;
+
+    const hl = new Set(s.lines);
+    [...$('code').children].forEach((ln, n) => {
+      ln.classList.toggle('hl', hl.has(n));
+      ln.classList.toggle('dim', hl.size > 0 && !hl.has(n));
+    });
+    const last = snaps.length - 1;
+    $('counter').textContent = `step ${i + 1} of ${last + 1}`;
+    $('b-back').disabled = i === 0;
+    $('b-next').disabled = i === last;
+    cur = i;
+    if (i === last) stop();
+  }
+
+  function stop() { clearInterval(timer); timer = null; $('b-play').textContent = 'Play'; }
+  function play() {
+    if (timer) return stop();
+    if (cur === snaps.length - 1) render(0, false);
+    $('b-play').textContent = 'Pause';
+    timer = setInterval(() => render(cur + 1), 1300);
+  }
+  function setStart(id) { start = id; run(0); }
+  function setMode(m) {
+    mode = m; algo = ALGOS[m][0]; start = m === 'graph' ? 1 : TREE.root;
+    $('m-graph').setAttribute('aria-pressed', m === 'graph');
+    $('m-tree').setAttribute('aria-pressed', m === 'tree');
+    buildSvg(); renderAlgoButtons(); run(0);
+  }
+
+  $('b-next').onclick = () => { stop(); if (cur < snaps.length - 1) render(cur + 1); };
+  $('b-back').onclick = () => { stop(); if (cur > 0) render(cur - 1); };
+  $('b-reset').onclick = () => { stop(); render(0, false); };
+  $('b-play').onclick = play;
+  $('m-graph').onclick = () => setMode('graph');
+  $('m-tree').onclick = () => setMode('tree');
+  document.addEventListener('keydown', e => {
+    if (e.target.closest && e.target.closest('.node')) return;
+    if (e.key === 'ArrowRight') $('b-next').click();
+    if (e.key === 'ArrowLeft') $('b-back').click();
+  });
+
+  // open on a step that already shows the queue at work
+  mode = 'graph'; buildSvg(); renderAlgoButtons(); run(5);
+})();
+</script>
+
+</body></html>

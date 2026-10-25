@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Learning Lab · Arman Ajabkhani</title>
+<meta name="description" content="Interactive guides on system design, algorithms and Java by Arman Ajabkhani. Step through real code and watch the data structures change.">
+<meta property="og:title" content="The Learning Lab">
+<meta property="og:description" content="Interactive guides on system design, algorithms and Java.">
+<meta property="og:url" content="https://armantik.com/lab/">
+<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+<script src="../assets/theme.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Schibsted+Grotesk:wght@400;500;600;700;800&display=swap">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body data-root="../">
+
+<div class="wrap">
+  <header class="site-head">
+    <a class="wordmark" href="../index.html">
+      <svg viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="14" style="fill:var(--petrol)"/><path d="M18 49 L32 15 L46 49 M23.5 37 H40.5" style="fill:none;stroke:var(--on-petrol)" stroke-width="6.5" stroke-linecap="square"/></svg>
+      Arman Ajabkhani
+    </a>
+    <nav class="site-nav" aria-label="Main">
+      <a href="index.html" aria-current="page">Lab</a>
+      <a href="../index.html#about">About</a>
+      <a href="../index.html#experience">Experience</a>
+      <a href="../writing/index.html" data-show="writing">Writing</a>
+      <a href="../index.html#contact">Contact</a>
+      <button class="theme-btn" type="button" data-theme-toggle aria-label="Switch theme">Theme</button>
+    </nav>
+  </header>
+
+  <header class="page-head">
+    <p class="crumb"><a href="../index.html">armantik.com</a> / lab</p>
+    <h1>The Learning Lab</h1>
+    <p>Interactive guides I use for learning and mentoring. Three tracks: system design, algorithms and Java. Pick a guide, press Next, and watch the data structure change while the matching Java lines light up. Everything runs in the browser and lives on this site.</p>
+    <p class="coords"><a href="#system-design">System design</a><a href="#algorithms">Algorithms</a><a href="#java">Java</a></p>
+  </header>
+
+  <div data-lab="all">
+    <noscript><p>The guide list needs JavaScript. Open a guide directly, for example <a href="system-design-casebook.html">System Design Casebook</a>.</p></noscript>
+  </div>
+
+  <section class="sec" aria-labelledby="new-h">
+    <p class="sec-label">/lab/new-joiners</p>
+    <div class="sec-body prose">
+      <h2 id="new-h">New to the team? Start here</h2>
+      <p>If you're joining a backend team, this order works well: <a href="bfs-dfs.html">BFS and DFS</a> and <a href="java-collections.html">Java Collections</a> for the everyday building blocks, then <a href="lru-lfu-cache.html">LRU and LFU Cache</a> and <a href="rate-limiter.html">Rate Limiter</a> for the patterns you'll meet in production, then the <a href="system-design-casebook.html">System Design Casebook</a> to put it together.</p>
+      <p class="intro">Most guides are built with Claude from my own Java solutions. Spotted a mistake? <a href="../index.html#contact">Tell me</a>.</p>
+    </div>
+  </section>
+
+  <footer class="site-foot">
+    <span>© <span data-year>2026</span> Arman Ajabkhani · <a href="../index.html">armantik.com</a></span>
+    <span class="fa" lang="fa" dir="rtl" data-show="persianName">آرمان عجب‌خانی</span>
+  </footer>
+</div>
+
+<script src="../content.js"></script>
+<script src="../assets/site.js"></script>
+</body>
+</html>

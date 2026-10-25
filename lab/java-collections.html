@@ -1,0 +1,533 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style>
+<title>Java Collections Field Guide · Arman Ajabkhani</title>
+<meta name="description" content="Every Java collection worth knowing: operation costs, the problems each solves, and common pitfalls.">
+<meta property="og:title" content="Java Collections Field Guide">
+<meta property="og:description" content="Every Java collection worth knowing: operation costs, the problems each solves, and common pitfalls.">
+<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+<script src="../assets/theme.js"></script>
+<style>
+/* armantik.com bar: links this guide back to the site */
+.aa-labbar { --aa-ink: #16211F; --aa-muted: #4A5855; --aa-line: #DCE3E0; --aa-accent: #0F5C55;
+  max-width: 1160px; margin: 0 auto 14px; padding: 0 0 10px; border-bottom: 1px solid var(--aa-line);
+  display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 6px 18px;
+  font: 500 13px/1.4 "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .aa-labbar { --aa-ink: #E3EAE7; --aa-muted: #A3B1AD; --aa-line: #2B3633; --aa-accent: #5BB8AA; } }
+:root[data-theme="dark"] .aa-labbar { --aa-ink: #E3EAE7; --aa-muted: #A3B1AD; --aa-line: #2B3633; --aa-accent: #5BB8AA; }
+.aa-labbar a { color: var(--aa-muted); text-decoration: none; display: inline-flex; align-items: center; gap: 8px; min-height: 32px; }
+.aa-labbar a:hover { color: var(--aa-accent); }
+.aa-labbar .aa-home { color: var(--aa-ink); font-weight: 600; }
+.aa-labbar.aa-pad { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-top: 12px; }
+.aa-right { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 6px 16px; }
+.aa-labbar .aa-crumb { color: var(--aa-muted); }
+.aa-labbar button { display: inline-flex; align-items: center; gap: 6px; min-height: 32px; padding: 0 10px; border: 1px solid var(--aa-line); border-radius: 999px;
+  background: transparent; color: var(--aa-muted); font: inherit; cursor: pointer; }
+.aa-labbar button:hover { color: var(--aa-accent); border-color: var(--aa-accent); }
+.aa-prob { max-width: 1160px; margin: -4px auto 16px; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px;
+  font: 500 13px/1.5 "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace; color: var(--aa-muted, #4A5855); }
+.aa-prob { --aa-muted: #4A5855; --aa-accent: #0F5C55; --aa-line: #DCE3E0; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .aa-prob { --aa-muted: #A3B1AD; --aa-accent: #5BB8AA; --aa-line: #2B3633; } }
+:root[data-theme="dark"] .aa-prob { --aa-muted: #A3B1AD; --aa-accent: #5BB8AA; --aa-line: #2B3633; }
+.aa-prob b { font-weight: 600; color: var(--aa-accent); text-transform: uppercase; letter-spacing: .06em; font-size: 11.5px; }
+.aa-prob a { color: var(--aa-accent); }
+.aa-prob span.aa-own { color: var(--aa-muted); }
+</style>
+</head>
+<body>
+<nav class="aa-labbar" aria-label="armantik.com"><a class="aa-home" href="../index.html"><svg viewBox="0 0 64 64" width="20" height="20" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#0F5C55"/><path d="M18 49 L32 15 L46 49 M23.5 37 H40.5" fill="none" stroke="#FAFBF9" stroke-width="6.5" stroke-linecap="square"/></svg>Arman Ajabkhani</a><span class="aa-right"><a class="aa-crumb" href="index.html#java">Lab / Java</a><a href="index.html">← All Lab guides</a><button type="button" data-theme-toggle aria-label="Switch theme">Theme</button></span></nav>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap">
+<style>
+  /* Layout: header, "I need to…" picker, family map, filter bar, collection cards grid, complexity table, pitfalls */
+  :root {
+    --bg: #f3f5f7;
+    --surface: #ffffff;
+    --ink: #171c24;
+    --muted: #5a6474;
+    --line: #d8dde5;
+    --line-strong: #a0aab8;
+    --accent: #2457d6;
+    --accent-soft: #e3eafc;
+    --code-bg: #eff2f6;
+    --fast: #1d8455; --fast-soft: #ddf2e6;
+    --mid: #a86a12;  --mid-soft: #fbf0dc;
+    --slow: #c23d2b; --slow-soft: #fbe6e2;
+    --f-list: #2f6fd0; --f-queue: #0f8a7e; --f-set: #8a4fd0; --f-map: #c0602a; --f-conc: #b8366e; --f-special: #5f6b2a;
+    --display: "Bricolage Grotesque", "Avenir Next", system-ui, sans-serif;
+    --body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+    --mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0f1217; --surface: #171c24; --ink: #e6eaf0; --muted: #98a2b2;
+      --line: #2a313c; --line-strong: #4f5a6a; --accent: #84a5ff; --accent-soft: #1d2a4d; --code-bg: #12161c;
+      --fast: #52c98f; --fast-soft: #15362a; --mid: #e7b24f; --mid-soft: #3a2c12; --slow: #ff7d69; --slow-soft: #3d1f1a;
+      --f-list: #7ea6ff; --f-queue: #4fd1c1; --f-set: #c39bff; --f-map: #ff9f68; --f-conc: #ff7fb0; --f-special: #c5d36b;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0f1217; --surface: #171c24; --ink: #e6eaf0; --muted: #98a2b2;
+    --line: #2a313c; --line-strong: #4f5a6a; --accent: #84a5ff; --accent-soft: #1d2a4d; --code-bg: #12161c;
+    --fast: #52c98f; --fast-soft: #15362a; --mid: #e7b24f; --mid-soft: #3a2c12; --slow: #ff7d69; --slow-soft: #3d1f1a;
+    --f-list: #7ea6ff; --f-queue: #4fd1c1; --f-set: #c39bff; --f-map: #ff9f68; --f-conc: #ff7fb0; --f-special: #c5d36b;
+    color-scheme: dark;
+  }
+
+  * { box-sizing: border-box; }
+  body { background: var(--bg); color: var(--ink); font: 15px/1.55 var(--body); padding: 28px 20px 56px; }
+  .wrap { max-width: 1160px; margin: 0 auto; display: grid; gap: 22px; }
+  header { display: grid; gap: 6px; }
+  h1 { font: 700 clamp(30px, 5.4vw, 44px)/1.05 var(--display); letter-spacing: -0.02em; margin: 0; text-wrap: balance; }
+  h2 { font: 700 22px/1.2 var(--display); margin: 0; letter-spacing: -0.01em; }
+  .lede { color: var(--muted); margin: 0; max-width: 72ch; }
+  code { font: 500 0.88em var(--mono); color: var(--ink); }
+  section { display: grid; gap: 12px; }
+  .sub { margin: 0; color: var(--muted); font-size: 14px; max-width: 74ch; }
+
+  .card { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 16px; min-width: 0; }
+
+  /* need picker */
+  .needs { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 8px; }
+  .need {
+    appearance: none; text-align: left; cursor: pointer; display: grid; gap: 3px; padding: 10px 12px;
+    background: var(--surface); border: 1px solid var(--line); border-left: 4px solid var(--fam, var(--line-strong)); border-radius: 8px; color: var(--ink);
+    font: 500 14px/1.35 var(--body);
+  }
+  .need:hover { border-color: var(--fam); }
+  .need b { font: 700 13px var(--mono); color: var(--fam); }
+  .need small { color: var(--muted); font-size: 12.5px; }
+
+  /* family map */
+  .fmap { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; }
+  .fbox { border: 1px solid var(--line); border-radius: 10px; padding: 12px; display: grid; gap: 6px; align-content: start; background: var(--surface); }
+  .fbox h3 { margin: 0; font: 700 15px var(--mono); color: var(--fam); }
+  .fbox p { margin: 0; font-size: 13px; color: var(--muted); }
+  .tree { margin: 0; padding: 0; list-style: none; font: 500 13px/1.7 var(--mono); }
+  .tree ul { margin: 0; padding-left: 16px; list-style: none; border-left: 1px dashed var(--line-strong); }
+  .tree li { padding-left: 6px; }
+  .tree .iface { color: var(--muted); font-style: italic; font-weight: 400; }
+  .tree a { color: var(--ink); text-decoration: none; border-bottom: 1px solid var(--fam); }
+  .tree a:hover { color: var(--fam); }
+
+  /* filter bar */
+  .bar { display: flex; flex-wrap: wrap; gap: 10px 14px; align-items: center; }
+  .bar input { flex: 1 1 260px; min-width: 0; font: 500 14px var(--body); padding: 9px 12px; border-radius: 8px; border: 1px solid var(--line-strong); background: var(--surface); color: var(--ink); }
+  .chipset { display: flex; flex-wrap: wrap; gap: 6px; }
+  .fchip { appearance: none; cursor: pointer; font: 600 13px var(--body); padding: 6px 11px; border-radius: 999px; border: 1.5px solid var(--fam, var(--line-strong)); background: var(--surface); color: var(--fam, var(--ink)); }
+  .fchip[aria-pressed="true"] { background: var(--fam, var(--ink)); color: var(--surface); }
+  button:focus-visible, input:focus-visible, a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .count { font-size: 13px; color: var(--muted); }
+
+  /* collection cards */
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 14px; align-items: start; }
+  @media (max-width: 420px) { .grid { grid-template-columns: minmax(0, 1fr); } }
+  .coll { display: grid; gap: 10px; border-top: 4px solid var(--fam); scroll-margin-top: 16px; transition: box-shadow 0.3s; }
+  .coll.flash { box-shadow: 0 0 0 3px var(--fam); }
+  .coll-head { display: flex; justify-content: space-between; align-items: baseline; gap: 6px 10px; flex-wrap: wrap; }
+  .coll h3 { margin: 0; font: 700 19px var(--mono); letter-spacing: -0.01em; }
+  .fam-tag { font: 600 11.5px var(--body); letter-spacing: 0.05em; text-transform: uppercase; color: var(--fam); }
+  .what { margin: 0; font-size: 14px; }
+  .props { display: flex; flex-wrap: wrap; gap: 5px; }
+  .prop { font: 500 11.5px var(--mono); padding: 2px 7px; border-radius: 5px; background: var(--code-bg); color: var(--muted); }
+  .ops { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 3px 12px; font: 500 12.5px var(--mono); }
+  .ops .op { color: var(--muted); min-width: 0; overflow-wrap: anywhere; }
+  .big { font-weight: 700; padding: 0 6px; border-radius: 4px; white-space: nowrap; justify-self: end; }
+  .big.fast { color: var(--fast); background: var(--fast-soft); }
+  .big.mid { color: var(--mid); background: var(--mid-soft); }
+  .big.slow { color: var(--slow); background: var(--slow-soft); }
+  .label { font: 600 11.5px var(--body); letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+  .uses { margin: 0; padding-left: 18px; font-size: 14px; display: grid; gap: 3px; }
+  .uses b { font-weight: 600; }
+  .probs { display: flex; flex-wrap: wrap; gap: 5px; }
+  .prob { font: 500 12px var(--body); padding: 3px 8px; border-radius: 6px; border: 1px solid var(--line); }
+  .repo { font: 500 12px var(--mono); padding: 3px 8px; border-radius: 6px; background: var(--accent-soft); color: var(--accent); }
+  pre.snip { margin: 0; background: var(--code-bg); border-radius: 8px; padding: 10px 12px; font: 400 12.5px/1.55 var(--mono); overflow-x: auto; white-space: pre; }
+  .pit { margin: 0; font-size: 13.5px; padding: 8px 10px; border-radius: 8px; background: var(--slow-soft); border-left: 3px solid var(--slow); }
+  .pit b { color: var(--slow); }
+  .empty-msg { color: var(--muted); font-size: 14px; }
+
+  /* complexity table */
+  .tscroll { overflow-x: auto; }
+  table { border-collapse: collapse; width: 100%; min-width: 860px; font-size: 13px; }
+  th, td { text-align: left; padding: 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { font: 600 12px var(--body); color: var(--muted); position: sticky; top: 0; background: var(--surface); }
+  td:first-child { font: 700 13px var(--mono); white-space: nowrap; }
+  td:first-child a { color: var(--fam); text-decoration: none; }
+  td .big { font: 600 12px var(--mono); display: inline-block; }
+  .legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 13px; color: var(--muted); }
+  .legend .big { font: 700 12px var(--mono); }
+
+  .tips { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 12px; }
+  .tip { display: grid; gap: 6px; align-content: start; }
+  .tip h3 { margin: 0; font: 700 16px var(--display); }
+  .tip p { margin: 0; font-size: 14px; color: var(--muted); }
+
+  @media (prefers-reduced-motion: reduce) { .coll { transition: none; } }
+  @media (max-width: 480px) { body { padding: 20px 16px 44px; } .card { padding: 13px; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>Java Collections Field Guide</h1>
+    <p class="lede">Every collection worth knowing for interviews and everyday Java: what it costs, which problems it solves, and example classes that use it. Start from what you need to do, or browse by family.</p>
+  </header>
+
+  <section>
+    <h2>I need to…</h2>
+    <p class="sub">Click a need to jump to the collection that fits it.</p>
+    <div class="needs" id="needs"></div>
+  </section>
+
+  <section>
+    <h2>The family map</h2>
+    <p class="sub">Interfaces in <i>italics</i>, the classes you actually create underneath. Program to the interface: <code>List&lt;Integer&gt; a = new ArrayList&lt;&gt;()</code>, <code>Deque&lt;Integer&gt; s = new ArrayDeque&lt;&gt;()</code>. Since Java 21 the ordered ones also share <code>getFirst</code>, <code>getLast</code>, <code>removeFirst</code>, <code>reversed</code> (SequencedCollection) and <code>pollFirstEntry</code> (SequencedMap).</p>
+    <div class="fmap" id="fmap"></div>
+  </section>
+
+  <section>
+    <h2>Collections</h2>
+    <div class="bar">
+      <input id="q" type="search" placeholder="Search a problem or idea: top k, LRU, visited, sliding window…" aria-label="Search collections">
+      <div class="chipset" id="fams" role="group" aria-label="Filter by family"></div>
+      <span class="count" id="count"></span>
+    </div>
+    <div class="grid" id="grid"></div>
+  </section>
+
+  <section>
+    <h2>Complexity at a glance</h2>
+    <div class="legend">
+      <span><span class="big fast">O(1)</span> constant</span>
+      <span><span class="big mid">O(log n)</span> logarithmic</span>
+      <span><span class="big slow">O(n)</span> linear: avoid in a loop</span>
+      <span>* amortised (occasional resize)</span>
+    </div>
+    <div class="card tscroll"><table id="ctable"></table></div>
+  </section>
+
+  <section>
+    <h2>Mistakes that cost interviews</h2>
+    <div class="tips" id="tips"></div>
+  </section>
+</div>
+
+<script>
+(() => {
+  const FAM = {
+    list: { label: 'List', color: 'var(--f-list)' },
+    queue: { label: 'Queue / Deque', color: 'var(--f-queue)' },
+    set: { label: 'Set', color: 'var(--f-set)' },
+    map: { label: 'Map', color: 'var(--f-map)' },
+    conc: { label: 'Concurrent', color: 'var(--f-conc)' },
+    special: { label: 'Arrays & special', color: 'var(--f-special)' }
+  };
+  const tone = c => /log/.test(c) ? 'mid' : /n\)|n log|O\(k|O\(n/.test(c) && !/O\(1/.test(c) ? 'slow' : 'fast';
+
+  const C = [
+    { id: 'arraylist', name: 'ArrayList', fam: 'list', impl: 'List',
+      what: 'A resizable array. Fast by index, cheap to append, slow to insert or remove in the middle.',
+      props: ['ordered by index', 'allows null', 'not thread-safe'],
+      ops: [['get(i) / set(i, x)', 'O(1)'], ['add(x) at the end', 'O(1)*'], ['add(i, x) / remove(i)', 'O(n)'], ['contains(x) / indexOf(x)', 'O(n)'], ['sort()', 'O(n log n)']],
+      uses: ['<b>Result lists</b> you build and return', '<b>Adjacency lists</b> for graphs: <code>List&lt;List&lt;Integer&gt;&gt;</code>', '<b>Dynamic arrays</b>, DP rows, two pointers after sorting', '<b>Backtracking</b> path: add, recurse, remove last'],
+      probs: ['Course Schedule', 'Merge Intervals', 'Subsets / Permutations', 'Pascal’s Triangle'],
+      repo: ['Graph.java', 'CourseScheduleKahn', 'MergeIntervalsSort'],
+      snip: 'List<List<Integer>> adj = new ArrayList<>();\nfor (int i = 0; i < n; i++) adj.add(new ArrayList<>());\nadj.get(b).add(a);            // edge b -> a\n\npath.add(x); dfs(); path.removeLast();   // Java 21',
+      pit: '<b>remove(int) vs remove(Object):</b> on a <code>List&lt;Integer&gt;</code>, <code>list.remove(1)</code> removes index 1, not the value 1. Use <code>list.remove(Integer.valueOf(1))</code>. Also <code>list.remove(0)</code> is O(n); use ArrayDeque for a queue.' },
+
+    { id: 'linkedlist', name: 'LinkedList', fam: 'list', impl: 'List + Deque',
+      what: 'A doubly linked list. O(1) at both ends, but O(n) to reach any position or find a value.',
+      props: ['ordered', 'allows null', 'not thread-safe', 'implements Deque too'],
+      ops: [['addFirst / addLast / removeFirst / removeLast', 'O(1)'], ['get(i)', 'O(n)'], ['remove(Object) / contains', 'O(n)'], ['iterator.remove()', 'O(1)']],
+      uses: ['Rarely the best choice: ArrayDeque is faster for queues and stacks', 'When you need List and Deque behaviour in one object', 'Removing many elements while iterating'],
+      probs: ['Design Browser History (simple version)'],
+      repo: ['LRUCache.java'],
+      snip: 'Deque<Integer> dq = new LinkedList<>();\ndq.addFirst(1); dq.addLast(2);\nint x = dq.removeFirst();',
+      pit: '<b>A common LRU mistake:</b> <code>lruList.remove(node)</code> walks the list, so every get/put is O(n). A HashMap pointing at your own doubly linked nodes, or a LinkedHashMap, makes it O(1).' },
+
+    { id: 'arraydeque', name: 'ArrayDeque', fam: 'queue', impl: 'Deque (Queue + stack)',
+      what: 'A circular array with O(1) add and remove at both ends. The default for any queue or stack.',
+      props: ['FIFO or LIFO', 'no nulls', 'no index access', 'not thread-safe'],
+      ops: [['offer / poll / peek (queue)', 'O(1)*'], ['push / pop / peek (stack)', 'O(1)*'], ['offerFirst / pollLast …', 'O(1)*'], ['contains(x)', 'O(n)']],
+      uses: ['<b>BFS</b>: level order, shortest path in an unweighted graph or grid', '<b>DFS without recursion</b>: explicit stack, no StackOverflowError', '<b>Monotonic stack</b>: next greater element, daily temperatures, largest rectangle', '<b>Monotonic deque</b>: sliding window maximum', '<b>Brackets</b>: valid parentheses, decode string, undo history'],
+      probs: ['Number of Islands', 'Binary Tree Level Order', 'Course Schedule (Kahn)', 'Valid Parentheses', 'Daily Temperatures', 'Sliding Window Maximum', 'Rotting Oranges'],
+      repo: ['NumberOfIslandsBFS', 'NumberOfIslandsDFSStack', 'Graph.bfs / dfsIterative', 'BinarySearchTree.levelOrder', 'CourseScheduleKahn', 'HitCounterQueue', 'LoggerQueue'],
+      snip: 'Queue<int[]> queue = new ArrayDeque<>();   // BFS\nqueue.offer(new int[]{r, c});\nint[] cell = queue.poll();\n\nDeque<Integer> stack = new ArrayDeque<>(); // stack\nstack.push(x); stack.peek(); stack.pop();',
+      pit: '<b>Never use java.util.Stack:</b> it extends the synchronized Vector. Also remember <code>push</code> adds to the front, so iterating a stack-deque goes from the top down.' },
+
+    { id: 'priorityqueue', name: 'PriorityQueue', fam: 'queue', impl: 'Queue (binary heap)',
+      what: 'A binary heap: the smallest element (or largest, with a comparator) is always at the head.',
+      props: ['min-heap by default', 'no nulls', 'iteration NOT sorted', 'not thread-safe'],
+      ops: [['offer(x) / poll()', 'O(log n)'], ['peek()', 'O(1)'], ['remove(x) / contains(x)', 'O(n)'], ['new PriorityQueue<>(collection)', 'O(n)']],
+      uses: ['<b>Top k / kth largest</b>: min-heap of size k', '<b>Merge k sorted lists</b>: heap of the k heads', '<b>Dijkstra</b> and A*: always expand the cheapest node', '<b>Running median</b>: max-heap + min-heap', '<b>Scheduling</b>: meeting rooms II, task scheduler, CPU tasks'],
+      probs: ['Kth Largest Element', 'Top K Frequent', 'Merge k Sorted Lists', 'Find Median from Data Stream', 'Meeting Rooms II', 'Network Delay Time', 'K Closest Points'],
+      repo: ['KthLargestMinHeap'],
+      snip: 'PriorityQueue<Integer> minHeap = new PriorityQueue<>();\nPriorityQueue<Integer> maxHeap = new PriorityQueue<>(Comparator.reverseOrder());\nPriorityQueue<int[]> byDist = new PriorityQueue<>(Comparator.comparingInt(a -> a[1]));\n\nheap.offer(x);\nif (heap.size() > k) heap.poll();   // keep the k largest',
+      pit: '<b>Comparator (a, b) -> a - b can overflow</b> for large or negative ints. Use <code>Integer.compare(a, b)</code> or <code>Comparator.comparingInt</code>. And printing or iterating a heap does not give sorted order; only repeated <code>poll()</code> does.' },
+
+    { id: 'hashset', name: 'HashSet', fam: 'set', impl: 'Set (hash table)',
+      what: 'Unique elements with O(1) average add, remove and contains. No order.',
+      props: ['unordered', 'one null allowed', 'not thread-safe'],
+      ops: [['add / remove / contains', 'O(1)'], ['iteration', 'O(n + capacity)']],
+      uses: ['<b>Visited set</b> in BFS / DFS on graphs', '<b>Deduplicate</b> or check for duplicates', '<b>Existence checks</b>: longest consecutive sequence, happy number, linked list cycle', '<b>Set algebra</b>: <code>retainAll</code> (intersection), <code>addAll</code> (union)'],
+      probs: ['Contains Duplicate', 'Longest Consecutive Sequence', 'Intersection of Two Arrays', 'Clone Graph', 'Word Ladder'],
+      repo: ['Graph.bfs (visited)', 'LoggerQueue (recent)'],
+      snip: 'Set<Integer> visited = new HashSet<>();\nif (!visited.add(next)) continue;   // add() returns false if already there',
+      pit: '<b>Custom objects need equals and hashCode.</b> Use a <code>record</code>, or encode a grid cell as <code>r * cols + c</code>. Never change a field that hashCode uses while the object is inside the set.' },
+
+    { id: 'linkedhashset', name: 'LinkedHashSet', fam: 'set', impl: 'SequencedSet',
+      what: 'A HashSet that remembers insertion order, with O(1) getFirst and removeFirst (Java 21).',
+      props: ['insertion order', 'one null allowed', 'not thread-safe'],
+      ops: [['add / remove / contains', 'O(1)'], ['getFirst / removeFirst', 'O(1)'], ['iteration (in order)', 'O(n)']],
+      uses: ['<b>Ordered dedupe</b>: unique values in the order first seen', '<b>Oldest-first buckets</b>: the LFU cache keeps one per frequency', 'Anything that is "a set, but I also need the oldest"'],
+      probs: ['LFU Cache', 'Remove Duplicate Letters (helper)'],
+      repo: ['SimpleLFUCache', 'LFUCache'],
+      snip: 'Map<Integer, LinkedHashSet<Integer>> keysByCount = new HashMap<>();\nint oldest = keysByCount.get(minCount).removeFirst();   // Java 21',
+      pit: '<b>Re-adding an existing element does not move it to the end.</b> Remove it first, then add it, if you want "most recently used" order.' },
+
+    { id: 'treeset', name: 'TreeSet', fam: 'set', impl: 'NavigableSet (red-black tree)',
+      what: 'Sorted unique elements with O(log n) operations and "nearest value" queries.',
+      props: ['sorted', 'no null', 'not thread-safe', 'needs Comparable or Comparator'],
+      ops: [['add / remove / contains', 'O(log n)'], ['first / last / pollFirst', 'O(log n)'], ['floor / ceiling / lower / higher', 'O(log n)'], ['headSet / tailSet / subSet (view)', 'O(log n)']],
+      uses: ['<b>Closest value</b> ≤ x or ≥ x', '<b>Sorted unique values</b> that change over time', '<b>Window with order</b>: contains duplicate III (values within t)', '<b>Rank-like queries</b> on small data'],
+      probs: ['Contains Duplicate III', 'Exam Room', 'Seat Reservation Manager', 'Find Right Interval'],
+      repo: [],
+      snip: 'TreeSet<Integer> set = new TreeSet<>();\nInteger lower = set.floor(x);     // largest <= x, or null\nInteger upper = set.ceiling(x);   // smallest >= x, or null',
+      pit: '<b>Equality comes from the comparator, not equals.</b> Two different objects that compare as 0 count as duplicates and one is silently dropped. Also floor/ceiling return <code>null</code>, so check before unboxing.' },
+
+    { id: 'hashmap', name: 'HashMap', fam: 'map', impl: 'Map (hash table)',
+      what: 'Key → value with O(1) average get and put. The single most useful interview tool.',
+      props: ['unordered', 'one null key', 'not thread-safe'],
+      ops: [['get / put / remove / containsKey', 'O(1)'], ['worst case (tree bins, Java 8+)', 'O(log n)'], ['containsValue', 'O(n)'], ['iteration', 'O(n + capacity)']],
+      uses: ['<b>Complement lookup</b>: Two Sum, pair with difference k', '<b>Counting</b>: frequencies, majority element, anagrams', '<b>Grouping</b>: group anagrams by sorted key', '<b>Prefix sums</b>: subarray sum equals k', '<b>Memoization</b> for recursion / DP', '<b>Index into another structure</b>: LRU node lookup, graph adjacency'],
+      probs: ['Two Sum', 'Group Anagrams', 'Subarray Sum Equals K', 'Top K Frequent', 'Logger Rate Limiter', 'LRU Cache', 'Clone Graph'],
+      repo: ['TwoSumHashMapOnePass', 'LoggerHashMap', 'LRUCacheDoublyLinkedList', 'SimpleLFUCache', 'Graph.java'],
+      snip: 'Map<Integer, Integer> count = new HashMap<>();\ncount.merge(x, 1, Integer::sum);                      // count++\nint c = count.getOrDefault(x, 0);\nmap.computeIfAbsent(key, k -> new ArrayList<>()).add(v);  // group',
+      pit: '<b>Modifying the map while looping over it</b> throws ConcurrentModificationException. Use <code>map.entrySet().removeIf(...)</code> or an iterator. And <code>map.get(k)</code> on a missing key returns <code>null</code>, which crashes when unboxed to int.' },
+
+    { id: 'linkedhashmap', name: 'LinkedHashMap', fam: 'map', impl: 'SequencedMap',
+      what: 'A HashMap that keeps insertion order, or access order with one constructor flag. An LRU cache in ten lines.',
+      props: ['insertion or access order', 'one null key', 'not thread-safe'],
+      ops: [['get / put / remove', 'O(1)'], ['pollFirstEntry / firstEntry (Java 21)', 'O(1)'], ['removeEldestEntry hook', 'O(1)']],
+      uses: ['<b>LRU cache</b>: <code>accessOrder = true</code> + removeEldestEntry', '<b>Ordered output</b>: keep keys in the order first seen', '<b>First unique</b>: first non-repeating character'],
+      probs: ['LRU Cache', 'First Unique Character', 'First Unique Number'],
+      repo: ['LRUCacheLinkedHashMap', 'SimpleLRUCache'],
+      snip: 'new LinkedHashMap<Integer, Integer>(16, 0.75f, true) {   // access order\n    protected boolean removeEldestEntry(Map.Entry<Integer, Integer> e) {\n        return size() > capacity;\n    }\n};',
+      pit: '<b>In access-order mode, get() changes the order.</b> Even reading counts as a use, which is what LRU needs but surprising anywhere else.' },
+
+    { id: 'treemap', name: 'TreeMap', fam: 'map', impl: 'NavigableMap (red-black tree)',
+      what: 'A map kept sorted by key, with O(log n) operations and nearest-key lookups.',
+      props: ['sorted by key', 'no null key', 'not thread-safe'],
+      ops: [['get / put / remove', 'O(log n)'], ['floorKey / ceilingKey / floorEntry', 'O(log n)'], ['firstKey / lastKey / pollFirstEntry', 'O(log n)'], ['headMap / tailMap / subMap (view)', 'O(log n)']],
+      uses: ['<b>Latest value at or before time t</b>: time-based key-value store', '<b>Booking without overlap</b>: check the neighbouring intervals', '<b>Sweep line with counts</b>: <code>TreeMap&lt;time, delta&gt;</code> for meeting rooms', '<b>Sorted multiset</b>: <code>TreeMap&lt;value, count&gt;</code> with fast min and max', '<b>Range queries</b> over keys'],
+      probs: ['Time Based Key-Value Store', 'My Calendar I / II', 'Meeting Rooms II', 'Stock Price Fluctuation', 'Hand of Straights', 'Sliding Window Median'],
+      repo: [],
+      snip: 'TreeMap<Integer, String> byTime = new TreeMap<>();\nMap.Entry<Integer, String> e = byTime.floorEntry(t);   // latest at or before t\n\nTreeMap<Integer, Integer> delta = new TreeMap<>();\ndelta.merge(start, 1, Integer::sum);\ndelta.merge(end, -1, Integer::sum);   // sweep in key order',
+      pit: '<b>It is O(log n), not O(1).</b> Only reach for it when you need the order or the floor/ceiling queries; otherwise HashMap is faster.' },
+
+    { id: 'arrays', name: 'int[] / boolean[] / char counts', fam: 'special', impl: 'plain arrays',
+      what: 'When keys are small integers or letters, a plain array is the fastest map there is: no hashing, no boxing.',
+      props: ['fixed size', 'primitive', 'O(1) everything'],
+      ops: [['read / write by index', 'O(1)'], ['Arrays.sort(int[])', 'O(n log n)'], ['Arrays.fill', 'O(n)']],
+      uses: ['<b>Letter counts</b>: <code>int[26]</code> for anagrams and pruning', '<b>Counting sort</b> over a small value range', '<b>Visited grid</b>: <code>boolean[rows][cols]</code>', '<b>Fixed buckets</b>: one slot per second, per day, per id'],
+      probs: ['Valid Anagram', 'Find All Anagrams', 'Kth Largest (counting)', 'Word Search (pruning)', 'Design Hit Counter'],
+      repo: ['WordSearchPruned', 'KthLargestCounting', 'HitCounterBuckets', 'WordSearchVisitedArray'],
+      snip: 'int[] freq = new int[26];\nfor (char ch : s.toCharArray()) freq[ch - \'a\']++;\n\nboolean[][] visited = new boolean[rows][cols];',
+      pit: '<b>Arrays.asList(int[])</b> gives a list with one element (the array). For primitives use <code>Arrays.stream(a).boxed().toList()</code>. And <code>Arrays.asList(...)</code> is fixed-size: add() throws.' },
+
+    { id: 'enummap', name: 'EnumMap / EnumSet / BitSet', fam: 'special', impl: 'array-backed',
+      what: 'Specialised array-backed collections: EnumMap and EnumSet for enum keys, BitSet for a large set of small non-negative ints.',
+      props: ['very compact', 'ordered by enum / index', 'not thread-safe'],
+      ops: [['get / put / contains', 'O(1)'], ['BitSet and / or / xor', 'O(n / 64)']],
+      uses: ['<b>State per enum value</b>: counters per status, per direction', '<b>Sieve of Eratosthenes</b> and huge visited flags with BitSet', '<b>Bitmask sets</b> without managing longs by hand'],
+      probs: ['Count Primes', 'Design Parking System'],
+      repo: [],
+      snip: 'Map<Direction, Integer> moves = new EnumMap<>(Direction.class);\nBitSet composite = new BitSet(n + 1);\ncomposite.set(i * j);',
+      pit: '<b>EnumMap needs the enum class</b> in its constructor, and it keeps keys in declaration order, not insertion order.' },
+
+    { id: 'concurrenthashmap', name: 'ConcurrentHashMap', fam: 'conc', impl: 'ConcurrentMap',
+      what: 'A thread-safe HashMap. Reads do not lock; compute, merge and computeIfAbsent are atomic per key.',
+      props: ['thread-safe', 'no null keys or values', 'unordered'],
+      ops: [['get', 'O(1)'], ['put / compute / merge', 'O(1)'], ['size()', 'O(1) estimate']],
+      uses: ['<b>Per-client state</b> shared by request threads: rate limiters, sessions', '<b>Shared caches</b> and memo tables', '<b>Parallel counting</b>: word counts with <code>merge</code>'],
+      probs: ['Design Rate Limiter', 'Web Crawler Multithreaded'],
+      repo: ['FixedWindowRateLimiter', 'TokenBucketRateLimiter', 'SlidingWindowLogRateLimiter'],
+      snip: 'Map<String, Bucket> buckets = new ConcurrentHashMap<>();\nBucket b = buckets.computeIfAbsent(clientId, id -> new Bucket());\ncounts.merge(word, 1, Integer::sum);   // atomic',
+      pit: '<b>get then put is not atomic.</b> Two threads can both see "missing" and both insert. Use <code>computeIfAbsent</code>, <code>compute</code> or <code>merge</code> instead.' },
+
+    { id: 'blockingqueue', name: 'BlockingQueue', fam: 'conc', impl: 'ArrayBlockingQueue, LinkedBlockingQueue',
+      what: 'A thread-safe queue whose take() waits while it is empty and put() waits while it is full.',
+      props: ['thread-safe', 'FIFO', 'optional capacity bound', 'no nulls'],
+      ops: [['put / take (may block)', 'O(1)'], ['offer / poll with timeout', 'O(1)'], ['peek', 'O(1)']],
+      uses: ['<b>Producer-consumer</b> pipelines', '<b>Bounded buffer</b>: slow consumers push back on fast producers', '<b>Work queues</b> behind thread pools (ExecutorService uses them)'],
+      probs: ['Design Bounded Blocking Queue', 'Print in Order / FooBar (threads)'],
+      repo: [],
+      snip: 'BlockingQueue<Task> queue = new ArrayBlockingQueue<>(100);\n// producer\nqueue.put(task);\n// consumer\nTask t = queue.take();',
+      pit: '<b>Use put/take for blocking.</b> add() throws when full, offer() returns false, so mixing them by accident silently drops work.' },
+
+    { id: 'cow', name: 'CopyOnWriteArrayList', fam: 'conc', impl: 'List',
+      what: 'A thread-safe list that copies the whole array on every write. Reads never lock.',
+      props: ['thread-safe', 'snapshot iteration', 'allows null'],
+      ops: [['get / iterate', 'O(1) / O(n)'], ['add / set / remove', 'O(n)']],
+      uses: ['<b>Read-mostly lists</b>: listeners, subscribers, configuration', 'Iterating safely while another thread adds'],
+      probs: [],
+      repo: [],
+      snip: 'List<Listener> listeners = new CopyOnWriteArrayList<>();\nfor (Listener l : listeners) l.onEvent(e);   // never throws CME',
+      pit: '<b>Every write copies the array.</b> Fine for a few listeners, terrible as a general-purpose shared list.' },
+
+    { id: 'legacy', name: 'Stack · Vector · Hashtable', fam: 'special', impl: 'legacy (Java 1.0)',
+      what: 'Old synchronized classes kept for compatibility. Recognise them in old code; do not choose them.',
+      props: ['synchronized on every call', 'slower', 'avoid'],
+      ops: [['Stack.push / pop', 'O(1)'], ['Hashtable.get / put', 'O(1)']],
+      uses: ['<b>Stack</b> → use <code>ArrayDeque</code>', '<b>Vector</b> → use <code>ArrayList</code>', '<b>Hashtable</b> → use <code>HashMap</code>, or <code>ConcurrentHashMap</code> for threads'],
+      probs: [],
+      repo: [],
+      snip: 'Deque<Integer> stack = new ArrayDeque<>();   // not new Stack<>()',
+      pit: '<b>Interviewers notice.</b> Writing <code>new Stack&lt;&gt;()</code> is a common small red flag; ArrayDeque is the modern answer.' }
+  ];
+
+  const NEEDS = [
+    ['Look something up by key, fast', 'hashmap', 'Two Sum, caches, memo'],
+    ['Count how often things appear', 'hashmap', 'merge(x, 1, Integer::sum), or int[26] for letters'],
+    ['Remember what I already visited', 'hashset', 'graph BFS / DFS'],
+    ['Process level by level, shortest path in steps', 'arraydeque', 'BFS with offer / poll'],
+    ['Go deep, undo, match brackets', 'arraydeque', 'stack with push / pop'],
+    ['Find the next greater or smaller element', 'arraydeque', 'monotonic stack'],
+    ['Max or min of a sliding window', 'arraydeque', 'monotonic deque'],
+    ['Always take the smallest / largest next', 'priorityqueue', 'heap: Dijkstra, scheduling'],
+    ['Top k, kth largest, k closest', 'priorityqueue', 'min-heap of size k'],
+    ['Nearest key ≤ x, sorted keys, ranges', 'treemap', 'floorKey / ceilingKey'],
+    ['Sorted unique values that change', 'treeset', 'first / last / floor'],
+    ['Evict the least recently used', 'linkedhashmap', 'access order + removeEldestEntry'],
+    ['Keep insertion order, unique', 'linkedhashset', 'ordered dedupe, oldest first'],
+    ['Index into a growing list', 'arraylist', 'results, adjacency lists'],
+    ['Count small keys with zero overhead', 'arrays', 'int[26], boolean[][]'],
+    ['Share a map between threads', 'concurrenthashmap', 'computeIfAbsent, merge'],
+    ['Hand work from one thread to another', 'blockingqueue', 'put / take']
+  ];
+
+  const MAPTREE = [
+    { fam: 'list', title: 'List', note: 'ordered, by index, duplicates allowed',
+      tree: [['List', [['ArrayList', 'arraylist'], ['LinkedList', 'linkedlist'], ['CopyOnWriteArrayList', 'cow']]]] },
+    { fam: 'queue', title: 'Queue', note: 'take from the head; Deque adds both ends',
+      tree: [['Queue', [['PriorityQueue', 'priorityqueue'], ['Deque', [['ArrayDeque', 'arraydeque'], ['LinkedList', 'linkedlist']]], ['BlockingQueue', [['ArrayBlockingQueue', 'blockingqueue'], ['LinkedBlockingQueue', 'blockingqueue']]]]]] },
+    { fam: 'set', title: 'Set', note: 'no duplicates',
+      tree: [['Set', [['HashSet', 'hashset', [['LinkedHashSet', 'linkedhashset']]], ['NavigableSet', [['TreeSet', 'treeset']]]]]] },
+    { fam: 'map', title: 'Map', note: 'key → value; not a Collection, but part of the framework',
+      tree: [['Map', [['HashMap', 'hashmap', [['LinkedHashMap', 'linkedhashmap']]], ['NavigableMap', [['TreeMap', 'treemap']]], ['ConcurrentMap', [['ConcurrentHashMap', 'concurrenthashmap']]]]]] }
+  ];
+
+  const TABLE = [
+    ['arraylist', 'O(1)* end, O(n) middle', 'O(n)', 'O(n)', 'O(1)', 'O(n)', 'index', 'yes', 'no'],
+    ['linkedlist', 'O(1) ends', 'O(1) ends', 'O(n)', 'O(n)', 'O(1) ends', 'insertion', 'yes', 'no'],
+    ['arraydeque', 'O(1)* ends', 'O(1) ends', 'O(n)', '–', 'O(1) ends', 'insertion', 'no', 'no'],
+    ['priorityqueue', 'O(log n)', 'O(log n) poll', 'O(n)', '–', 'O(1) peek', 'heap', 'no', 'no'],
+    ['hashset', 'O(1)', 'O(1)', 'O(1)', '–', 'O(n)', 'none', 'one', 'no'],
+    ['linkedhashset', 'O(1)', 'O(1)', 'O(1)', '–', 'O(1) first', 'insertion', 'one', 'no'],
+    ['treeset', 'O(log n)', 'O(log n)', 'O(log n)', '–', 'O(log n)', 'sorted', 'no', 'no'],
+    ['hashmap', 'O(1)', 'O(1)', 'O(1)', '–', 'O(n)', 'none', 'one key', 'no'],
+    ['linkedhashmap', 'O(1)', 'O(1)', 'O(1)', '–', 'O(1) first', 'insertion / access', 'one key', 'no'],
+    ['treemap', 'O(log n)', 'O(log n)', 'O(log n)', '–', 'O(log n)', 'sorted keys', 'no key', 'no'],
+    ['concurrenthashmap', 'O(1)', 'O(1)', 'O(1)', '–', 'O(n)', 'none', 'no', 'yes'],
+    ['blockingqueue', 'O(1)', 'O(1) take', 'O(n)', '–', 'O(1) peek', 'FIFO', 'no', 'yes'],
+    ['cow', 'O(n)', 'O(n)', 'O(n)', 'O(1)', 'O(n)', 'index', 'yes', 'yes']
+  ];
+
+  const TIPS = [
+    ['Use the interface type', 'Declare <code>Map&lt;K, V&gt; m = new HashMap&lt;&gt;()</code>. Swapping to TreeMap or LinkedHashMap later is then a one-word change.'],
+    ['Compare Integers with equals', '<code>Integer</code> values above 127 are different objects, so <code>a == b</code> can be false for equal numbers taken out of a collection. Use <code>a.equals(b)</code> or unbox first.'],
+    ['Recursion is not free memory', 'A deep DFS can throw StackOverflowError (Number of Islands, Course Schedule). An ArrayDeque on the heap does the same job without the limit.'],
+    ['Know the hidden O(n) calls', '<code>list.remove(0)</code>, <code>list.contains</code>, <code>heap.remove(x)</code>, <code>linkedList.get(i)</code> all look cheap and are linear. Inside a loop they make the whole thing O(n²).'],
+    ['Immutable factories throw on change', '<code>List.of</code>, <code>Set.of</code>, <code>Map.of</code> are unmodifiable and reject nulls. Copy into a <code>new ArrayList&lt;&gt;(...)</code> if you need to modify.'],
+    ['Size the HashMap when n is known', '<code>HashMap.newHashMap(n)</code> (Java 19+) avoids every resize. For LinkedHashMap with access order, use <code>(int) Math.ceil(n / 0.75)</code> as you did in LRUCacheLinkedHashMap.']
+  ];
+
+  const $ = id => document.getElementById(id);
+  const byId = Object.fromEntries(C.map(c => [c.id, c]));
+  const esc = s => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  const famColor = f => FAM[f].color;
+
+  /* needs */
+  $('needs').innerHTML = NEEDS.map(([need, id, hint]) => {
+    const c = byId[id];
+    return `<button class="need" data-go="${id}" style="--fam:${famColor(c.fam)}"><span>${need}</span><b>${c.name}</b><small>${hint}</small></button>`;
+  }).join('');
+
+  /* family map */
+  const treeHtml = nodes => '<ul class="tree">' + nodes.map(n => renderNode(n)).join('') + '</ul>';
+  function renderNode([label, a, b]) {
+    if (Array.isArray(a)) return `<li><span class="iface">${label}</span>${treeHtml(a).replace('class="tree"', '')}</li>`;
+    const kids = b ? treeHtml(b).replace('class="tree"', '') : '';
+    return `<li><a href="#${a}" data-go="${a}">${label}</a>${kids}</li>`;
+  }
+  $('fmap').innerHTML = MAPTREE.map(m => `<div class="fbox" style="--fam:${famColor(m.fam)}"><h3>${m.title}</h3><p>${m.note}</p>${treeHtml(m.tree)}</div>`).join('');
+
+  /* filter chips */
+  let fam = 'all', query = '';
+  function renderChips() {
+    const opts = [['all', 'All', 'var(--ink)'], ...Object.entries(FAM).map(([k, v]) => [k, v.label, v.color])];
+    $('fams').innerHTML = opts.map(([k, l, col]) => `<button class="fchip" data-fam="${k}" style="--fam:${col}" aria-pressed="${k === fam}">${l}</button>`).join('');
+  }
+
+  /* cards */
+  function cardHtml(c) {
+    const ops = c.ops.map(([op, cost]) => `<span class="op">${esc(op)}</span><span class="big ${tone(cost)}">${cost}</span>`).join('');
+    return `<article class="card coll" id="${c.id}" style="--fam:${famColor(c.fam)}">
+      <div class="coll-head"><h3>${c.name}</h3><span class="fam-tag">${FAM[c.fam].label} · ${esc(c.impl)}</span></div>
+      <p class="what">${c.what}</p>
+      <div class="props">${c.props.map(p => `<span class="prop">${p}</span>`).join('')}</div>
+      <div class="ops">${ops}</div>
+      <span class="label">Good for</span>
+      <ul class="uses">${c.uses.map(u => `<li>${u}</li>`).join('')}</ul>
+      ${c.probs.length ? `<span class="label">Classic problems</span><div class="probs">${c.probs.map(p => `<span class="prob">${p}</span>`).join('')}</div>` : ''}
+      ${c.repo.length ? `<span class="label">Example classes</span><div class="probs">${c.repo.map(r => `<span class="repo">${r}</span>`).join('')}</div>` : ''}
+      <pre class="snip">${esc(c.snip)}</pre>
+      <p class="pit">${c.pit}</p>
+    </article>`;
+  }
+  function renderGrid() {
+    const q = query.trim().toLowerCase();
+    const list = C.filter(c => (fam === 'all' || c.fam === fam) &&
+      (!q || [c.name, c.impl, c.what, ...c.uses, ...c.probs, ...c.repo, c.pit].join(' ').toLowerCase().replace(/<[^>]+>/g, '').includes(q)));
+    $('grid').innerHTML = list.length ? list.map(cardHtml).join('') : '<p class="empty-msg">No collection matches. Try a problem name like "median" or an idea like "window".</p>';
+    $('count').textContent = `${list.length} of ${C.length}`;
+  }
+
+  /* complexity table */
+  $('ctable').innerHTML = '<thead><tr><th>Collection</th><th>Add</th><th>Remove</th><th>Contains / get by key</th><th>Get by index</th><th>Min / max / first</th><th>Order</th><th>Nulls</th><th>Thread-safe</th></tr></thead><tbody>' +
+    TABLE.map(([id, ...cells]) => {
+      const c = byId[id];
+      const cost = v => v === '–' ? '<span style="color:var(--muted)">–</span>' : `<span class="big ${tone(v)}">${v}</span>`;
+      return `<tr style="--fam:${famColor(c.fam)}"><td><a href="#${id}" data-go="${id}">${c.name}</a></td>${cells.slice(0, 5).map(v => `<td>${cost(v)}</td>`).join('')}<td>${cells[5]}</td><td>${cells[6]}</td><td>${cells[7] === 'yes' ? '<b style="color:var(--fast)">yes</b>' : 'no'}</td></tr>`;
+    }).join('') + '</tbody>';
+
+  /* tips */
+  $('tips').innerHTML = TIPS.map(([t, p]) => `<div class="card tip"><h3>${t}</h3><p>${p}</p></div>`).join('');
+
+  /* interactions */
+  function go(id) {
+    fam = 'all'; query = ''; $('q').value = '';
+    renderChips(); renderGrid();
+    const el = $(id); if (!el) return;
+    const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    el.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'start' });
+    el.classList.add('flash'); setTimeout(() => el.classList.remove('flash'), 1400);
+  }
+  document.addEventListener('click', e => {
+    const g = e.target.closest('[data-go]');
+    if (g) { e.preventDefault(); go(g.dataset.go); return; }
+    const f = e.target.closest('[data-fam]');
+    if (f) { fam = f.dataset.fam; renderChips(); renderGrid(); }
+  });
+  $('q').addEventListener('input', e => { query = e.target.value; renderGrid(); });
+
+  renderChips(); renderGrid();
+})();
+</script>
+
+</body></html>

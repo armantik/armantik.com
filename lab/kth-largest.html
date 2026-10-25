@@ -1,0 +1,727 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style>
+<title>Kth Largest Visualizer · Arman Ajabkhani</title>
+<meta name="description" content="Kth largest element four ways in Java: sorting, a min heap, quickselect and counting.">
+<meta property="og:title" content="Kth Largest Visualizer">
+<meta property="og:description" content="Kth largest element four ways in Java: sorting, a min heap, quickselect and counting.">
+<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+<script src="../assets/theme.js"></script>
+<style>
+/* armantik.com bar: links this guide back to the site */
+.aa-labbar { --aa-ink: #16211F; --aa-muted: #4A5855; --aa-line: #DCE3E0; --aa-accent: #0F5C55;
+  max-width: 1160px; margin: 0 auto 14px; padding: 0 0 10px; border-bottom: 1px solid var(--aa-line);
+  display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 6px 18px;
+  font: 500 13px/1.4 "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .aa-labbar { --aa-ink: #E3EAE7; --aa-muted: #A3B1AD; --aa-line: #2B3633; --aa-accent: #5BB8AA; } }
+:root[data-theme="dark"] .aa-labbar { --aa-ink: #E3EAE7; --aa-muted: #A3B1AD; --aa-line: #2B3633; --aa-accent: #5BB8AA; }
+.aa-labbar a { color: var(--aa-muted); text-decoration: none; display: inline-flex; align-items: center; gap: 8px; min-height: 32px; }
+.aa-labbar a:hover { color: var(--aa-accent); }
+.aa-labbar .aa-home { color: var(--aa-ink); font-weight: 600; }
+.aa-labbar.aa-pad { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-top: 12px; }
+.aa-right { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 6px 16px; }
+.aa-labbar .aa-crumb { color: var(--aa-muted); }
+.aa-labbar button { display: inline-flex; align-items: center; gap: 6px; min-height: 32px; padding: 0 10px; border: 1px solid var(--aa-line); border-radius: 999px;
+  background: transparent; color: var(--aa-muted); font: inherit; cursor: pointer; }
+.aa-labbar button:hover { color: var(--aa-accent); border-color: var(--aa-accent); }
+.aa-prob { max-width: 1160px; margin: -4px auto 16px; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px;
+  font: 500 13px/1.5 "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace; color: var(--aa-muted, #4A5855); }
+.aa-prob { --aa-muted: #4A5855; --aa-accent: #0F5C55; --aa-line: #DCE3E0; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .aa-prob { --aa-muted: #A3B1AD; --aa-accent: #5BB8AA; --aa-line: #2B3633; } }
+:root[data-theme="dark"] .aa-prob { --aa-muted: #A3B1AD; --aa-accent: #5BB8AA; --aa-line: #2B3633; }
+.aa-prob b { font-weight: 600; color: var(--aa-accent); text-transform: uppercase; letter-spacing: .06em; font-size: 11.5px; }
+.aa-prob a { color: var(--aa-accent); }
+.aa-prob span.aa-own { color: var(--aa-muted); }
+</style>
+</head>
+<body>
+<nav class="aa-labbar" aria-label="armantik.com"><a class="aa-home" href="../index.html"><svg viewBox="0 0 64 64" width="20" height="20" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#0F5C55"/><path d="M18 49 L32 15 L46 49 M23.5 37 H40.5" fill="none" stroke="#FAFBF9" stroke-width="6.5" stroke-linecap="square"/></svg>Arman Ajabkhani</a><span class="aa-right"><a class="aa-crumb" href="index.html#algorithms">Lab / Algorithms</a><a href="index.html">← All Lab guides</a><button type="button" data-theme-toggle aria-label="Switch theme">Theme</button></span></nav>
+<p class="aa-prob"><b>Problem</b> <a href="https://leetcode.com/problems/kth-largest-element-in-an-array/" target="_blank" rel="noopener">LeetCode 215. Kth Largest Element in an Array ↗</a> · <a href="https://neetcode.io/problems/kth-largest-element-in-an-array" target="_blank" rel="noopener">NeetCode ↗</a><span class="aa-own">· The solutions on this page are my own.</span></p>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap">
+<style>
+  /* Layout: header, algorithm + preset pickers, input row, then the array + helper view on the left and the Java source on the right */
+  :root {
+    --bg: #f2f6f6;
+    --surface: #ffffff;
+    --ink: #162024;
+    --muted: #586a70;
+    --line: #d3dee0;
+    --line-strong: #98abb0;
+    --accent: #2457d6;
+    --accent-soft: #e3eafc;
+    --wait: #b06a00;
+    --wait-soft: #fbecd6;
+    --code-bg: #edf2f3;
+    --bar: #c3d3d8;
+    --less: #a9c4f7;
+    --eq: #b8d39c;
+    --greater: #f6c08f;
+    --danger: #c0392b;
+    --display: "Bricolage Grotesque", "Avenir Next", system-ui, sans-serif;
+    --body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+    --mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0f1517; --surface: #172024; --ink: #e5eef0; --muted: #93a7ad;
+      --line: #29373b; --line-strong: #4f6469; --accent: #84a5ff; --accent-soft: #1d2a4d;
+      --wait: #f0b54d; --wait-soft: #3a2d14; --code-bg: #121a1d;
+      --bar: #3a4c52; --less: #2f4f8f; --eq: #3f5a2c; --greater: #8a5426; --danger: #ff8a7a;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0f1517; --surface: #172024; --ink: #e5eef0; --muted: #93a7ad;
+    --line: #29373b; --line-strong: #4f6469; --accent: #84a5ff; --accent-soft: #1d2a4d;
+    --wait: #f0b54d; --wait-soft: #3a2d14; --code-bg: #121a1d;
+    --bar: #3a4c52; --less: #2f4f8f; --eq: #3f5a2c; --greater: #8a5426; --danger: #ff8a7a;
+    color-scheme: dark;
+  }
+
+  * { box-sizing: border-box; }
+  body { background: var(--bg); color: var(--ink); font: 15px/1.55 var(--body); padding: 28px 20px 48px; margin: 0; }
+  .wrap { max-width: 1080px; margin: 0 auto; display: grid; gap: 18px; }
+  header { display: grid; gap: 6px; }
+  h1 { font: 700 clamp(28px, 5vw, 40px)/1.1 var(--display); letter-spacing: -0.02em; margin: 0; text-wrap: balance; }
+  .lede { color: var(--muted); margin: 0; max-width: 66ch; }
+  code { font: 500 0.88em var(--mono); color: var(--ink); }
+
+  .pickers { display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center; }
+  .pick-label { font: 600 12px var(--body); letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+  .seg { display: inline-flex; flex-wrap: wrap; border: 1px solid var(--line-strong); border-radius: 8px; overflow: hidden; }
+  .seg button { appearance: none; border: 0; background: var(--surface); color: var(--muted); font: 600 14px var(--body); padding: 7px 13px; cursor: pointer; }
+  .seg button + button { border-left: 1px solid var(--line-strong); }
+  .seg button[aria-pressed="true"] { background: var(--ink); color: var(--bg); }
+  button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .summary { margin: 0; color: var(--muted); font-size: 14px; max-width: 74ch; }
+
+  .inputs { display: flex; flex-wrap: wrap; gap: 10px 14px; align-items: end; }
+  .field { display: grid; gap: 3px; min-width: 0; }
+  .field.grow { flex: 1 1 240px; }
+  .field span { font: 600 12px var(--body); letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+  .field input { font: 500 14px var(--mono); color: var(--ink); background: var(--surface); border: 1px solid var(--line-strong); border-radius: 8px; padding: 7px 10px; width: 100%; min-width: 0; }
+  .field input[type="number"] { width: 84px; }
+  .err { margin: 0; font-size: 13px; color: var(--danger); min-height: 1.2em; flex-basis: 100%; }
+
+  .grid2 { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 20px; align-items: start; }
+  @media (max-width: 880px) { .grid2 { grid-template-columns: minmax(0, 1fr); } }
+  .panel { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 18px; min-width: 0; display: grid; gap: 14px; }
+
+  .stats { display: flex; flex-wrap: wrap; gap: 10px 26px; }
+  .stat { display: grid; gap: 0; }
+  .stat .n { font: 700 28px/1.1 var(--display); font-variant-numeric: tabular-nums; }
+  .stat .k { font-size: 12px; color: var(--muted); }
+  .stat.warn .n { color: var(--wait); }
+  .stat.ans .n { color: var(--accent); }
+
+  .sec-head { display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; font-size: 12px; color: var(--muted); }
+  .sec-head b { font: 600 12px var(--body); color: var(--ink); letter-spacing: 0.06em; text-transform: uppercase; }
+  .scroll { overflow-x: auto; padding-bottom: 2px; }
+
+  /* array as bars */
+  .bars { display: flex; gap: 4px; width: max-content; margin: 0 auto; padding: 4px 4px 0; }
+  .col { width: 34px; display: grid; grid-template-rows: 86px auto auto 18px; justify-items: center; position: relative; }
+  .col .bar-box { height: 86px; width: 100%; display: flex; align-items: flex-end; border-radius: 6px; }
+  .col.inrange .bar-box { background: var(--code-bg); }
+  .col .bar { width: 100%; border-radius: 6px 6px 3px 3px; background: var(--bar); border: 1.5px solid transparent; transition: height 0.35s, background 0.3s, opacity 0.3s; }
+  .col .v { font: 700 13px var(--mono); margin-top: 3px; }
+  .col .i { font: 400 10px var(--mono); color: var(--muted); }
+  .col .tag { font: 700 10.5px var(--mono); color: var(--accent); white-space: nowrap; }
+  .col.done .bar { opacity: 0.35; }
+  .col.out .bar { opacity: 0.22; }
+  .col.out .v { color: var(--muted); }
+  .col.less .bar { background: var(--less); }
+  .col.eq .bar { background: var(--eq); }
+  .col.greater .bar { background: var(--greater); }
+  .col.cur .bar { border-color: var(--accent); border-width: 3px; }
+  .col.pivot .bar { border-color: var(--wait); border-width: 3px; background: var(--wait-soft); }
+  .col.ans .bar { background: var(--accent); }
+  .col.ans .v { color: var(--accent); }
+  .col.pulse .bar { animation: pulse 0.4s ease-out; }
+  @keyframes pulse { 40% { transform: scaleX(1.18); } }
+
+  /* helper row of cells (sorted copy, heap array, buckets) */
+  .cells { display: flex; gap: 4px; width: max-content; margin: 0 auto; padding: 4px; }
+  .box { display: grid; justify-items: center; gap: 1px; }
+  .box .c { min-width: 34px; height: 34px; padding: 0 4px; display: grid; place-items: center; border-radius: 7px; background: var(--code-bg); border: 1.5px solid var(--line); font: 700 13px var(--mono); transition: background 0.3s, border-color 0.3s; }
+  .box .i { font: 400 10px var(--mono); color: var(--muted); }
+  .box .t { font: 700 10.5px var(--mono); color: var(--accent); min-height: 14px; white-space: nowrap; }
+  .box.cur .c { border-color: var(--accent); border-width: 3px; }
+  .box.other .c { border-color: var(--wait); border-width: 2.5px; }
+  .box.out .c { border-style: dashed; border-color: var(--wait); color: var(--muted); }
+  .box.ans .c { background: var(--accent); border-color: var(--accent); color: var(--surface); }
+  .box.seen .c { background: var(--accent-soft); }
+  .box.zero .c { color: var(--muted); }
+  .box.empty .c { color: var(--muted); font-weight: 400; }
+  .bucket-key { font: 400 10px var(--mono); color: var(--muted); }
+
+  .heap-svg text { font: 700 13px var(--mono); fill: var(--ink); text-anchor: middle; dominant-baseline: central; }
+  .heap-svg text.idx { font: 400 9.5px var(--mono); fill: var(--muted); }
+  .heap-svg line { stroke: var(--line-strong); stroke-width: 1.5; }
+  .heap-svg circle { fill: var(--code-bg); stroke: var(--line-strong); stroke-width: 1.5; transition: fill 0.3s, stroke 0.3s; }
+  .heap-svg .cur circle { stroke: var(--accent); stroke-width: 3.5; fill: var(--accent-soft); }
+  .heap-svg .other circle { stroke: var(--wait); stroke-width: 3; }
+  .heap-svg .out circle { stroke: var(--wait); stroke-dasharray: 4 3; stroke-width: 2.5; }
+  .heap-svg .ans circle { fill: var(--accent); stroke: var(--accent); }
+  .heap-svg .ans text { fill: var(--surface); }
+  .heap-empty { font-size: 13px; color: var(--muted); text-align: center; margin: 6px 0; }
+
+  .kv { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
+  .kv span { font: 500 12.5px var(--mono); padding: 3px 8px; border-radius: 6px; background: var(--code-bg); }
+  .kv b { color: var(--accent); }
+
+  .explain { margin: 0; min-height: 3.1em; max-width: 62ch; }
+  .controls { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .btn { appearance: none; font: 600 14px var(--body); padding: 8px 14px; border-radius: 8px; cursor: pointer; border: 1px solid var(--line-strong); background: var(--surface); color: var(--ink); }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: var(--surface); }
+  .btn:disabled { opacity: 0.4; cursor: default; }
+  .counter { margin-left: auto; font: 500 13px var(--mono); color: var(--muted); font-variant-numeric: tabular-nums; }
+
+  .legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 13px; color: var(--muted); }
+  .legend i { display: inline-block; width: 14px; height: 14px; border-radius: 4px; vertical-align: -2px; margin-right: 6px; border: 2px solid transparent; }
+  .l-less { background: var(--less); } .l-eq { background: var(--eq); } .l-greater { background: var(--greater); }
+  .l-cur { border-color: var(--accent) !important; border-width: 3px !important; }
+  .l-wait { border-color: var(--wait) !important; }
+  .l-ans { background: var(--accent); }
+  .l-done { background: var(--bar); opacity: 0.4; }
+
+  .code-head { display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+  .code-head h3 { margin: 0; font: 600 14px var(--mono); }
+  .code-head span { font-size: 12px; color: var(--muted); }
+  pre.code { margin: 0; background: var(--code-bg); border-radius: 8px; padding: 10px 0; font: 400 12.5px/1.6 var(--mono); overflow-x: auto; }
+  pre.code .ln { display: block; padding: 0 14px; white-space: pre; border-left: 3px solid transparent; transition: background 0.25s; }
+  pre.code .ln.hl { background: var(--accent-soft); border-left-color: var(--accent); }
+  pre.code .ln.dim { color: var(--muted); }
+  .note { margin: 0; font-size: 14px; color: var(--muted); }
+  .note b { color: var(--ink); }
+
+  .cx { display: grid; gap: 10px; }
+  .cx h4, .cmp h4 { margin: 0; font: 600 12px var(--body); letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+  .cx-row { display: flex; flex-wrap: wrap; gap: 10px; }
+  .cx-box { flex: 1 1 140px; min-width: 0; border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; display: grid; gap: 2px; }
+  .cx-box .big { font: 700 18px var(--mono); }
+  .cx-box .k { font-size: 12px; color: var(--muted); }
+  .cx-box.warn { border-color: var(--wait); }
+  .cx-box.warn .big { color: var(--wait); }
+  .cx p { margin: 0; font-size: 14px; color: var(--muted); }
+  .cx p b { color: var(--ink); }
+
+  .cmp { display: grid; gap: 8px; }
+  .cmp-scroll { overflow-x: auto; }
+  .cmp table { border-collapse: collapse; width: 100%; font-size: 13px; min-width: 520px; }
+  .cmp th, .cmp td { text-align: left; padding: 7px 8px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+  .cmp th { font: 600 12px var(--body); color: var(--muted); }
+  .cmp td.mono { font: 500 12.5px var(--mono); }
+  .cmp tr.sel td { background: var(--accent-soft); }
+  .cmp tr.sel td:first-child { box-shadow: inset 3px 0 0 var(--accent); font-weight: 600; }
+  .cmp .bad { color: var(--wait); font-weight: 600; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .col .bar, .box .c, .heap-svg circle, pre.code .ln { transition: none !important; }
+    .col.pulse .bar { animation: none !important; }
+  }
+  @media (max-width: 480px) {
+    body { padding: 20px 16px 40px; }
+    .panel { padding: 14px; }
+    .counter { margin-left: 0; width: 100%; }
+    .col { width: 30px; }
+  }
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>Kth Largest Visualizer</h1>
+    <p class="lede">LeetCode 215, four ways, from <code>org.example.kthlargest</code>. Pick a variant and an array, or type your own, then step through the run.</p>
+  </header>
+
+  <div class="pickers">
+    <span class="pick-label">Algorithm</span>
+    <div class="seg" role="group" aria-label="Algorithm" id="algos"></div>
+  </div>
+  <div class="pickers">
+    <span class="pick-label">Preset</span>
+    <div class="seg" role="group" aria-label="Preset" id="presets"></div>
+  </div>
+  <div class="inputs">
+    <label class="field grow"><span>nums (comma separated, up to 20 values, −99..99)</span><input id="in-nums" type="text" inputmode="text" autocomplete="off" spellcheck="false"></label>
+    <label class="field"><span>k</span><input id="in-k" type="number" min="1"></label>
+    <button class="btn" id="b-run">Run</button>
+    <p class="err" id="err" aria-live="polite"></p>
+  </div>
+  <p class="summary" id="summary"></p>
+
+  <div class="grid2">
+    <div class="panel">
+      <div class="stats">
+        <div class="stat"><span class="n" id="s-a">0</span><span class="k" id="s-a-k"></span></div>
+        <div class="stat"><span class="n" id="s-b">0</span><span class="k" id="s-b-k"></span></div>
+        <div class="stat warn"><span class="n" id="s-c">0</span><span class="k" id="s-c-k"></span></div>
+        <div class="stat ans"><span class="n" id="s-ans">?</span><span class="k" id="s-ans-k">answer</span></div>
+      </div>
+
+      <div class="sec-head"><b id="arr-name">nums</b><span id="arr-sub"></span></div>
+      <div class="scroll"><div class="bars" id="bars"></div></div>
+
+      <div class="sec-head"><b id="aux-name"></b><span id="aux-sub"></span></div>
+      <div id="aux"></div>
+
+      <p class="explain" id="explain" aria-live="polite"></p>
+
+      <div class="controls">
+        <button class="btn" id="b-reset">Reset</button>
+        <button class="btn" id="b-back">Back</button>
+        <button class="btn primary" id="b-next">Next</button>
+        <button class="btn" id="b-play">Play</button>
+        <button class="btn" id="b-end">Skip to end</button>
+        <span class="counter" id="counter"></span>
+      </div>
+
+      <div class="legend" id="legend"></div>
+    </div>
+
+    <div class="panel">
+      <div class="code-head"><h3 id="code-title"></h3><span>lines that run are highlighted</span></div>
+      <pre class="code" id="code"></pre>
+      <p class="note" id="note"></p>
+
+      <div class="cx">
+        <h4>Complexity · n values, range r = max − min + 1</h4>
+        <div class="cx-row">
+          <div class="cx-box" id="cx-time-box"><span class="big" id="cx-time"></span><span class="k">time</span></div>
+          <div class="cx-box"><span class="big" id="cx-space"></span><span class="k">extra space</span></div>
+        </div>
+        <p id="cx-why"></p>
+      </div>
+
+      <div class="cmp">
+        <h4>All four compared</h4>
+        <div class="cmp-scroll">
+          <table>
+            <thead><tr><th>Variant</th><th>Time</th><th>Worst</th><th>Extra space</th><th>Changes nums</th><th>Best when</th></tr></thead>
+            <tbody id="cmp-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ---------- pure simulations (no DOM): each returns { answer, snaps } ---------- */
+const KL = (() => {
+  // small fixed-seed PRNG so quickselect pivots are the same on every run
+  function mulberry32(seed) {
+    return () => {
+      seed |= 0; seed = (seed + 0x6D2B79F5) | 0;
+      let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+  const ord = r => r + (r % 10 === 1 && r % 100 !== 11 ? 'st' : r % 10 === 2 && r % 100 !== 12 ? 'nd' : r % 10 === 3 && r % 100 !== 13 ? 'rd' : 'th');
+
+  function simSort(nums, k, rec = true) {
+    const n = nums.length, snaps = [];
+    const est = n < 2 ? 0 : Math.ceil(n * Math.log2(n));
+    let sorted = nums.slice(), sortedYet = false, rank = 0, cmp = 0, answer = null;
+    const snap = !rec ? () => {} : (text, lines, extra = {}) => {
+      const auxCls = sorted.map((_, i) => (sortedYet && rank && i >= n - rank) ? (i === n - rank ? 'cur' : 'seen') : '');
+      if (extra.ans) auxCls[n - k] = 'ans';
+      const tags = {};
+      if (sortedYet) tags[n - k] = 'n−k';
+      if (rank && rank !== k) tags[n - rank] = ord(rank);
+      snaps.push({ arr: nums.slice(), cls: nums.map(() => sortedYet ? 'done' : ''), tags: {}, range: null,
+        aux: { kind: 'cells', values: sorted.slice(), cls: auxCls, tags, sorted: sortedYet },
+        stats: [cmp, n, rank], answer, text, lines, quick: !!extra.quick });
+    };
+    snap(`Copy nums so the caller's array stays as it is. n = ${n}, k = ${k}, so the answer will sit at index n − k = ${n - k} once sorted.`, [1]);
+    sorted.sort((a, b) => a - b); sortedYet = true; cmp = est;
+    snap(`Arrays.sort puts the copy in ascending order (about n·log₂n ≈ ${est} comparisons). The largest value is now at the right end.`, [2]);
+    for (rank = 1; rank <= k; rank++) {
+      if (rank === k) break;
+      snap(`Counting from the right: index ${n - rank} holds ${sorted[n - rank]}, the ${ord(rank)} largest. Duplicates count separately.`, [3], { quick: true });
+    }
+    rank = k; answer = sorted[n - k];
+    snap(`Index n − k = ${n - k} holds ${answer}: the ${ord(k)} largest. Return it.`, [3], { ans: true });
+    return { answer, snaps };
+  }
+
+  function simHeap(nums, k, rec = true) {
+    const n = nums.length, snaps = [], h = [];
+    let cmp = 0, swaps = 0, at = -1, answer = null;
+    const snap = !rec ? () => {} : (text, lines, hl = {}, quick = false) => {
+      snaps.push({ arr: nums.slice(), cls: nums.map((_, i) => i < at ? 'done' : i === at ? 'cur' : ''), tags: at >= 0 && at < n ? { [at]: 'num' } : {}, range: null,
+        aux: { kind: 'heap', heap: h.slice(), hl: { ...hl } }, stats: [cmp, swaps, h.length], answer, text, lines, quick });
+    };
+    const sw = (a, b) => { const t = h[a]; h[a] = h[b]; h[b] = t; swaps++; };
+    snap(`Start with an empty min-heap. It will keep the ${k} largest values seen so far, smallest on top.`, [1]);
+    for (at = 0; at < n; at++) {
+      const num = nums[at];
+      h.push(num);
+      let pos = h.length - 1;
+      snap(`offer(${num}): put it at the end of the heap array, index ${pos}${pos ? ', then sift it up' : ''}.`, [2, 3], { [pos]: 'cur' });
+      while (pos > 0) {
+        const parent = (pos - 1) >> 1;
+        cmp++;
+        if (h[pos] >= h[parent]) { snap(`${h[pos]} ≥ parent ${h[parent]}, so it stays. The heap order holds.`, [3], { [pos]: 'cur', [parent]: 'other' }, true); break; }
+        sw(pos, parent);
+        snap(`${h[parent]} < parent ${h[pos]}: swap them, ${h[parent]} moves up to index ${parent}.`, [3], { [parent]: 'cur', [pos]: 'other' }, true);
+        pos = parent;
+      }
+      if (h.length > k) {
+        const root = h[0];
+        snap(`Size ${h.length} > k = ${k}: poll() removes the root ${root}, the smallest value, which cannot be among the ${k} largest.`, [4, 5], { 0: 'out' });
+        const last = h.pop();
+        if (h.length) {
+          h[0] = last; pos = 0;
+          snap(`Move the last element ${last} to the root, then sift it down.`, [5], { 0: 'cur' }, true);
+          for (;;) {
+            const l = 2 * pos + 1, r = l + 1;
+            if (l >= h.length) break;
+            let c = l;
+            if (r < h.length) { cmp++; if (h[l] > h[r]) c = r; }
+            cmp++;
+            if (h[pos] <= h[c]) { snap(`${h[pos]} ≤ its smaller child ${h[c]}, so it stops here.`, [5], { [pos]: 'cur', [c]: 'other' }, true); break; }
+            sw(pos, c);
+            snap(`${h[pos]} is the smaller child and is less than ${h[c]}: swap, ${h[c]} moves down to index ${c}.`, [5], { [c]: 'cur', [pos]: 'other' }, true);
+            pos = c;
+          }
+        }
+      }
+    }
+    answer = h[0];
+    snap(`All ${n} values processed. The heap holds the ${k} largest; its root ${answer} is the smallest of them, so it is the ${ord(k)} largest.`, [8], { 0: 'ans' });
+    return { answer, snaps };
+  }
+
+  function simQuick(nums, k, rec = true, seed = 42) {
+    const a = nums.slice(), n = a.length, snaps = [], rnd = mulberry32(seed);
+    const target = n - k;
+    let lo = 0, hi = n - 1, cmp = 0, swaps = 0, pivot = null, pIdx = -1, lt = -1, i = -1, gt = -1, phase = 'range', answer = null;
+    const snap = !rec ? () => {} : (text, lines, quick = false) => {
+      const cls = a.map((_, x) => {
+        if (x < lo || x > hi) return 'out';
+        if (phase === 'pick') return x === pIdx ? 'pivot' : '';
+        if (phase === 'part' || phase === 'split') {
+          if (x < lt) return 'less';
+          if (x < i || (phase === 'split' && x <= gt)) return 'eq';
+          if (x > gt) return 'greater';
+          return x === i ? 'cur' : '';
+        }
+        if (phase === 'done') return x >= lt && x <= gt ? (x === target ? 'ans' : 'eq') : 'out';
+        return '';
+      });
+      const tags = {};
+      const add = (x, t) => { if (x >= 0 && x < n) tags[x] = tags[x] ? tags[x] + ' ' + t : t; };
+      if (phase === 'part') { add(lt, 'lt'); if (i <= gt) add(i, 'i'); add(gt, 'gt'); }
+      if (phase === 'split') { add(lt, 'lt'); add(gt, 'gt'); }
+      add(target, '★');
+      snaps.push({ arr: a.slice(), cls, tags, range: [lo, hi],
+        aux: { kind: 'kv', items: [['target', target], ['lo', lo], ['hi', hi], ['pivot', pivot === null ? '–' : pivot], ['lt', phase === 'part' || phase === 'split' || phase === 'done' ? lt : '–'], ['gt', phase === 'part' || phase === 'split' || phase === 'done' ? gt : '–']] },
+        stats: [cmp, swaps, hi - lo + 1], answer, text, lines, quick });
+    };
+    const sw = (x, y) => { const t = a[x]; a[x] = a[y]; a[y] = t; swaps++; };
+    snap(`The ${k === 1 ? 'largest' : ord(k) + ' largest'} value belongs at index target = n − k = ${target} (★) in sorted order. Search the whole array: lo = 0, hi = ${hi}.`, [1, 2]);
+    for (;;) {
+      pIdx = lo + Math.floor(rnd() * (hi - lo + 1)); pivot = a[pIdx]; phase = 'pick';
+      snap(`Random index ${pIdx} in [${lo}, ${hi}] (fixed seed, so every run picks the same). Pivot = ${pivot}.`, [3, 4]);
+      lt = lo; i = lo; gt = hi; phase = 'part';
+      snap(`Three-way partition: blue = less than ${pivot}, green = equal, orange = greater. lt = i = ${lo}, gt = ${hi}.`, [5], true);
+      while (i <= gt) {
+        const v = a[i];
+        cmp++;
+        if (v < pivot) { sw(lt, i); lt++; i++; snap(`${v} < ${pivot}: swap it into the blue block, lt and i move right.`, [6, 7], true); continue; }
+        cmp++;
+        if (v > pivot) { sw(i, gt); gt--; snap(`${v} > ${pivot}: swap it to the orange block at the right end, gt moves left. i stays to check the value that came in.`, [6, 8], true); continue; }
+        i++;
+        snap(`${v} == ${pivot}: it joins the green block, i moves right.`, [6, 9], true);
+      }
+      phase = 'split';
+      snap(`Partition done: [${lo}..${lt - 1}] < ${pivot}, [${lt}..${gt}] == ${pivot}, [${gt + 1}..${hi}] > ${pivot}.`, [10]);
+      if (target < lt) { hi = lt - 1; phase = 'range'; snap(`target ${target} < lt ${lt}: the answer is among the smaller values. hi = ${hi}.`, [11]); }
+      else if (target > gt) { lo = gt + 1; phase = 'range'; snap(`target ${target} > gt ${gt}: the answer is among the larger values. lo = ${lo}.`, [11, 12]); }
+      else { answer = pivot; phase = 'done'; snap(`lt ${lt} ≤ target ${target} ≤ gt ${gt}: target landed in the equal block, so the answer is the pivot ${pivot}.`, [11, 12, 13]); break; }
+    }
+    return { answer, snaps };
+  }
+
+  function simCount(nums, k, rec = true) {
+    const n = nums.length, snaps = [];
+    let min = Infinity, max = -Infinity;
+    for (const v of nums) { min = Math.min(min, v); max = Math.max(max, v); }
+    let count = null, at = -1, counted = 0, scanned = 0, remaining = k, scanTop = null, hl = {}, answer = null;
+    const snap = !rec ? () => {} : (text, lines, quick = false) => {
+      snaps.push({ arr: nums.slice(), cls: nums.map((_, i) => at < 0 ? '' : at >= n ? 'done' : i < at ? 'done' : i === at ? 'cur' : ''), tags: at >= 0 && at < n ? { [at]: 'num' } : {}, range: null,
+        aux: { kind: 'buckets', min, max, count: count ? count.slice() : null, hl: { ...hl }, scanTop, distinct: [...new Set(nums)].sort((x, y) => x - y) },
+        stats: [counted, scanned, remaining], answer, text, lines, quick });
+    };
+    snap(`First pass: min = ${min}, max = ${max}. The count array needs max − min + 1 = ${max - min + 1} slots.`, [1, 2, 3, 4, 5]);
+    count = new Array(max - min + 1).fill(0);
+    snap(`Allocate count[${max - min + 1}], all zeros. count[v − min] will say how often v occurs.`, [6]);
+    for (at = 0; at < n; at++) {
+      count[nums[at] - min]++; counted++;
+      hl = { [nums[at]]: 'cur' };
+      snap(`Count ${nums[at]}: count[${nums[at]} − (${min})] is now ${count[nums[at] - min]}.`, [7, 8], true);
+    }
+    hl = {};
+    snap(`Every value is counted. remaining = k = ${k}. Now walk the values from the top (${max}) down.`, [10]);
+    for (let v = max; v >= min; v--) {
+      const c = count[v - min];
+      if (c === 0) {
+        let w = v;
+        while (w - 1 >= min && count[w - 1 - min] === 0) w--;
+        scanned += v - w + 1; scanTop = w; hl = {};
+        snap(v === w ? `${v} never occurs, count 0: skip it.` : `Values ${v} down to ${w} never occur, count 0: skip them.`, [11, 12], true);
+        v = w; continue;
+      }
+      scanned++; remaining -= c; scanTop = v;
+      if (remaining <= 0) {
+        answer = v; hl = { [v]: 'ans' };
+        snap(`${v} occurs ${c}×, remaining drops to ${remaining} ≤ 0: the ${ord(k)} largest is among these copies. Return ${v}.`, [11, 12, 13, 14]);
+        break;
+      }
+      hl = { [v]: 'cur' };
+      snap(`${v} occurs ${c}×: those are the next ${c} largest. remaining = ${remaining}.`, [11, 12, 13]);
+    }
+    return { answer, snaps };
+  }
+
+  return { simSort, simHeap, simQuick, simCount, mulberry32 };
+})();
+
+/* ---------- page ---------- */
+if (typeof document !== 'undefined') (() => {
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const PRESETS = [
+    { id: 'lc1', label: 'LeetCode 1', nums: [3, 2, 1, 5, 6, 4], k: 2 },
+    { id: 'lc2', label: 'LeetCode 2', nums: [3, 2, 3, 1, 2, 4, 5, 5, 6], k: 4 },
+    { id: 'dup', label: 'Duplicates', nums: [5, 5, 5, 2, 5, 5, 8, 5, 5, 1], k: 3 },
+    { id: 'random', label: 'Random', nums: null, k: null }
+  ];
+  const randomCase = () => {
+    const n = 8 + Math.floor(Math.random() * 7);
+    const nums = Array.from({ length: n }, () => Math.floor(Math.random() * 19) - 4);
+    return { nums, k: 1 + Math.floor(Math.random() * n) };
+  };
+
+  const CODE = {
+    sort: ['public int findKthLargest(int[] nums, int k) {', '    int[] sorted = nums.clone();       // leave the caller\'s array untouched', '    Arrays.sort(sorted);', '    return sorted[sorted.length - k];', '}'],
+    heap: ['public int findKthLargest(int[] nums, int k) {', '    PriorityQueue<Integer> heap = new PriorityQueue<>(k + 1); // min-heap', '    for (int num : nums) {', '        heap.offer(num);                 // sift up', '        if (heap.size() > k) {', '            heap.poll();                 // drop the smallest, sift down', '        }', '    }', '    return heap.peek();                  // smallest of the k largest', '}'],
+    quick: ['public int findKthLargest(int[] nums, int k) {', '    int target = nums.length - k;            // kth largest = index n - k', '    int lo = 0, hi = nums.length - 1;', '    while (true) {                           // target is always inside [lo, hi]', '        int pivot = nums[lo + random.nextInt(hi - lo + 1)];', '        int lt = lo, i = lo, gt = hi;', '        while (i <= gt) {', '            if (nums[i] < pivot) swap(nums, lt++, i++);', '            else if (nums[i] > pivot) swap(nums, i, gt--);', '            else i++;', '        }', '        if (target < lt) hi = lt - 1;        // among the smaller values', '        else if (target > gt) lo = gt + 1;   // among the larger values', '        else return pivot;                   // target is in the == block', '    }', '}'],
+    count: ['public int findKthLargest(int[] nums, int k) {', '    int min = Integer.MAX_VALUE, max = Integer.MIN_VALUE;', '    for (int num : nums) {', '        min = Math.min(min, num);', '        max = Math.max(max, num);', '    }', '    int[] count = new int[max - min + 1];    // count[v - min] = occurrences of v', '    for (int num : nums) {', '        count[num - min]++;', '    }', '    int remaining = k;', '    for (int value = max; value >= min; value--) {', '        remaining -= count[value - min];', '        if (remaining <= 0) {', '            return value;', '        }', '    }', '    throw new IllegalArgumentException("k is larger than nums.length");', '}']
+  };
+
+  const ALGOS = [
+    { id: 'sort', label: 'Sort', title: 'KthLargestSort.java', run: KL.simSort,
+      stats: ['comparisons ≈ n·log₂n', 'array length n', 'rank from the top'], aux: 'sorted copy', auxSub: 'ascending, answer at n − k',
+      legend: [['l-done', 'input (unchanged)'], ['l-cur', 'current rank'], ['l-ans', 'answer']],
+      summary: 'Sort a copy ascending; the kth largest is then simply at index n − k. Hard to get wrong, but it sorts far more than it needs.',
+      note: '<b>Interview tip:</b> say this one first as the baseline, then improve. Sorting nums in place drops the O(n) copy but changes the caller\'s array.',
+      cx: { time: 'O(n log n)', worst: 'O(n log n)', space: 'O(n)', mutates: 'no (copy)', best: 'simplest, small n',
+        why: '<b>Time:</b> Arrays.sort on int[] is a dual-pivot quicksort, O(n log n). The lookup is O(1). <b>Space:</b> the clone takes n ints; sorting in place would leave only the O(log n) sort stack.' } },
+    { id: 'heap', label: 'Min-heap', title: 'KthLargestMinHeap.java', run: KL.simHeap,
+      stats: ['comparisons', 'swaps', 'heap size'], aux: 'min-heap (PriorityQueue)', auxSub: 'tree view and its array form',
+      legend: [['l-done', 'already offered'], ['l-cur', 'moving value'], ['l-wait', 'compared / polled'], ['l-ans', 'answer']],
+      summary: 'Keep the k largest values in a min-heap. When it holds k + 1, poll the smallest. The root at the end is the answer.',
+      note: '<b>Why a MIN-heap:</b> the root is the weakest of the current top k, so it is exactly the one to throw out when a bigger value arrives. Works on a stream, too.',
+      cx: { time: 'O(n log k)', worst: 'O(n log k)', space: 'O(k)', mutates: 'no', best: 'small k, streams',
+        why: '<b>Time:</b> each of the n values is offered once and may cause one poll; both sift along a path of length log(k + 1). <b>Space:</b> the heap never holds more than k + 1 values.' } },
+    { id: 'quick', label: 'Quickselect', title: 'KthLargestQuickselect.java', run: KL.simQuick,
+      stats: ['comparisons', 'swaps', 'range size hi−lo+1'], aux: 'search state', auxSub: '★ = target index n − k',
+      legend: [['l-less', '< pivot'], ['l-eq', '== pivot'], ['l-greater', '> pivot'], ['l-wait', 'pivot pick'], ['l-cur', 'i'], ['l-done', 'outside [lo, hi]']],
+      summary: 'Partition around a random pivot like quicksort, but keep only the side that holds index n − k. The range [lo, hi] shrinks until the target lands in the pivot block.',
+      note: '<b>Duplicates pitfall:</b> a plain two-way (Lomuto) partition sends every copy of the pivot to one side, so an all-equal array drops one element per round, O(n²). The green == block swallows all copies at once; try the Duplicates preset.',
+      cx: { time: 'O(n) avg', worst: 'O(n²)', space: 'O(1)', mutates: 'yes (reorders)', best: 'one-off query, big n', risky: true,
+        why: '<b>Time:</b> on average each round keeps about half, so n + n/2 + n/4 + … ≈ 2n. Very unlucky pivots every round give O(n²), which random pivots make practically impossible. <b>Space:</b> an iterative loop and a few indexes; the array is reordered in place.' } },
+    { id: 'count', label: 'Counting', title: 'KthLargestCounting.java', run: KL.simCount,
+      stats: ['values counted', 'buckets scanned', 'k remaining'], aux: 'count array', auxSub: 'value on top, count in the box',
+      legend: [['l-done', 'already counted'], ['l-cur', 'current'], ['l-ans', 'answer']],
+      summary: 'Values are limited to −10⁴..10⁴, so count each value, then walk the counts from the biggest value down until k copies are used up.',
+      note: '<b>Range, not size:</b> this is linear in n but also pays for every slot between min and max. Great for small value ranges, useless for arbitrary 32-bit ints.',
+      cx: { time: 'O(n + r)', worst: 'O(n + r)', space: 'O(r)', mutates: 'no', best: 'small value range',
+        why: '<b>Time:</b> two passes over nums plus at most one pass over the r = max − min + 1 buckets (r ≤ 20,001 on LeetCode). <b>Space:</b> the count array has r ints regardless of n.' } }
+  ];
+
+  const $ = id => document.getElementById(id);
+  let algo = ALGOS[1], preset = PRESETS[1], nums = PRESETS[1].nums, k = PRESETS[1].k, snaps = [], cur = 0, timer = null;
+
+  function renderPickers() {
+    $('algos').replaceChildren(...ALGOS.map(a => {
+      const b = document.createElement('button');
+      b.textContent = a.label; b.setAttribute('aria-pressed', a === algo);
+      b.onclick = () => { algo = a; renderPickers(); run(0); };
+      return b;
+    }));
+    $('presets').replaceChildren(...PRESETS.map(p => {
+      const b = document.createElement('button');
+      b.textContent = p.label; b.setAttribute('aria-pressed', p === preset);
+      b.onclick = () => {
+        preset = p;
+        const c = p.nums ? p : randomCase();
+        nums = c.nums.slice(); k = c.k;
+        renderPickers(); run(0);
+      };
+      return b;
+    }));
+  }
+
+  function readInputs() {
+    const raw = $('in-nums').value.split(/[\s,]+/).filter(Boolean);
+    const vals = raw.map(Number);
+    const kk = Number($('in-k').value);
+    if (!raw.length) return 'Type at least one number.';
+    if (vals.some(v => !Number.isInteger(v))) return 'nums must be whole numbers separated by commas.';
+    if (vals.length > 20) return 'Keep it to 20 values so the picture fits.';
+    if (vals.some(v => v < -99 || v > 99)) return 'Use values between −99 and 99 here (LeetCode allows −10⁴..10⁴).';
+    if (!Number.isInteger(kk) || kk < 1 || kk > vals.length) return `k must be between 1 and ${vals.length}.`;
+    nums = vals; k = kk; preset = null;
+    return '';
+  }
+  $('b-run').onclick = () => {
+    const e = readInputs();
+    $('err').textContent = e;
+    if (!e) { renderPickers(); run(0); }
+  };
+  ['in-nums', 'in-k'].forEach(id => $(id).addEventListener('keydown', e => { if (e.key === 'Enter') $('b-run').click(); }));
+
+  function run(at) {
+    stop();
+    $('in-nums').value = nums.join(', ');
+    $('in-k').value = k; $('in-k').max = nums.length;
+    $('err').textContent = '';
+    snaps = algo.run(nums, k).snaps;
+    $('code').innerHTML = CODE[algo.id].map(l => `<span class="ln">${l.replace(/&/g, '&amp;').replace(/</g, '&lt;') || ' '}</span>`).join('');
+    $('code-title').textContent = algo.title;
+    $('summary').textContent = algo.summary;
+    $('note').innerHTML = algo.note;
+    ['a', 'b', 'c'].forEach((x, i) => { $('s-' + x + '-k').textContent = algo.stats[i]; });
+    $('arr-name').textContent = algo.id === 'quick' ? 'nums (reordered in place)' : 'nums';
+    $('arr-sub').textContent = `n = ${nums.length}, k = ${k}`;
+    $('aux-name').textContent = algo.aux;
+    $('aux-sub').textContent = algo.auxSub;
+    $('legend').innerHTML = algo.legend.map(([c, t]) => `<span><i class="${c}"></i>${t}</span>`).join('');
+    $('cx-time').textContent = algo.cx.time;
+    $('cx-space').textContent = algo.cx.space;
+    $('cx-time-box').classList.toggle('warn', !!algo.cx.risky);
+    $('cx-why').innerHTML = algo.cx.why;
+    $('cmp-body').innerHTML = ALGOS.map(a => `<tr class="${a === algo ? 'sel' : ''}">
+      <td>${a.label}</td><td class="mono">${a.cx.time}</td><td class="mono ${a.cx.risky ? 'bad' : ''}">${a.cx.worst}</td><td class="mono">${a.cx.space}</td><td>${a.cx.mutates}</td><td>${a.cx.best}</td></tr>`).join('');
+    cur = -1;
+    render(at === 'mid' ? Math.floor((snaps.length - 1) / 2) : Math.min(at, snaps.length - 1), false);
+  }
+
+  function renderBars(s, animate) {
+    const lo = Math.min(...nums), hi = Math.max(...nums), span = hi - lo || 1;
+    const box = $('bars');
+    if (box.children.length !== s.arr.length) box.replaceChildren(...s.arr.map(() => {
+      const d = document.createElement('div'); d.className = 'col';
+      d.innerHTML = '<div class="bar-box"><div class="bar"></div></div><span class="v"></span><span class="i"></span><span class="tag"></span>';
+      return d;
+    }));
+    s.arr.forEach((v, i) => {
+      const el = box.children[i];
+      const wasCur = el.classList.contains('cur');
+      const cls = ['col'];
+      if (s.cls[i]) cls.push(s.cls[i]);
+      if (s.range && i >= s.range[0] && i <= s.range[1]) cls.push('inrange');
+      el.className = cls.join(' ');
+      el.querySelector('.bar').style.height = (14 + 70 * (v - lo) / span) + 'px';
+      el.querySelector('.v').textContent = v;
+      el.querySelector('.i').textContent = i;
+      el.querySelector('.tag').textContent = s.tags[i] || '';
+      if (s.cls[i] === 'cur' && !wasCur && animate && !reduced) { void el.offsetWidth; el.classList.add('pulse'); }
+    });
+  }
+
+  const cellsHtml = (vals, cls, tags, idx) => `<div class="scroll"><div class="cells">${vals.map((v, i) =>
+    `<div class="box ${cls[i] || ''}">${tags ? `<span class="t">${tags[i] || ''}</span>` : ''}<span class="c">${v}</span><span class="i">${idx ? idx[i] : i}</span></div>`).join('')}</div></div>`;
+
+  function heapSvg(h, hl) {
+    if (!h.length) return '<p class="heap-empty">heap is empty</p>';
+    const levels = Math.floor(Math.log2(h.length)) + 1;
+    const W = Math.max(320, (1 << (levels - 1)) * 42), Y = d => 24 + d * 58, H = Y(levels - 1) + 30;
+    const pos = i => { const d = Math.floor(Math.log2(i + 1)), p = i - ((1 << d) - 1); return [(p + 0.5) * W / (1 << d), Y(d)]; };
+    let lines = '', nodes = '';
+    h.forEach((v, i) => {
+      const [x, y] = pos(i);
+      if (i > 0) { const [px, py] = pos((i - 1) >> 1); lines += `<line x1="${px}" y1="${py}" x2="${x}" y2="${y}"/>`; }
+      nodes += `<g class="${hl[i] || ''}"><circle cx="${x}" cy="${y}" r="16"/><text x="${x}" y="${y}">${v}</text><text class="idx" x="${x + 20}" y="${y - 14}">${i}</text></g>`;
+    });
+    return `<div class="scroll"><svg class="heap-svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="img" aria-label="Heap as a binary tree" style="display:block;margin:0 auto">${lines}${nodes}</svg></div>`;
+  }
+
+  function renderAux(s) {
+    const a = s.aux, el = $('aux');
+    if (a.kind === 'cells') {
+      el.innerHTML = a.sorted ? cellsHtml(a.values, a.cls, a.tags) : '<p class="heap-empty">not sorted yet</p>';
+    } else if (a.kind === 'heap') {
+      el.innerHTML = heapSvg(a.heap, a.hl) + (a.heap.length ? cellsHtml(a.heap, a.heap.map((_, i) => a.hl[i] || ''), null) : '');
+    } else if (a.kind === 'kv') {
+      el.innerHTML = `<div class="kv">${a.items.map(([key, v]) => `<span>${key} = <b>${v}</b></span>`).join('')}</div>`;
+    } else if (a.kind === 'buckets') {
+      if (!a.count) { el.innerHTML = '<p class="heap-empty">count array not allocated yet</p>'; return; }
+      const r = a.max - a.min + 1;
+      const values = r <= 40 ? Array.from({ length: r }, (_, i) => a.min + i) : a.distinct;
+      const counts = values.map(v => a.count[v - a.min]);
+      const cls = values.map((v, i) => a.hl[v] || (a.scanTop !== null && v >= a.scanTop ? 'seen' : counts[i] === 0 ? 'zero' : ''));
+      el.innerHTML = cellsHtml(counts, cls, null, values) + (r > 40 ? `<p class="heap-empty">range ${r} is wide, so only values that occur are drawn</p>` : '');
+    }
+  }
+
+  function render(i, animate = true) {
+    const s = snaps[i];
+    renderBars(s, animate);
+    renderAux(s);
+    $('s-a').textContent = s.stats[0];
+    $('s-b').textContent = s.stats[1];
+    $('s-c').textContent = s.stats[2];
+    $('s-ans').textContent = s.answer === null ? '?' : s.answer;
+    $('explain').textContent = s.text;
+    const hl = new Set(s.lines);
+    [...$('code').children].forEach((ln, n) => {
+      ln.classList.toggle('hl', hl.has(n));
+      ln.classList.toggle('dim', hl.size > 0 && !hl.has(n));
+    });
+    const last = snaps.length - 1;
+    $('counter').textContent = `step ${i + 1} of ${last + 1}`;
+    $('b-back').disabled = i === 0;
+    $('b-next').disabled = i === last;
+    $('b-end').disabled = i === last;
+    cur = i;
+  }
+
+  function stop() { clearTimeout(timer); timer = null; $('b-play').textContent = 'Play'; }
+  function tick() {
+    if (cur >= snaps.length - 1) return stop();
+    render(cur + 1);
+    timer = setTimeout(tick, snaps[cur].quick ? 380 : 950);
+  }
+  function play() {
+    if (timer) return stop();
+    if (cur === snaps.length - 1) render(0, false);
+    $('b-play').textContent = 'Pause';
+    timer = setTimeout(tick, 200);
+  }
+
+  $('b-next').onclick = () => { stop(); if (cur < snaps.length - 1) render(cur + 1); };
+  $('b-back').onclick = () => { stop(); if (cur > 0) render(cur - 1); };
+  $('b-reset').onclick = () => { stop(); render(0, false); };
+  $('b-end').onclick = () => { stop(); render(snaps.length - 1, false); };
+  $('b-play').onclick = play;
+  document.addEventListener('keydown', e => {
+    if (e.target.closest && e.target.closest('input, .seg')) return;
+    if (e.key === 'ArrowRight') $('b-next').click();
+    if (e.key === 'ArrowLeft') $('b-back').click();
+  });
+
+  renderPickers();
+  run('mid'); // open mid-way: LeetCode 2 on the min-heap, part way through the offers
+})();
+</script>
+
+</body></html>

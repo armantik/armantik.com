@@ -1,0 +1,825 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style>
+<title>Word Search Visualizer · Arman Ajabkhani</title>
+<meta name="description" content="Word Search with three backtracking versions: a visited array, in-place marking and pruning.">
+<meta property="og:title" content="Word Search Visualizer">
+<meta property="og:description" content="Word Search with three backtracking versions: a visited array, in-place marking and pruning.">
+<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+<script src="../assets/theme.js"></script>
+<style>
+/* armantik.com bar: links this guide back to the site */
+.aa-labbar { --aa-ink: #16211F; --aa-muted: #4A5855; --aa-line: #DCE3E0; --aa-accent: #0F5C55;
+  max-width: 1160px; margin: 0 auto 14px; padding: 0 0 10px; border-bottom: 1px solid var(--aa-line);
+  display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 6px 18px;
+  font: 500 13px/1.4 "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .aa-labbar { --aa-ink: #E3EAE7; --aa-muted: #A3B1AD; --aa-line: #2B3633; --aa-accent: #5BB8AA; } }
+:root[data-theme="dark"] .aa-labbar { --aa-ink: #E3EAE7; --aa-muted: #A3B1AD; --aa-line: #2B3633; --aa-accent: #5BB8AA; }
+.aa-labbar a { color: var(--aa-muted); text-decoration: none; display: inline-flex; align-items: center; gap: 8px; min-height: 32px; }
+.aa-labbar a:hover { color: var(--aa-accent); }
+.aa-labbar .aa-home { color: var(--aa-ink); font-weight: 600; }
+.aa-labbar.aa-pad { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-top: 12px; }
+.aa-right { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 6px 16px; }
+.aa-labbar .aa-crumb { color: var(--aa-muted); }
+.aa-labbar button { display: inline-flex; align-items: center; gap: 6px; min-height: 32px; padding: 0 10px; border: 1px solid var(--aa-line); border-radius: 999px;
+  background: transparent; color: var(--aa-muted); font: inherit; cursor: pointer; }
+.aa-labbar button:hover { color: var(--aa-accent); border-color: var(--aa-accent); }
+.aa-prob { max-width: 1160px; margin: -4px auto 16px; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px;
+  font: 500 13px/1.5 "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace; color: var(--aa-muted, #4A5855); }
+.aa-prob { --aa-muted: #4A5855; --aa-accent: #0F5C55; --aa-line: #DCE3E0; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .aa-prob { --aa-muted: #A3B1AD; --aa-accent: #5BB8AA; --aa-line: #2B3633; } }
+:root[data-theme="dark"] .aa-prob { --aa-muted: #A3B1AD; --aa-accent: #5BB8AA; --aa-line: #2B3633; }
+.aa-prob b { font-weight: 600; color: var(--aa-accent); text-transform: uppercase; letter-spacing: .06em; font-size: 11.5px; }
+.aa-prob a { color: var(--aa-accent); }
+.aa-prob span.aa-own { color: var(--aa-muted); }
+</style>
+</head>
+<body>
+<nav class="aa-labbar" aria-label="armantik.com"><a class="aa-home" href="../index.html"><svg viewBox="0 0 64 64" width="20" height="20" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#0F5C55"/><path d="M18 49 L32 15 L46 49 M23.5 37 H40.5" fill="none" stroke="#FAFBF9" stroke-width="6.5" stroke-linecap="square"/></svg>Arman Ajabkhani</a><span class="aa-right"><a class="aa-crumb" href="index.html#algorithms">Lab / Algorithms</a><a href="index.html">← All Lab guides</a><button type="button" data-theme-toggle aria-label="Switch theme">Theme</button></span></nav>
+<p class="aa-prob"><b>Problem</b> <a href="https://leetcode.com/problems/word-search/" target="_blank" rel="noopener">LeetCode 79. Word Search ↗</a> · <a href="https://neetcode.io/problems/search-for-word" target="_blank" rel="noopener">NeetCode ↗</a><span class="aa-own">· The solutions on this page are my own.</span></p>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap">
+<style>
+  /* Layout: header, algorithm + preset pickers, board/word inputs, then the board with path, word and stack on the left and the Java source on the right */
+  :root {
+    --bg: #f2f6f6;
+    --surface: #ffffff;
+    --ink: #162024;
+    --muted: #586a70;
+    --line: #d3dee0;
+    --line-strong: #98abb0;
+    --accent: #2457d6;
+    --accent-soft: #e3eafc;
+    --wait: #b06a00;
+    --wait-soft: #fbefdc;
+    --bad: #c23a3a;
+    --bad-soft: #fbe3e3;
+    --good: #1f7a4d;
+    --good-soft: #dcf2e5;
+    --tile: #f7fafa;
+    --tile-line: #c9d6d8;
+    --hash: #e6ebec;
+    --code-bg: #edf2f3;
+    --display: "Bricolage Grotesque", "Avenir Next", system-ui, sans-serif;
+    --body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+    --mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0f1517; --surface: #172024; --ink: #e5eef0; --muted: #93a7ad;
+      --line: #29373b; --line-strong: #4f6469; --accent: #84a5ff; --accent-soft: #1d2a4d;
+      --wait: #f0b54d; --wait-soft: #3a2c12; --bad: #f08080; --bad-soft: #4a1f22;
+      --good: #6fd39d; --good-soft: #173a2a; --tile: #1c272b; --tile-line: #34454a; --hash: #263236;
+      --code-bg: #121a1d;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0f1517; --surface: #172024; --ink: #e5eef0; --muted: #93a7ad;
+    --line: #29373b; --line-strong: #4f6469; --accent: #84a5ff; --accent-soft: #1d2a4d;
+    --wait: #f0b54d; --wait-soft: #3a2c12; --bad: #f08080; --bad-soft: #4a1f22;
+    --good: #6fd39d; --good-soft: #173a2a; --tile: #1c272b; --tile-line: #34454a; --hash: #263236;
+    --code-bg: #121a1d;
+    color-scheme: dark;
+  }
+
+  * { box-sizing: border-box; }
+  body { background: var(--bg); color: var(--ink); font: 15px/1.55 var(--body); padding: 28px 20px 48px; margin: 0; }
+  .wrap { max-width: 1080px; margin: 0 auto; display: grid; gap: 18px; }
+  header { display: grid; gap: 6px; }
+  h1 { font: 700 clamp(28px, 5vw, 40px)/1.1 var(--display); letter-spacing: -0.02em; margin: 0; text-wrap: balance; }
+  .lede { color: var(--muted); margin: 0; max-width: 66ch; }
+  code { font: 500 0.88em var(--mono); color: var(--ink); }
+
+  .pickers { display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center; }
+  .pick-label { font: 600 12px var(--body); letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+  .seg { display: inline-flex; flex-wrap: wrap; border: 1px solid var(--line-strong); border-radius: 8px; overflow: hidden; }
+  .seg button { appearance: none; border: 0; background: var(--surface); color: var(--muted); font: 600 14px var(--body); padding: 7px 13px; cursor: pointer; }
+  .seg button + button { border-left: 1px solid var(--line-strong); }
+  .seg button[aria-pressed="true"] { background: var(--ink); color: var(--bg); }
+  button:focus-visible, textarea:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .summary { margin: 0; color: var(--muted); font-size: 14px; max-width: 74ch; }
+
+  .inputs { display: flex; flex-wrap: wrap; gap: 10px 14px; align-items: flex-end; }
+  .field { display: grid; gap: 4px; min-width: 0; }
+  .field label { font: 600 12px var(--body); letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+  .field textarea, .field input { font: 500 14px/1.45 var(--mono); color: var(--ink); background: var(--surface); border: 1px solid var(--line-strong); border-radius: 8px; padding: 7px 10px; text-transform: uppercase; max-width: 100%; }
+  .field textarea { width: 12ch; min-width: 9ch; resize: vertical; }
+  .field input { width: 19ch; }
+  .err { margin: 0; color: var(--bad); font-size: 14px; flex-basis: 100%; }
+  .err:empty { display: none; }
+
+  .grid2 { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 20px; align-items: start; }
+  @media (max-width: 880px) { .grid2 { grid-template-columns: minmax(0, 1fr); } }
+  .panel { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 18px; min-width: 0; display: grid; gap: 14px; }
+
+  .stats { display: flex; flex-wrap: wrap; gap: 10px 26px; }
+  .stat { display: grid; gap: 0; }
+  .stat .n { font: 700 28px/1.1 var(--display); font-variant-numeric: tabular-nums; }
+  .stat .k { font-size: 12px; color: var(--muted); }
+  .stat.warn .n { color: var(--wait); }
+
+  .result { font: 600 14px var(--body); padding: 6px 10px; border-radius: 8px; justify-self: start; background: var(--code-bg); color: var(--muted); }
+  .result.yes { background: var(--good-soft); color: var(--good); }
+  .result.no { background: var(--bad-soft); color: var(--bad); }
+
+  .map-scroll { overflow-x: auto; }
+  .map { --cell: 50px; display: grid; gap: 5px; width: max-content; margin: 0 auto; padding: 6px; }
+  @media (max-width: 480px) { .map { --cell: 42px; } .cell { font-size: 16px; padding-top: 7px; } }
+  .cell {
+    width: var(--cell); height: var(--cell); border-radius: 8px; position: relative;
+    background: var(--tile); border: 1.5px solid var(--tile-line);
+    display: grid; place-items: center; font: 700 19px var(--mono); color: var(--ink);
+    transition: background 0.3s, border-color 0.3s, transform 0.2s;
+  }
+  .cell .coord { position: absolute; left: 4px; top: 2px; font: 400 8.5px var(--mono); color: var(--muted); opacity: 0.8; }
+  .cell .num { position: absolute; right: -6px; top: -7px; min-width: 18px; height: 18px; padding: 0 4px; border-radius: 9px; background: var(--accent); color: var(--surface); font: 700 10.5px/18px var(--mono); text-align: center; z-index: 3; }
+  .cell .was { position: absolute; bottom: 1px; left: 0; right: 0; text-align: center; font: 500 8.5px var(--mono); color: var(--muted); }
+  .cell.path { background: var(--accent-soft); border-color: var(--accent); }
+  .cell.hash { background: var(--hash); color: var(--muted); }
+  .cell.path.hash { background: var(--accent-soft); color: var(--accent); }
+  .cell.found { background: var(--good-soft); border-color: var(--good); }
+  .cell.found .num { background: var(--good); }
+  .cell.undo { background: var(--wait-soft); border-color: var(--wait); border-style: dashed; }
+  .cell.start::after, .cell.probe-ok::after, .cell.probe-bad::after {
+    content: ""; position: absolute; inset: -5px; border-radius: 11px; pointer-events: none;
+  }
+  .cell.start::after { border: 2px dashed var(--muted); }
+  .cell.probe-ok::after { border: 3.5px solid var(--accent); }
+  .cell.probe-bad::after { border: 3px solid var(--bad); }
+  .cell.probe-bad { background: var(--bad-soft); }
+  .cell.pulse { animation: pulse 0.45s ease-out; }
+  @keyframes pulse { 40% { transform: scale(1.12); } }
+
+  .strip { display: grid; gap: 6px; }
+  .strip-head { display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; font-size: 12px; color: var(--muted); }
+  .strip-head b { font: 600 12px var(--body); color: var(--ink); letter-spacing: 0.06em; text-transform: uppercase; }
+  .chips { display: flex; flex-wrap: wrap; gap: 5px; min-height: 38px; align-items: center; padding: 6px; border-radius: 8px; background: var(--code-bg); }
+  .chips .empty { font-size: 13px; color: var(--muted); padding: 0 6px; }
+  .chip { display: inline-grid; place-items: center; height: 26px; padding: 0 7px; border-radius: 6px; font: 600 12px var(--mono); background: var(--surface); border: 1.5px solid var(--line-strong); }
+  .chip.top { border-color: var(--accent); background: var(--accent-soft); }
+  .chip.ghost { border-style: dashed; border-color: var(--bad); color: var(--bad); }
+  .chip.new { animation: pop 0.35s ease-out; }
+  @keyframes pop { from { transform: translateY(-6px); opacity: 0; } }
+  .letters { display: flex; flex-wrap: wrap; gap: 4px; }
+  .letter { width: 30px; height: 34px; display: grid; place-items: center; border-radius: 6px; border: 1.5px solid var(--line); background: var(--surface); font: 700 15px var(--mono); position: relative; }
+  .letter small { position: absolute; bottom: -1px; font: 400 8px var(--mono); color: var(--muted); }
+  .letter.ok { background: var(--accent-soft); border-color: var(--accent); }
+  .letter.done { background: var(--good-soft); border-color: var(--good); }
+  .letter.next { border: 2.5px solid var(--wait); }
+  .letter.bad { border: 2.5px solid var(--bad); background: var(--bad-soft); }
+
+  .prune { display: grid; gap: 6px; }
+  .prune[hidden] { display: none; }
+  .prune-scroll { overflow-x: auto; }
+  .prune table { border-collapse: collapse; font-size: 13px; }
+  .prune th, .prune td { padding: 4px 9px; border-bottom: 1px solid var(--line); text-align: center; font-variant-numeric: tabular-nums; }
+  .prune th { font: 600 12px var(--body); color: var(--muted); text-align: left; }
+  .prune td { font: 500 13px var(--mono); }
+  .prune td.cur { background: var(--wait-soft); }
+  .prune td.fail { background: var(--bad-soft); color: var(--bad); font-weight: 700; }
+  .prune p { margin: 0; font-size: 13.5px; color: var(--muted); }
+  .prune p b { color: var(--ink); }
+
+  .explain { margin: 0; min-height: 3.1em; max-width: 62ch; }
+  .controls { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .btn { appearance: none; font: 600 14px var(--body); padding: 8px 14px; border-radius: 8px; cursor: pointer; border: 1px solid var(--line-strong); background: var(--surface); color: var(--ink); }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: var(--surface); }
+  .btn:disabled { opacity: 0.4; cursor: default; }
+  .counter { margin-left: auto; font: 500 13px var(--mono); color: var(--muted); font-variant-numeric: tabular-nums; }
+  .trunc { margin: 0; font-size: 13px; color: var(--wait); }
+  .trunc:empty { display: none; }
+
+  .legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 13px; color: var(--muted); }
+  .legend i { display: inline-block; width: 14px; height: 14px; border-radius: 4px; vertical-align: -2px; margin-right: 6px; border: 2px solid transparent; }
+  .l-path { background: var(--accent-soft); border-color: var(--accent) !important; }
+  .l-bad { background: var(--bad-soft); border-color: var(--bad) !important; }
+  .l-undo { background: var(--wait-soft); border-color: var(--wait) !important; border-style: dashed !important; }
+  .l-found { background: var(--good-soft); border-color: var(--good) !important; }
+  .l-hash { background: var(--hash); border-color: var(--line-strong) !important; }
+
+  .code-head { display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+  .code-head h3 { margin: 0; font: 600 14px var(--mono); }
+  .code-head span { font-size: 12px; color: var(--muted); }
+  pre.code { margin: 0; background: var(--code-bg); border-radius: 8px; padding: 10px 0; font: 400 12px/1.6 var(--mono); overflow-x: auto; }
+  pre.code .ln { display: block; padding: 0 14px; white-space: pre; border-left: 3px solid transparent; transition: background 0.25s; }
+  pre.code .ln.hl { background: var(--accent-soft); border-left-color: var(--accent); }
+  pre.code .ln.dim { color: var(--muted); }
+  .note { margin: 0; font-size: 14px; color: var(--muted); }
+  .note b { color: var(--ink); }
+
+  .cx { display: grid; gap: 10px; }
+  .cx h4, .cmp h4 { margin: 0; font: 600 12px var(--body); letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+  .cx-row { display: flex; flex-wrap: wrap; gap: 10px; }
+  .cx-box { flex: 1 1 140px; min-width: 0; border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; display: grid; gap: 2px; }
+  .cx-box .big { font: 700 18px var(--mono); }
+  .cx-box .k { font-size: 12px; color: var(--muted); }
+  .cx p { margin: 0; font-size: 14px; color: var(--muted); }
+  .cx p b { color: var(--ink); }
+
+  .cmp { display: grid; gap: 8px; }
+  .cmp-scroll { overflow-x: auto; }
+  .cmp table { border-collapse: collapse; width: 100%; font-size: 13px; min-width: 520px; }
+  .cmp th, .cmp td { text-align: left; padding: 7px 8px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+  .cmp th { font: 600 12px var(--body); color: var(--muted); }
+  .cmp td.mono { font: 500 12.5px var(--mono); }
+  .cmp tr.sel td { background: var(--accent-soft); }
+  .cmp tr.sel td:first-child { box-shadow: inset 3px 0 0 var(--accent); font-weight: 600; }
+  .cmp .good { color: var(--good); font-weight: 600; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .cell, pre.code .ln { transition: none !important; }
+    .cell.pulse, .chip.new { animation: none !important; }
+  }
+  @media (max-width: 480px) {
+    body { padding: 20px 16px 40px; }
+    .panel { padding: 14px; }
+    .counter { margin-left: 0; width: 100%; }
+  }
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>Word Search Visualizer</h1>
+    <p class="lede">LeetCode 79, step by step: the three backtracking versions from <code>org.example.wordsearch</code>. Watch a path grow letter by letter, hit a dead end, and get undone. Edit the board or the word and every version reruns.</p>
+  </header>
+
+  <div class="pickers">
+    <span class="pick-label">Algorithm</span>
+    <div class="seg" role="group" aria-label="Algorithm" id="algos"></div>
+  </div>
+  <div class="pickers">
+    <span class="pick-label">Preset</span>
+    <div class="seg" role="group" aria-label="Preset" id="presets"></div>
+  </div>
+  <div class="inputs">
+    <div class="field">
+      <label for="in-board">Board rows</label>
+      <textarea id="in-board" rows="4" spellcheck="false" autocomplete="off"></textarea>
+    </div>
+    <div class="field">
+      <label for="in-word">Word</label>
+      <input id="in-word" type="text" spellcheck="false" autocomplete="off">
+    </div>
+    <button class="btn" id="b-run">Run</button>
+    <p class="err" id="err" role="alert"></p>
+  </div>
+  <p class="summary" id="summary"></p>
+
+  <div class="grid2">
+    <div class="panel">
+      <div class="stats">
+        <div class="stat"><span class="n" id="s-visits">0</span><span class="k">cells visited</span></div>
+        <div class="stat warn"><span class="n" id="s-back">0</span><span class="k">backtracks</span></div>
+        <div class="stat"><span class="n" id="s-calls">0</span><span class="k">search() calls</span></div>
+        <div class="stat"><span class="n" id="s-path">0</span><span class="k">path length</span></div>
+      </div>
+
+      <div class="map-scroll"><div class="map" id="map" role="img" aria-label="Board"></div></div>
+
+      <div class="strip">
+        <div class="strip-head"><b>Word</b><span id="word-note"></span></div>
+        <div class="letters" id="letters"></div>
+      </div>
+
+      <div class="prune" id="prune" hidden>
+        <div class="strip-head"><b>Pruning</b><span>before any search</span></div>
+        <div class="prune-scroll"><table id="prune-table"></table></div>
+        <p id="prune-rev"></p>
+      </div>
+
+      <div class="strip">
+        <div class="strip-head"><b>Recursion stack</b><span>bottom → top · search(index, cell)</span></div>
+        <div class="chips" id="stack"></div>
+      </div>
+
+      <p class="explain" id="explain" aria-live="polite"></p>
+      <span class="result" id="result">searching…</span>
+
+      <div class="controls">
+        <button class="btn" id="b-reset">Reset</button>
+        <button class="btn" id="b-back">Back</button>
+        <button class="btn primary" id="b-next">Next</button>
+        <button class="btn" id="b-play">Play</button>
+        <button class="btn" id="b-end">Skip to end</button>
+        <span class="counter" id="counter"></span>
+      </div>
+      <p class="trunc" id="trunc"></p>
+
+      <div class="legend">
+        <span><i class="l-path"></i>on the current path (number = order)</span>
+        <span><i class="l-bad"></i>checked, does not match</span>
+        <span><i class="l-undo"></i>dead end, just un-marked</span>
+        <span><i class="l-hash"></i><span id="lg-mark">'#' mark</span></span>
+        <span><i class="l-found"></i>found path</span>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="code-head"><h3 id="code-title"></h3><span>lines that run are highlighted</span></div>
+      <pre class="code" id="code"></pre>
+      <p class="note" id="note"></p>
+
+      <div class="cx">
+        <h4>Complexity · m × n board, word length L</h4>
+        <div class="cx-row">
+          <div class="cx-box"><span class="big" id="cx-time"></span><span class="k">time, worst case</span></div>
+          <div class="cx-box"><span class="big" id="cx-space"></span><span class="k">extra space</span></div>
+        </div>
+        <p id="cx-why"></p>
+      </div>
+
+      <div class="cmp">
+        <h4>All three compared</h4>
+        <div class="cmp-scroll">
+          <table>
+            <thead><tr><th>Version</th><th>Time</th><th>Extra space</th><th>Marks the path with</th><th>Missing letter</th></tr></thead>
+            <tbody id="cmp-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ---------- pure simulation (no DOM; also run under node for testing) ---------- */
+const DIRS = [[-1, 0, 'up'], [1, 0, 'down'], [0, -1, 'left'], [0, 1, 'right']];
+
+const CODE = {
+  va: [
+    'public boolean exist(char[][] board, String word) {',
+    '    boolean[][] visited = new boolean[rows][cols];',
+    '    for (int row = 0; row < rows; row++)',
+    '        for (int col = 0; col < cols; col++)',
+    '            if (search(board, word, 0, row, col, visited)) return true;',
+    '    return false;',
+    '}',
+    '',
+    'private boolean search(char[][] board, String word, int index, int row, int col, boolean[][] visited) {',
+    '    if (index == word.length()) return true;        // every letter matched',
+    '    if (outside(row, col) || visited[row][col]',
+    '            || board[row][col] != word.charAt(index)) return false;',
+    '    visited[row][col] = true;                         // choose',
+    '    for (int[] d : DIRECTIONS)                        // up, down, left, right',
+    '        if (search(board, word, index + 1, row + d[0], col + d[1], visited)) return true;',
+    '    visited[row][col] = false;                        // un-choose: backtrack',
+    '    return false;',
+    '}'
+  ],
+  ip: [
+    'public boolean exist(char[][] board, String word) {',
+    '    for (int row = 0; row < rows; row++)',
+    '        for (int col = 0; col < cols; col++)',
+    '            if (search(board, word, 0, row, col)) return true;',
+    '    return false;',
+    '}',
+    '',
+    'private boolean search(char[][] board, String word, int index, int row, int col) {',
+    '    if (index == word.length()) return true;',
+    '    if (outside(row, col) || board[row][col] != word.charAt(index))',
+    "        return false;                                 // '#' never matches",
+    '    char letter = board[row][col];',
+    "    board[row][col] = '#';                            // choose",
+    '    boolean found = search(board, word, index + 1, row - 1, col)   // up',
+    '            || search(board, word, index + 1, row + 1, col)        // down',
+    '            || search(board, word, index + 1, row, col - 1)        // left',
+    '            || search(board, word, index + 1, row, col + 1);       // right',
+    '    board[row][col] = letter;                         // un-choose, even when found',
+    '    return found;',
+    '}'
+  ]
+};
+CODE.pr = [
+  'public boolean exist(char[][] board, String word) {',
+  '    if (word.length() > rows * cols) return false;      // not enough cells',
+  '    int[] boardCount = count every letter on the board;',
+  '    for (char letter : word.toCharArray())',
+  '        if (++wordCount[letter] > boardCount[letter]) return false;  // pruning 1',
+  '    if (boardCount[word.charAt(0)] > boardCount[word.charAt(L - 1)])',
+  '        word = reverse(word);                            // pruning 2: rare end first',
+  '    for (int row = 0; row < rows; row++)',
+  '        for (int col = 0; col < cols; col++)',
+  '            if (search(board, word, 0, row, col)) return true;',
+  '    return false;',
+  '}',
+  ''
+].concat(CODE.ip.slice(7));
+
+// line numbers per variant, by role
+const LINES = {
+  va: { init: [1], loop: [2, 3, 4], ret: [5], base: [9], check: [10, 11], choose: [12], dir: () => [13, 14], undo: [15, 16], win: [14], top: [4] },
+  ip: { init: [], loop: [1, 2, 3], ret: [4], base: [8], check: [9, 10], choose: [11, 12], dir: d => [13 + d], undo: [17, 18], win: [17, 18], top: [3] }
+};
+LINES.pr = (() => {
+  const s = k => k + 6, ip = LINES.ip;
+  return { init: [], loop: [7, 8, 9], ret: [10], base: ip.base.map(s), check: ip.check.map(s), choose: ip.choose.map(s),
+    dir: d => [s(13 + d)], undo: ip.undo.map(s), win: ip.win.map(s), top: [9], len: [1], count: [2], each: [3, 4], rev: [5, 6] };
+})();
+
+const P = (r, c) => `(${r},${c})`;
+
+/**
+ * Runs one variant on rows (array of strings) and word.
+ * Returns { found, snaps, truncated, aborted, calls, visits, backtracks, reversed, searchWord }.
+ * Snapshots stop after `cap`; the search keeps going (unrecorded) up to `callLimit` calls.
+ */
+function simulate(rows, word, variant, opts = {}) {
+  const cap = opts.cap ?? 600, callLimit = opts.callLimit ?? Infinity, record = opts.record !== false;
+  const R = rows.length, C = rows[0].length, N = R * C, L = LINES[variant];
+  const board = rows.join('').split('');
+  const vis = Array(N).fill(false);
+  const snaps = [], path = [];
+  let calls = 0, visits = 0, backtracks = 0, truncated = false, aborted = false;
+  let w = word, reversed = false, prune = null, foundPath = null, result = null;
+
+  const snap = (text, lines, extra = {}, force = false) => {
+    if (!record) return;
+    if (snaps.length >= cap && !force) { truncated = true; return; }
+    snaps.push({
+      board: board.slice(), vis: vis.slice(), path: path.slice(), word: w, reversed,
+      probe: null, undone: null, start: null, matchedTo: path.length,
+      calls, visits, backtracks, text, lines, quick: false, result,
+      prune: prune && { rows: prune.rows.map(x => ({ ...x })), cur: prune.cur, fail: prune.fail, rev: prune.rev },
+      ...extra
+    });
+  };
+  const ABORT = {};
+
+  const search = (i, r, c, from, dir) => {
+    calls++;
+    if (calls > callLimit) throw ABORT;
+    const callLines = from === null ? L.top : L.dir(dir);
+    if (i === w.length) {
+      foundPath = path.slice();
+      snap(`index == word.length() (${w.length}): every letter is matched. Return true.`, L.base, { matchedTo: w.length });
+      return true;
+    }
+    if (r < 0 || r >= R || c < 0 || c >= C) return false;     // off the board: rejected at once, not drawn
+    const id = r * C + c, here = board[id], dirName = from === null ? '' : `${DIRS[dir][2]} of ${P(from[0], from[1])}: `;
+    if (variant === 'va' && vis[id]) {
+      snap(`${dirName}${P(r, c)} is already on the path (visited = true). Return false.`, [...callLines, ...L.check],
+        { probe: { id, ok: false }, quick: true });
+      return false;
+    }
+    if (here !== w[i]) {
+      const t = from === null
+        ? `Start at ${P(r, c)}? It holds '${here}', not '${w[0]}'. Try the next cell.`
+        : here === '#'
+          ? `${dirName}${P(r, c)} is '#', so it is already on the path. '#' never equals a letter: return false.`
+          : `${dirName}${P(r, c)} holds '${here}', not '${w[i]}' (word[${i}]). Return false.`;
+      snap(t, [...callLines, ...L.check], { probe: { id, ok: false }, quick: true, start: from === null ? id : null });
+      return false;
+    }
+    // choose
+    visits++;
+    if (variant === 'va') vis[id] = true; else board[id] = '#';
+    path.push(id);
+    const nextNote = i + 1 < w.length ? ` Look at its neighbours for '${w[i + 1]}' (word[${i + 1}]).` : ' That was the last letter.';
+    snap(`${from === null ? 'Start at ' : dirName}${P(r, c)} = '${here}' matches word[${i}]. ` +
+      (variant === 'va' ? 'Set visited = true.' : `Overwrite it with '#' so the path cannot reuse it.`) + nextNote,
+      [...callLines, ...L.check, ...L.choose], { probe: { id, ok: true }, start: from === null ? id : null });
+
+    let found = false;
+    for (let d = 0; d < 4; d++) {
+      if (search(i + 1, r + DIRS[d][0], c + DIRS[d][1], [r, c], d)) { found = true; break; }
+    }
+    const parent = path.length > 1 ? path[path.length - 2] : null;
+    const back = parent === null ? 'exist()' : P(Math.floor(parent / C), parent % C);
+    if (found) {
+      if (variant !== 'va') board[id] = here;
+      path.pop();
+      snap(variant === 'va'
+        ? `${P(r, c)} got true from below, so it returns true to ${back} at once. visited stays true (the board itself is untouched).`
+        : `${P(r, c)} got true from below. Restore '${here}' over the '#' anyway, then return true to ${back}.`,
+        L.win, { quick: true });
+      return true;
+    }
+    // dead end: un-choose
+    if (variant === 'va') vis[id] = false; else board[id] = here;
+    path.pop();
+    backtracks++;
+    snap(`Dead end at ${P(r, c)}: no neighbour continues with '${w[i + 1] ?? ''}'. ` +
+      (variant === 'va' ? 'Set visited back to false' : `Restore '${here}' over the '#'`) +
+      (parent === null ? ', so no path starts here. Back in exist(), try the next start cell.' : ` and return false to ${back}, which tries its next direction.`),
+      L.undo, { undone: id });
+    return false;
+  };
+
+  const finish = () => {
+    if (foundPath) { path.length = 0; path.push(...foundPath); }
+    const head = truncated ? `Stopped recording after ${cap} steps; the search ran on to the end without recording. ` : '';
+    const txt = aborted
+      ? `Gave up after ${callLimit.toLocaleString()} search() calls. This is the 3^L blow-up: shrink the board or the word.`
+      : result
+        ? `Found "${word}"${reversed ? ` (as the reversed word "${w}")` : ''}. ${visits} cells visited, ${backtracks} backtracks, ${calls} calls.` +
+          (variant === 'va' ? '' : ` Every '#' was restored, so the board is unchanged.`)
+        : prune && prune.fail
+          ? `Answer: false, decided by counting alone. Zero search() calls.`
+          : `Every start cell failed: "${word}" is not on the board. ${visits} cells visited, ${backtracks} backtracks, ${calls} calls.`;
+    snap(head + txt, result ? L.top : (prune && prune.fail ? [] : L.ret),
+      { matchedTo: result ? w.length : 0 }, true);
+  };
+
+  if (variant === 'va') snap(`Create visited[${R}][${C}], all false. Then try every cell as the start of the word.`, [0, ...L.init]);
+  else snap(`Try every cell as the start of the word. Cells on the current path will be overwritten with '#'.`, [0]);
+
+  if (variant === 'pr') {
+    const counts = {};
+    board.forEach(ch => { counts[ch] = (counts[ch] || 0) + 1; });
+    const letters = [...new Set(word.split(''))];
+    prune = { rows: letters.map(ch => ({ ch, need: 0, have: counts[ch] || 0 })), cur: null, fail: null, rev: null };
+    if (word.length > N) {
+      prune.fail = 'len'; result = false;
+      snap(`The word has ${word.length} letters but the board only has ${N} cells. Return false without searching.`, L.len);
+      finish();
+      return { found: false, snaps, truncated, aborted, calls, visits, backtracks, reversed, searchWord: w };
+    }
+    snap(`Pruning first. Length check passes (${word.length} ≤ ${N} cells). Count every letter on the board: ` +
+      letters.map(ch => `${ch}=${counts[ch] || 0}`).join(', ') + '.', [...L.len, ...L.count]);
+    for (let k = 0; k < word.length; k++) {
+      const row = prune.rows.find(x => x.ch === word[k]);
+      row.need++;
+      prune.cur = row.ch;
+      if (row.need > row.have) {
+        prune.fail = row.ch; result = false;
+        snap(`word[${k}] = '${row.ch}': the word needs ${row.need} '${row.ch}' but the board has only ${row.have}. No path can exist: return false.`, L.each);
+        finish();
+        return { found: false, snaps, truncated, aborted, calls, visits, backtracks, reversed, searchWord: w };
+      }
+      snap(`word[${k}] = '${row.ch}': needs ${row.need} so far, board has ${row.have}. OK.`, L.each, { quick: true });
+    }
+    prune.cur = null;
+    const first = counts[word[0]] || 0, last = counts[word[word.length - 1]] || 0;
+    if (first > last) {
+      reversed = true;
+      w = word.split('').reverse().join('');
+      prune.rev = { first, last, did: true };
+      snap(`First letter '${word[0]}' is on ${first} cells, last letter '${word[word.length - 1]}' on only ${last}. Search the reversed word "${w}": same answer, fewer starts.`, L.rev);
+    } else {
+      prune.rev = { first, last, did: false };
+      snap(`First letter '${word[0]}' is on ${first} cell${first === 1 ? '' : 's'}, last letter '${word[word.length - 1]}' on ${last}. The start is already the rarer end: keep "${w}".`, L.rev.slice(0, 1));
+    }
+  }
+
+  try {
+    outer:
+    for (let r = 0; r < R; r++) for (let c = 0; c < C; c++) {
+      if (search(0, r, c, null, -1)) { result = true; break outer; }
+    }
+    if (result === null) result = false;
+  } catch (e) {
+    if (e !== ABORT) throw e;
+    aborted = true; result = null;
+  }
+  finish();
+  return { found: result, snaps, truncated, aborted, calls, visits, backtracks, reversed, searchWord: w };
+}
+
+/* ---------- variants ---------- */
+const ALGOS = [
+  { id: 'va', label: 'Visited array', title: 'WordSearchVisitedArray.java', mark: 'visited[r][c] = true',
+    summary: 'Backtracking DFS with a separate boolean[][] visited. Choose a matching cell, recurse into its 4 neighbours, and set visited back to false on the way out.',
+    note: '<b>The board is never written to.</b> visited[][] remembers the current path. A found path returns true straight away, so visited stays dirty, but nobody reads it again.',
+    cx: { time: 'O(m·n·3^L)', space: 'O(m·n + L)', missing: 'full search',
+      why: '<b>Time:</b> any of the m·n cells can start a path. From the first letter there are 4 directions, after that only 3, because the cell you came from is already on the path. So each start explores at most 4·3^(L-1) paths. <b>Space:</b> the visited array takes m·n booleans, and the call stack is at most L deep.' } },
+  { id: 'ip', label: 'In-place #', title: 'WordSearchInPlace.java', mark: "'#' in the board",
+    summary: "Same backtracking, no extra array: a cell on the path is overwritten with '#', which never matches a letter, and the original letter is put back on the way out.",
+    note: "<b>Restore even on success.</b> Line <code>board[row][col] = letter</code> runs whether the call found the word or not, so the caller gets its board back unchanged.",
+    cx: { time: 'O(m·n·3^L)', space: 'O(L)', missing: 'full search',
+      why: "<b>Time:</b> same search tree as the visited-array version: m·n starts × 4·3^(L-1) paths. <b>Space:</b> only the call stack, at most L frames deep. The '#' marks live in the board itself." } },
+  { id: 'pr', label: 'Pruned', title: 'WordSearchPruned.java (condensed)', mark: "'#' in the board",
+    summary: 'In-place backtracking plus two cheap checks first: if the board lacks letters the word needs, answer false at once; if the first letter is commoner than the last, search the reversed word.',
+    note: '<b>Try the worst case:</b> on the all-A board the other two versions explore thousands of paths before giving up; this one counts letters and stops with zero calls.',
+    cx: { time: 'O(m·n·3^L)', space: 'O(L)', missing: 'O(m·n + L)',
+      why: '<b>Time:</b> the worst case does not change (a board can contain every letter and still not the word), but counting costs only O(m·n + L). Words with a missing letter are rejected without any search, and starting from the rarer end cuts the number of start cells. <b>Space:</b> call stack O(L) plus two count arrays of fixed size (128 chars), so O(1).' } }
+];
+
+const PRESETS = [
+  { id: 'abcced', label: 'LeetCode · ABCCED', rows: ['ABCE', 'SFCS', 'ADEE'], word: 'ABCCED' },
+  { id: 'see', label: 'LeetCode · SEE', rows: ['ABCE', 'SFCS', 'ADEE'], word: 'SEE' },
+  { id: 'abcb', label: 'LeetCode · ABCB', rows: ['ABCE', 'SFCS', 'ADEE'], word: 'ABCB' },
+  { id: 'dead', label: 'Dead ends', rows: ['SEES', 'EESE', 'SESD'], word: 'SEESESD' },
+  { id: 'worst', label: "Worst case · all 'A'", rows: ['AAA', 'AAA', 'AAA'], word: 'AAAAAB' }
+];
+
+/* ---------- UI ---------- */
+function initUI() {
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const $ = id => document.getElementById(id);
+  let algo = ALGOS[1], preset = PRESETS[1], rows = preset.rows, word = preset.word;
+  let run = null, snaps = [], cur = 0, timer = null, cellEls = [];
+
+  function renderPickers() {
+    $('algos').replaceChildren(...ALGOS.map(a => {
+      const b = document.createElement('button');
+      b.textContent = a.label; b.setAttribute('aria-pressed', a === algo);
+      b.onclick = () => { algo = a; renderPickers(); start(); };
+      return b;
+    }));
+    $('presets').replaceChildren(...PRESETS.map(p => {
+      const b = document.createElement('button');
+      b.textContent = p.label; b.setAttribute('aria-pressed', p === preset);
+      b.onclick = () => { preset = p; rows = p.rows; word = p.word; fillInputs(); renderPickers(); buildMap(); start(); };
+      return b;
+    }));
+  }
+  function fillInputs() { $('in-board').value = rows.join('\n'); $('in-word').value = word; $('err').textContent = ''; }
+
+  function readInputs() {
+    const rs = $('in-board').value.toUpperCase().split(/[\s,]+/).filter(Boolean);
+    const w = $('in-word').value.toUpperCase().trim();
+    if (!rs.length) return 'Enter at least one board row.';
+    if (rs.some(r => !/^[A-Z]+$/.test(r))) return 'Board rows may only contain letters A to Z.';
+    if (rs.some(r => r.length !== rs[0].length)) return 'Every board row must have the same length.';
+    if (rs.length > 8 || rs[0].length > 8) return 'Keep the board at most 8 × 8 so it stays readable.';
+    if (!/^[A-Z]+$/.test(w)) return 'The word must be 1 or more letters A to Z.';
+    if (w.length > 16) return 'Keep the word at most 16 letters.';
+    rows = rs; word = w; preset = null;
+    return null;
+  }
+  function onRun() {
+    const err = readInputs();
+    $('err').textContent = err || '';
+    if (err) return;
+    renderPickers(); buildMap(); start();
+  }
+  $('b-run').onclick = onRun;
+  $('in-word').addEventListener('keydown', e => { if (e.key === 'Enter') onRun(); });
+
+  function buildMap() {
+    const R = rows.length, C = rows[0].length, map = $('map');
+    map.style.gridTemplateColumns = `repeat(${C}, var(--cell))`;
+    map.setAttribute('aria-label', `Board, ${R} rows by ${C} columns`);
+    cellEls = [];
+    map.replaceChildren();
+    for (let r = 0; r < R; r++) for (let c = 0; c < C; c++) {
+      const d = document.createElement('div');
+      d.className = 'cell';
+      d.innerHTML = `<span class="coord">${r},${c}</span><span class="ch"></span><span class="was"></span>`;
+      map.append(d);
+      cellEls.push(d);
+    }
+  }
+
+  function start() {
+    stop();
+    run = simulate(rows, word, algo.id, { cap: 600, callLimit: 2000000 });
+    snaps = run.snaps;
+    $('code').innerHTML = CODE[algo.id].map(l => `<span class="ln">${l.replace(/&/g, '&amp;').replace(/</g, '&lt;') || ' '}</span>`).join('');
+    $('code-title').textContent = algo.title;
+    $('summary').textContent = algo.summary;
+    $('note').innerHTML = algo.note;
+    $('lg-mark').textContent = algo.id === 'va' ? "'#' mark (not used here)" : "'#' mark (original letter below)";
+    $('cx-time').textContent = algo.cx.time;
+    $('cx-space').textContent = algo.cx.space;
+    $('cx-why').innerHTML = algo.cx.why;
+    $('cmp-body').innerHTML = ALGOS.map(a => `<tr class="${a === algo ? 'sel' : ''}">
+      <td>${a.label}</td><td class="mono">${a.cx.time}</td><td class="mono">${a.cx.space}</td>
+      <td class="mono">${a.mark}</td><td class="${a.id === 'pr' ? 'good mono' : ''}">${a.cx.missing}</td></tr>`).join('');
+    $('prune').hidden = algo.id !== 'pr';
+    $('trunc').textContent = run.truncated ? `This run took more than 600 steps, so only the first 600 are recorded; the last step jumps to the final answer.` : '';
+    // open mid-way: the first dead end below the start cell, else the middle
+    let at = snaps.findIndex(s => s.undone !== null && s.path.length >= 1);
+    if (at < 0) at = Math.floor((snaps.length - 1) / 2);
+    cur = -1;
+    render(at, false);
+  }
+
+  function render(i, animate = true) {
+    const s = snaps[i], p = snaps[i - 1];
+    const forward = animate && p && i === cur + 1;
+    const C = rows[0].length;
+    const last = i === snaps.length - 1;
+    const pathIndex = new Map(s.path.map((id, k) => [id, k]));
+    const done = last && s.result === true;
+    s.board.forEach((ch, id) => {
+      const el = cellEls[id];
+      const cls = ['cell'];
+      const onPath = pathIndex.has(id);
+      if (onPath) cls.push(done ? 'found' : 'path');
+      if (ch === '#') cls.push('hash');
+      if (s.undone === id) cls.push('undo');
+      if (s.start === id && !(s.probe && s.probe.id === id)) cls.push('start');
+      if (s.probe && s.probe.id === id) cls.push(s.probe.ok ? 'probe-ok' : 'probe-bad');
+      const wasProbe = el.classList.contains('probe-ok') || el.classList.contains('probe-bad');
+      el.className = cls.join(' ');
+      el.querySelector('.ch').textContent = ch;
+      el.querySelector('.was').textContent = ch === '#' ? rows[Math.floor(id / C)][id % C] : (algo.id === 'va' && s.vis[id] && !onPath ? 'vis' : '');
+      let num = el.querySelector('.num');
+      if (onPath) {
+        if (!num) { num = document.createElement('span'); num.className = 'num'; el.append(num); }
+        num.textContent = pathIndex.get(id) + 1;
+      } else if (num) num.remove();
+      if (s.probe && s.probe.id === id && animate && !reduced && !wasProbe) { void el.offsetWidth; el.classList.add('pulse'); }
+    });
+
+    // word strip
+    const w = s.word;
+    const probeIdx = s.probe && !s.probe.ok ? s.path.length : null;
+    $('letters').innerHTML = w.split('').map((ch, k) => {
+      const cls = ['letter'];
+      if (k < s.matchedTo) cls.push(done ? 'done' : 'ok');
+      else if (probeIdx === k) cls.push('bad');
+      else if (k === s.matchedTo && s.result === null) cls.push('next');
+      return `<span class="${cls.join(' ')}">${ch}<small>${k}</small></span>`;
+    }).join('');
+    $('word-note').textContent = s.reversed ? `searching the reverse of "${word}"` : `${Math.min(s.matchedTo, w.length)} of ${w.length} matched`;
+
+    // pruning table
+    if (algo.id === 'pr') {
+      const pr = s.prune;
+      if (!pr) {
+        $('prune-table').innerHTML = '<tr><td>not counted yet</td></tr>';
+        $('prune-rev').textContent = '';
+      } else {
+        const cell = (x, v) => `<td class="${pr.fail === x.ch ? 'fail' : pr.cur === x.ch ? 'cur' : ''}">${v}</td>`;
+        $('prune-table').innerHTML =
+          `<tr><th>letter</th>${pr.rows.map(x => cell(x, x.ch)).join('')}</tr>` +
+          `<tr><th>word needs</th>${pr.rows.map(x => cell(x, x.need)).join('')}</tr>` +
+          `<tr><th>board has</th>${pr.rows.map(x => cell(x, x.have)).join('')}</tr>`;
+        $('prune-rev').innerHTML = pr.fail === 'len' ? '<b>Word longer than the board.</b> Answer false.'
+          : pr.fail ? `<b>Not enough '${pr.fail}'.</b> Answer false without searching.`
+          : pr.rev ? (pr.rev.did ? `<b>Reversed:</b> first letter on ${pr.rev.first} cells &gt; last letter on ${pr.rev.last}, so search "${s.word}".`
+            : `<b>Not reversed:</b> first letter on ${pr.rev.first} cells ≤ last letter on ${pr.rev.last}.`)
+          : 'Counting the word letters…';
+      }
+    }
+
+    // recursion stack
+    const box = $('stack');
+    const frames = s.path.map((id, k) => ({ k, id, ghost: false }));
+    if (s.probe && !s.probe.ok) frames.push({ k: s.path.length, id: s.probe.id, ghost: true });
+    if (!frames.length || (last && s.result !== null)) box.innerHTML = '<span class="empty">empty: back in exist()</span>';
+    else {
+      const grew = forward && s.path.length > p.path.length;
+      box.innerHTML = frames.map((f, k) => {
+        const cls = ['chip'];
+        if (f.ghost) cls.push('ghost');
+        else if (k === s.path.length - 1) cls.push('top');
+        if ((grew && !f.ghost && k === s.path.length - 1) || (f.ghost && animate)) cls.push('new');
+        const r = Math.floor(f.id / C), c = f.id % C;
+        return `<span class="${cls.join(' ')}">${f.k} · ${r},${c}${f.ghost ? ' ✗' : ''}</span>`;
+      }).join('');
+    }
+
+    $('s-visits').textContent = s.visits;
+    $('s-back').textContent = s.backtracks;
+    $('s-calls').textContent = s.calls;
+    $('s-path').textContent = done ? w.length : s.path.length;
+    $('explain').textContent = s.text;
+    const res = $('result');
+    if (last && s.result === true) { res.className = 'result yes'; res.textContent = 'exist() returns true'; }
+    else if (last && s.result === false) { res.className = 'result no'; res.textContent = 'exist() returns false'; }
+    else if (last) { res.className = 'result'; res.textContent = 'gave up'; }
+    else { res.className = 'result'; res.textContent = 'searching…'; }
+
+    const hl = new Set(s.lines);
+    [...$('code').children].forEach((ln, n) => {
+      ln.classList.toggle('hl', hl.has(n));
+      ln.classList.toggle('dim', hl.size > 0 && !hl.has(n));
+    });
+
+    const lastI = snaps.length - 1;
+    $('counter').textContent = `step ${i + 1} of ${lastI + 1}`;
+    $('b-back').disabled = i === 0;
+    $('b-next').disabled = i === lastI;
+    $('b-end').disabled = i === lastI;
+    cur = i;
+  }
+
+  function stop() { clearTimeout(timer); timer = null; $('b-play').textContent = 'Play'; }
+  function tick() {
+    if (cur >= snaps.length - 1) return stop();
+    render(cur + 1);
+    timer = setTimeout(tick, snaps[cur].quick ? 320 : 850);
+  }
+  function play() {
+    if (timer) return stop();
+    if (cur === snaps.length - 1) render(0, false);
+    $('b-play').textContent = 'Pause';
+    timer = setTimeout(tick, 200);
+  }
+
+  $('b-next').onclick = () => { stop(); if (cur < snaps.length - 1) render(cur + 1); };
+  $('b-back').onclick = () => { stop(); if (cur > 0) render(cur - 1); };
+  $('b-reset').onclick = () => { stop(); render(0, false); };
+  $('b-end').onclick = () => { stop(); render(snaps.length - 1, false); };
+  $('b-play').onclick = play;
+  document.addEventListener('keydown', e => {
+    if (e.target.closest && e.target.closest('input, textarea, .seg')) return;
+    if (e.key === 'ArrowRight') $('b-next').click();
+    if (e.key === 'ArrowLeft') $('b-back').click();
+  });
+
+  fillInputs(); renderPickers(); buildMap(); start();
+}
+
+if (typeof document !== 'undefined') initUI();
+</script>
+
+</body></html>

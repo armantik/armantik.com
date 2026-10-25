@@ -1,0 +1,843 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style>
+<title>LRU &amp; LFU Cache Visualizer · Arman Ajabkhani</title>
+<meta name="description" content="How LRU and LFU caches pick what to evict, one operation at a time, with diagrams of the data structures.">
+<meta property="og:title" content="LRU &amp; LFU Cache Visualizer">
+<meta property="og:description" content="How LRU and LFU caches pick what to evict, one operation at a time, with diagrams of the data structures.">
+<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+<script src="../assets/theme.js"></script>
+<style>
+/* armantik.com bar: links this guide back to the site */
+.aa-labbar { --aa-ink: #16211F; --aa-muted: #4A5855; --aa-line: #DCE3E0; --aa-accent: #0F5C55;
+  max-width: 1160px; margin: 0 auto 14px; padding: 0 0 10px; border-bottom: 1px solid var(--aa-line);
+  display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 6px 18px;
+  font: 500 13px/1.4 "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .aa-labbar { --aa-ink: #E3EAE7; --aa-muted: #A3B1AD; --aa-line: #2B3633; --aa-accent: #5BB8AA; } }
+:root[data-theme="dark"] .aa-labbar { --aa-ink: #E3EAE7; --aa-muted: #A3B1AD; --aa-line: #2B3633; --aa-accent: #5BB8AA; }
+.aa-labbar a { color: var(--aa-muted); text-decoration: none; display: inline-flex; align-items: center; gap: 8px; min-height: 32px; }
+.aa-labbar a:hover { color: var(--aa-accent); }
+.aa-labbar .aa-home { color: var(--aa-ink); font-weight: 600; }
+.aa-labbar.aa-pad { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-top: 12px; }
+.aa-right { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 6px 16px; }
+.aa-labbar .aa-crumb { color: var(--aa-muted); }
+.aa-labbar button { display: inline-flex; align-items: center; gap: 6px; min-height: 32px; padding: 0 10px; border: 1px solid var(--aa-line); border-radius: 999px;
+  background: transparent; color: var(--aa-muted); font: inherit; cursor: pointer; }
+.aa-labbar button:hover { color: var(--aa-accent); border-color: var(--aa-accent); }
+.aa-prob { max-width: 1160px; margin: -4px auto 16px; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px;
+  font: 500 13px/1.5 "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace; color: var(--aa-muted, #4A5855); }
+.aa-prob { --aa-muted: #4A5855; --aa-accent: #0F5C55; --aa-line: #DCE3E0; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .aa-prob { --aa-muted: #A3B1AD; --aa-accent: #5BB8AA; --aa-line: #2B3633; } }
+:root[data-theme="dark"] .aa-prob { --aa-muted: #A3B1AD; --aa-accent: #5BB8AA; --aa-line: #2B3633; }
+.aa-prob b { font-weight: 600; color: var(--aa-accent); text-transform: uppercase; letter-spacing: .06em; font-size: 11.5px; }
+.aa-prob a { color: var(--aa-accent); }
+.aa-prob span.aa-own { color: var(--aa-muted); }
+</style>
+</head>
+<body>
+<nav class="aa-labbar" aria-label="armantik.com"><a class="aa-home" href="../index.html"><svg viewBox="0 0 64 64" width="20" height="20" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#0F5C55"/><path d="M18 49 L32 15 L46 49 M23.5 37 H40.5" fill="none" stroke="#FAFBF9" stroke-width="6.5" stroke-linecap="square"/></svg>Arman Ajabkhani</a><span class="aa-right"><a class="aa-crumb" href="index.html#algorithms">Lab / Algorithms</a><a href="index.html">← All Lab guides</a><button type="button" data-theme-toggle aria-label="Switch theme">Theme</button></span></nav>
+<p class="aa-prob"><b>Problem</b> <a href="https://leetcode.com/problems/lru-cache/" target="_blank" rel="noopener">LeetCode 146. LRU Cache ↗</a> · <a href="https://neetcode.io/problems/lru-cache" target="_blank" rel="noopener">NeetCode LRU Cache ↗</a> · <a href="https://leetcode.com/problems/lfu-cache/" target="_blank" rel="noopener">LeetCode 460. LFU Cache ↗</a> · <a href="https://neetcode.io/problems/lfu-cache" target="_blank" rel="noopener">NeetCode LFU Cache ↗</a><span class="aa-own">· The solutions on this page are my own.</span></p>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap">
+<style>
+  /* Layout: narrow header, two tabs; step view = stage + controls left, Java source right; diagrams stacked as figures */
+  :root {
+    --bg: #f3f6f5;
+    --surface: #ffffff;
+    --ink: #17201c;
+    --muted: #5b6862;
+    --line: #d6ddd9;
+    --line-strong: #9fada6;
+    --accent: #2457d6;
+    --accent-soft: #e3eafc;
+    --evict: #c23d2b;
+    --evict-soft: #fbe6e2;
+    --new: #a86a12;
+    --new-soft: #fbf0dc;
+    --hit: #1d8455;
+    --code-bg: #eef2f0;
+    --display: "Bricolage Grotesque", "Avenir Next", system-ui, sans-serif;
+    --body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+    --mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #101513; --surface: #182019; --ink: #e6ece9; --muted: #95a39c;
+      --line: #2b3631; --line-strong: #52625a; --accent: #84a5ff; --accent-soft: #1d2a4d;
+      --evict: #ff7d69; --evict-soft: #3d1f1a; --new: #e7b24f; --new-soft: #3a2c12;
+      --hit: #52c98f; --code-bg: #141b17; color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #101513; --surface: #182019; --ink: #e6ece9; --muted: #95a39c;
+    --line: #2b3631; --line-strong: #52625a; --accent: #84a5ff; --accent-soft: #1d2a4d;
+    --evict: #ff7d69; --evict-soft: #3d1f1a; --new: #e7b24f; --new-soft: #3a2c12;
+    --hit: #52c98f; --code-bg: #141b17; color-scheme: dark;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    background: var(--bg); color: var(--ink);
+    font: 15px/1.55 var(--body);
+    padding: 28px 20px 48px;
+  }
+  .wrap { max-width: 1060px; margin: 0 auto; display: grid; gap: 24px; }
+
+  header { display: grid; gap: 6px; }
+  h1 {
+    font: 700 clamp(28px, 5vw, 40px)/1.1 var(--display);
+    letter-spacing: -0.02em; margin: 0; text-wrap: balance;
+  }
+  .lede { color: var(--muted); margin: 0; max-width: 62ch; }
+  .lede code, p code, li code, figcaption code { font: 500 0.88em var(--mono); color: var(--ink); }
+
+  .tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+  .tab {
+    appearance: none; border: 0; background: none; color: var(--muted);
+    font: 600 15px var(--body); padding: 10px 14px; cursor: pointer;
+    border-bottom: 2px solid transparent; margin-bottom: -1px;
+  }
+  .tab[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--accent); }
+  .tab:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  /* ---------- step view ---------- */
+  .seg { display: inline-flex; border: 1px solid var(--line-strong); border-radius: 8px; overflow: hidden; }
+  .seg button {
+    appearance: none; border: 0; background: var(--surface); color: var(--muted);
+    font: 600 14px var(--body); padding: 7px 16px; cursor: pointer;
+  }
+  .seg button + button { border-left: 1px solid var(--line-strong); }
+  .seg button[aria-pressed="true"] { background: var(--ink); color: var(--bg); }
+
+  .step-top { display: flex; flex-wrap: wrap; gap: 12px 20px; align-items: center; justify-content: space-between; }
+  .rule { color: var(--muted); margin: 0; font-size: 14px; }
+
+  .step-grid { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: 20px; align-items: start; }
+  @media (max-width: 820px) { .step-grid { grid-template-columns: minmax(0, 1fr); } }
+
+  .panel { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 18px; min-width: 0; }
+
+  .stage-scroll { overflow-x: auto; padding-block: 6px; }
+  .stage { position: relative; margin: 0 auto; }
+  .slot {
+    position: absolute; width: 64px; height: 52px; border-radius: 8px;
+    border: 1.5px dashed var(--line-strong);
+  }
+  .stage-label { position: absolute; font: 500 12px var(--body); color: var(--muted); white-space: nowrap; }
+  .stage-label.evict { color: var(--evict); }
+  .stage-label.acc { color: var(--accent); }
+
+  .track {
+    position: absolute; height: 52px; border-radius: 10px;
+    background: var(--code-bg); border: 1px solid var(--line);
+    transition: background 0.35s, border-color 0.35s;
+  }
+  .track .rl {
+    position: absolute; left: 10px; top: 50%; transform: translateY(-50%);
+    font: 500 12px var(--mono); color: var(--muted);
+  }
+  .track .mintag {
+    position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+    font: 600 11px var(--body); color: var(--accent); letter-spacing: 0.04em; text-transform: uppercase;
+    opacity: 0; transition: opacity 0.3s;
+  }
+  .track.is-min { background: var(--accent-soft); border-color: var(--accent); }
+  .track.is-min .mintag { opacity: 1; }
+
+  .tok {
+    position: absolute; left: 0; top: 0; width: 64px; height: 52px; z-index: 2;
+    border-radius: 8px; background: var(--surface); border: 1.5px solid var(--line-strong);
+    display: grid; place-content: center; text-align: center; line-height: 1.1;
+    transition: transform 0.5s cubic-bezier(.2,.8,.2,1), opacity 0.4s, background 0.3s, border-color 0.3s;
+  }
+  .tok .k { font: 700 18px var(--mono); }
+  .tok .v { font: 400 11px var(--mono); color: var(--muted); }
+  .tok.enter { opacity: 0; }
+  .tok.is-touched { border-color: var(--accent); background: var(--accent-soft); border-width: 2px; }
+  .tok.is-new { border-color: var(--new); background: var(--new-soft); border-width: 2px; }
+  .tok.is-evicted { border-color: var(--evict); background: var(--evict-soft); opacity: 0; transition-duration: 0.7s, 0.9s, 0.2s, 0.2s; }
+
+  .status { display: grid; gap: 10px; margin-top: 14px; }
+  .op-line { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
+  .op-name { font: 700 17px var(--mono); }
+  .chip {
+    font: 600 12px var(--body); padding: 3px 9px; border-radius: 999px;
+    border: 1px solid currentColor; letter-spacing: 0.02em;
+  }
+  .chip.hit { color: var(--hit); }
+  .chip.miss, .chip.evict { color: var(--evict); }
+  .chip.insert { color: var(--new); }
+  .chip.update { color: var(--accent); }
+  .chip.idle { color: var(--muted); }
+  .explain { margin: 0; max-width: 62ch; }
+  .meta { font: 500 12px var(--mono); color: var(--muted); }
+
+  .controls { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; align-items: center; }
+  .btn {
+    appearance: none; font: 600 14px var(--body); padding: 8px 14px; border-radius: 8px; cursor: pointer;
+    border: 1px solid var(--line-strong); background: var(--surface); color: var(--ink);
+  }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: var(--surface); }
+  .btn:disabled { opacity: 0.4; cursor: default; }
+  .counter { margin-left: auto; font: 500 13px var(--mono); color: var(--muted); font-variant-numeric: tabular-nums; }
+
+  .ops { display: flex; flex-wrap: wrap; gap: 6px; margin: 16px 0 0; padding: 0; list-style: none; }
+  .ops button {
+    appearance: none; font: 500 12px var(--mono); padding: 5px 8px; border-radius: 6px; cursor: pointer;
+    border: 1px solid var(--line); background: var(--bg); color: var(--muted);
+  }
+  .ops button.done { color: var(--ink); }
+  .ops button[aria-current="step"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+
+  .code-head { display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
+  .code-head h3 { margin: 0; font: 600 14px var(--mono); }
+  .code-head span { font-size: 12px; color: var(--muted); }
+  pre.code {
+    margin: 0; background: var(--code-bg); border-radius: 8px; padding: 10px 0;
+    font: 400 12.5px/1.6 var(--mono); overflow-x: auto;
+  }
+  pre.code .ln { display: block; padding: 0 14px; white-space: pre; border-left: 3px solid transparent; transition: background 0.25s; }
+  pre.code .ln.hl { background: var(--accent-soft); border-left-color: var(--accent); color: var(--ink); }
+  pre.code .ln.dim { color: var(--muted); }
+
+  .legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 13px; color: var(--muted); }
+  .legend i { display: inline-block; width: 12px; height: 12px; border-radius: 3px; vertical-align: -1px; margin-right: 6px; border: 2px solid; }
+  .legend .l-touch { border-color: var(--accent); background: var(--accent-soft); }
+  .legend .l-new { border-color: var(--new); background: var(--new-soft); }
+  .legend .l-ev { border-color: var(--evict); background: var(--evict-soft); }
+
+  /* ---------- diagrams ---------- */
+  .dsec { display: grid; gap: 18px; }
+  .dsec + .dsec { margin-top: 20px; padding-top: 28px; border-top: 1px solid var(--line); }
+  h2 { font: 700 24px/1.2 var(--display); margin: 0; letter-spacing: -0.01em; }
+  h2 small { font: 500 14px var(--mono); color: var(--muted); margin-left: 8px; letter-spacing: 0; }
+  .dsec > p { margin: 0; max-width: 66ch; color: var(--muted); }
+  figure { margin: 0; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 18px; min-width: 0; }
+  figure .svgwrap { overflow-x: auto; }
+  figure svg { display: block; width: 100%; min-width: 560px; height: auto; }
+  figcaption { margin-top: 12px; font-size: 14px; color: var(--muted); max-width: 70ch; }
+  figcaption b { color: var(--ink); font-weight: 600; }
+
+  .d-box { fill: var(--surface); stroke: var(--line-strong); stroke-width: 1.25; }
+  .d-soft { fill: var(--code-bg); stroke: var(--line); stroke-width: 1; }
+  .d-acc { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 2; }
+  .d-acc-o { fill: var(--surface); stroke: var(--accent); stroke-width: 2; }
+  .d-ev { fill: var(--evict-soft); stroke: var(--evict); stroke-width: 2; }
+  .d-ev-o { fill: var(--surface); stroke: var(--evict); stroke-width: 2; }
+  .d-dashbox { stroke-dasharray: 5 4; }
+  .d-new { fill: var(--new-soft); stroke: var(--new); stroke-width: 2; }
+  .d-t { fill: var(--ink); font: 500 13px var(--mono); dominant-baseline: central; }
+  .d-tb { fill: var(--ink); font: 700 15px var(--mono); dominant-baseline: central; }
+  .d-h { fill: var(--ink); font: 600 13px var(--body); dominant-baseline: central; }
+  .d-s { fill: var(--muted); font: 400 12px var(--body); dominant-baseline: central; }
+  .d-sm { fill: var(--muted); font: 400 10.5px var(--body); dominant-baseline: central; }
+  .d-et { fill: var(--evict); }
+  .d-at { fill: var(--accent); }
+  .d-line { stroke: var(--muted); stroke-width: 1.3; fill: none; }
+  .d-line-acc { stroke: var(--accent); stroke-width: 1.6; fill: none; }
+  .d-dash { stroke-dasharray: 4 4; }
+  .m-muted { fill: var(--muted); }
+  .m-acc { fill: var(--accent); }
+
+  @media (prefers-reduced-motion: reduce) {
+    .tok, .track, .track .mintag, pre.code .ln { transition: none !important; }
+  }
+  @media (max-width: 480px) {
+    body { padding: 20px 16px 40px; }
+    .panel, figure { padding: 14px; }
+    .counter { margin-left: 0; width: 100%; }
+  }
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>LRU &amp; LFU Cache Visualizer</h1>
+    <p class="lede">How <code>SimpleLRUCache</code> and <code>SimpleLFUCache</code> decide which key to throw out. Every example uses a capacity of 3.</p>
+  </header>
+
+  <div class="tabs" role="tablist">
+    <button class="tab" role="tab" id="tab-step" aria-controls="view-step" aria-selected="true">Step through</button>
+    <button class="tab" role="tab" id="tab-diagrams" aria-controls="view-diagrams" aria-selected="false">Diagrams</button>
+  </div>
+
+  <!-- ================= STEP THROUGH ================= -->
+  <section id="view-step" role="tabpanel" aria-labelledby="tab-step" class="wrap" style="gap:18px">
+    <div class="step-top">
+      <div class="seg" role="group" aria-label="Cache type">
+        <button id="pick-lru" aria-pressed="true">LRU</button>
+        <button id="pick-lfu" aria-pressed="false">LFU</button>
+      </div>
+      <p class="rule" id="rule"></p>
+    </div>
+
+    <div class="step-grid">
+      <div class="panel">
+        <div class="stage-scroll"><div class="stage" id="stage"></div></div>
+
+        <div class="status" aria-live="polite">
+          <div class="op-line">
+            <span class="op-name" id="op-name"></span>
+            <span class="chip" id="op-chip"></span>
+          </div>
+          <p class="explain" id="explain"></p>
+          <div class="meta" id="meta"></div>
+        </div>
+
+        <div class="controls">
+          <button class="btn" id="b-reset">Reset</button>
+          <button class="btn" id="b-back">Back</button>
+          <button class="btn primary" id="b-next">Next</button>
+          <button class="btn" id="b-play">Play</button>
+          <span class="counter" id="counter"></span>
+        </div>
+
+        <ol class="ops" id="ops" aria-label="Operations"></ol>
+
+        <div class="legend" style="margin-top:16px">
+          <span><i class="l-touch"></i>just used</span>
+          <span><i class="l-new"></i>just added</span>
+          <span><i class="l-ev"></i>evicted</span>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="code-head">
+          <h3 id="code-title"></h3>
+          <span>lines that run are highlighted</span>
+        </div>
+        <pre class="code" id="code"></pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= DIAGRAMS ================= -->
+  <section id="view-diagrams" role="tabpanel" aria-labelledby="tab-diagrams" hidden>
+    <div class="dsec">
+      <h2>LRU <small>SimpleLRUCache.java</small></h2>
+      <p>A <code>LinkedHashMap</code> is two structures sharing the same entries: a hash table to find a key fast, and a linked list that remembers order. The cache only ever touches the two ends of the list.</p>
+
+      <figure>
+        <div class="svgwrap">
+        <svg viewBox="0 0 720 260" role="img" aria-label="The hash index finds each entry by key; the entries are linked front to end, the front is evicted and new keys are added at the end.">
+          <defs>
+            <marker id="lruA-m" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="m-muted" d="M0,0 L10,5 L0,10 z"/></marker>
+          </defs>
+          <text class="d-h" x="20" y="50">hash index</text>
+          <text class="d-s" x="20" y="68">finds a key fast</text>
+          <rect class="d-soft" x="170" y="40" width="90" height="34" rx="6"/><text class="d-t" x="215" y="57" text-anchor="middle">key 3</text>
+          <rect class="d-soft" x="330" y="40" width="90" height="34" rx="6"/><text class="d-t" x="375" y="57" text-anchor="middle">key 1</text>
+          <rect class="d-soft" x="490" y="40" width="90" height="34" rx="6"/><text class="d-t" x="535" y="57" text-anchor="middle">key 2</text>
+          <text class="d-sm" x="592" y="57">hash order ≠ use order</text>
+
+          <line class="d-line d-dash" x1="375" y1="76" x2="210" y2="146" marker-end="url(#lruA-m)"/>
+          <line class="d-line d-dash" x1="535" y1="76" x2="378" y2="146" marker-end="url(#lruA-m)"/>
+          <line class="d-line d-dash" x1="215" y1="76" x2="540" y2="146" marker-end="url(#lruA-m)"/>
+
+          <text class="d-h" x="20" y="168">linked order</text>
+          <text class="d-s" x="20" y="186">oldest → newest</text>
+          <rect class="d-ev-o" x="150" y="150" width="110" height="50" rx="8"/><text class="d-tb" x="205" y="175" text-anchor="middle">1 = 10</text>
+          <rect class="d-box"  x="320" y="150" width="110" height="50" rx="8"/><text class="d-tb" x="375" y="175" text-anchor="middle">2 = 20</text>
+          <rect class="d-acc-o" x="490" y="150" width="110" height="50" rx="8"/><text class="d-tb" x="545" y="175" text-anchor="middle">3 = 30</text>
+
+          <line class="d-line" x1="262" y1="167" x2="316" y2="167" marker-end="url(#lruA-m)"/>
+          <line class="d-line" x1="318" y1="183" x2="264" y2="183" marker-end="url(#lruA-m)"/>
+          <line class="d-line" x1="432" y1="167" x2="486" y2="167" marker-end="url(#lruA-m)"/>
+          <line class="d-line" x1="488" y1="183" x2="434" y2="183" marker-end="url(#lruA-m)"/>
+          <text class="d-sm" x="290" y="156" text-anchor="middle">after</text>
+          <text class="d-sm" x="290" y="194" text-anchor="middle">before</text>
+
+          <text class="d-h d-et" x="205" y="222" text-anchor="middle">front · oldest</text>
+          <text class="d-s" x="205" y="240" text-anchor="middle">pollFirstEntry() removes it</text>
+          <text class="d-h d-at" x="545" y="222" text-anchor="middle">end · newest</text>
+          <text class="d-s" x="545" y="240" text-anchor="middle">put() adds here</text>
+        </svg>
+        </div>
+        <figcaption><b>Structure.</b> The hash index finds an entry in one step, and each entry links to the one before and after it. Because the order lives in the links, the cache can drop the front or add at the end without scanning anything.</figcaption>
+      </figure>
+
+      <figure>
+        <div class="svgwrap">
+        <svg viewBox="0 0 720 290" role="img" aria-label="Start with 1, 2, 3. get(1) moves 1 to the end giving 2, 3, 1. put(4) on the full cache evicts 2 from the front giving 3, 1, 4.">
+          <text class="d-s d-et" x="272" y="20" text-anchor="middle">front · oldest</text>
+          <text class="d-s d-at" x="472" y="20" text-anchor="middle">end · newest</text>
+
+          <text class="d-h" x="20" y="48">start</text>
+          <text class="d-s" x="20" y="66">cache is full</text>
+          <rect class="d-box" x="230" y="34" width="84" height="44" rx="8"/><text class="d-tb" x="272" y="56" text-anchor="middle">1</text>
+          <rect class="d-box" x="330" y="34" width="84" height="44" rx="8"/><text class="d-tb" x="372" y="56" text-anchor="middle">2</text>
+          <rect class="d-box" x="430" y="34" width="84" height="44" rx="8"/><text class="d-tb" x="472" y="56" text-anchor="middle">3</text>
+
+          <text class="d-h" x="20" y="138">get(1)</text>
+          <text class="d-s" x="20" y="156">remove + put → moves to end</text>
+          <rect class="d-box" x="230" y="124" width="84" height="44" rx="8"/><text class="d-tb" x="272" y="146" text-anchor="middle">2</text>
+          <rect class="d-box" x="330" y="124" width="84" height="44" rx="8"/><text class="d-tb" x="372" y="146" text-anchor="middle">3</text>
+          <rect class="d-acc" x="430" y="124" width="84" height="44" rx="8"/><text class="d-tb" x="472" y="146" text-anchor="middle">1</text>
+
+          <text class="d-h" x="20" y="228">put(4, 40)</text>
+          <text class="d-s" x="20" y="246">full → front is evicted</text>
+          <rect class="d-box" x="230" y="214" width="84" height="44" rx="8"/><text class="d-tb" x="272" y="236" text-anchor="middle">3</text>
+          <rect class="d-box" x="330" y="214" width="84" height="44" rx="8"/><text class="d-tb" x="372" y="236" text-anchor="middle">1</text>
+          <rect class="d-new" x="430" y="214" width="84" height="44" rx="8"/><text class="d-tb" x="472" y="236" text-anchor="middle">4</text>
+          <rect class="d-ev d-dashbox" x="590" y="214" width="84" height="44" rx="8"/><text class="d-tb d-et" x="632" y="236" text-anchor="middle">2</text>
+          <text class="d-s d-et" x="632" y="276" text-anchor="middle">evicted</text>
+        </svg>
+        </div>
+        <figcaption><b>Two operations.</b> <code>get(1)</code> takes key 1 out and puts it back, so it jumps to the end. That leaves 2 at the front, so the next <code>put</code> on a full cache evicts 2, even though 2 was added after 1.</figcaption>
+      </figure>
+    </div>
+
+    <div class="dsec">
+      <h2>LFU <small>SimpleLFUCache.java</small></h2>
+      <p>Three plain maps and one number. <code>values</code> and <code>counts</code> answer questions about a key. <code>keysByCount</code> groups keys into one row per use count, and <code>minCount</code> says which row to evict from.</p>
+
+      <figure>
+        <div class="svgwrap">
+        <svg viewBox="0 0 720 270" role="img" aria-label="values and counts tables per key; keysByCount rows 1: 5,7; 2: 3; 3: 1,4. minCount is 1, so 5, the oldest key in row 1, is evicted next.">
+          <defs>
+            <marker id="lfuA-m" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="m-acc" d="M0,0 L10,5 L0,10 z"/></marker>
+          </defs>
+          <text class="d-h" x="20" y="26">values</text>
+          <text class="d-h" x="150" y="26">counts</text>
+          <g>
+            <rect class="d-box" x="20" y="40" width="110" height="26"/><text class="d-t" x="75" y="53" text-anchor="middle">1 → 10</text>
+            <rect class="d-box" x="20" y="66" width="110" height="26"/><text class="d-t" x="75" y="79" text-anchor="middle">3 → 30</text>
+            <rect class="d-box" x="20" y="92" width="110" height="26"/><text class="d-t" x="75" y="105" text-anchor="middle">4 → 40</text>
+            <rect class="d-box" x="20" y="118" width="110" height="26"/><text class="d-t" x="75" y="131" text-anchor="middle">5 → 50</text>
+            <rect class="d-box" x="20" y="144" width="110" height="26"/><text class="d-t" x="75" y="157" text-anchor="middle">7 → 70</text>
+
+            <rect class="d-box" x="150" y="40" width="110" height="26"/><text class="d-t" x="205" y="53" text-anchor="middle">1 → 3</text>
+            <rect class="d-box" x="150" y="66" width="110" height="26"/><text class="d-t" x="205" y="79" text-anchor="middle">3 → 2</text>
+            <rect class="d-box" x="150" y="92" width="110" height="26"/><text class="d-t" x="205" y="105" text-anchor="middle">4 → 3</text>
+            <rect class="d-box" x="150" y="118" width="110" height="26"/><text class="d-t" x="205" y="131" text-anchor="middle">5 → 1</text>
+            <rect class="d-box" x="150" y="144" width="110" height="26"/><text class="d-t" x="205" y="157" text-anchor="middle">7 → 1</text>
+          </g>
+          <text class="d-s" x="20" y="192">key → value</text>
+          <text class="d-s" x="150" y="192">key → times used</text>
+
+          <text class="d-h" x="320" y="26">keysByCount</text>
+          <text class="d-s" x="430" y="26">each row: oldest → newest</text>
+
+          <rect class="d-acc" x="320" y="44" width="56" height="40" rx="6"/><text class="d-t" x="348" y="64" text-anchor="middle">1</text>
+          <rect class="d-ev-o" x="392" y="44" width="56" height="40" rx="6"/><text class="d-tb" x="420" y="64" text-anchor="middle">5</text>
+          <rect class="d-box" x="460" y="44" width="56" height="40" rx="6"/><text class="d-tb" x="488" y="64" text-anchor="middle">7</text>
+          <text class="d-sm d-et" x="420" y="100" text-anchor="middle">removeFirst() evicts this next</text>
+
+          <rect class="d-soft" x="320" y="124" width="56" height="40" rx="6"/><text class="d-t" x="348" y="144" text-anchor="middle">2</text>
+          <rect class="d-box" x="392" y="124" width="56" height="40" rx="6"/><text class="d-tb" x="420" y="144" text-anchor="middle">3</text>
+
+          <rect class="d-soft" x="320" y="204" width="56" height="40" rx="6"/><text class="d-t" x="348" y="224" text-anchor="middle">3</text>
+          <rect class="d-box" x="392" y="204" width="56" height="40" rx="6"/><text class="d-tb" x="420" y="224" text-anchor="middle">1</text>
+          <rect class="d-box" x="460" y="204" width="56" height="40" rx="6"/><text class="d-tb" x="488" y="224" text-anchor="middle">4</text>
+
+          <rect class="d-acc-o" x="600" y="44" width="104" height="40" rx="6"/><text class="d-t d-at" x="652" y="64" text-anchor="middle">minCount = 1</text>
+          <line class="d-line-acc" x1="598" y1="64" x2="524" y2="64" marker-end="url(#lfuA-m)"/>
+          <text class="d-sm" x="652" y="100" text-anchor="middle">row to evict from</text>
+        </svg>
+        </div>
+        <figcaption><b>Structure.</b> The row a key sits in is the same number as its entry in <code>counts</code>. To evict, the cache goes to the <code>minCount</code> row and removes its first key. Keys 5 and 7 are both used once, and 5 has waited longer, so 5 goes first.</figcaption>
+      </figure>
+
+      <figure>
+        <div class="svgwrap">
+        <svg viewBox="0 0 720 230" role="img" aria-label="get(5) moves key 5 from row 1 to the end of row 2. Row 1 still holds 7, so minCount stays 1.">
+          <defs>
+            <marker id="lfuB-m" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="m-acc" d="M0,0 L10,5 L0,10 z"/></marker>
+          </defs>
+          <text class="d-h" x="20" y="22">before get(5)</text>
+          <text class="d-h" x="390" y="22">after get(5)</text>
+
+          <rect class="d-soft" x="20" y="40" width="40" height="40" rx="6"/><text class="d-t" x="40" y="60" text-anchor="middle">1</text>
+          <rect class="d-acc-o" x="72" y="40" width="48" height="40" rx="6"/><text class="d-tb" x="96" y="60" text-anchor="middle">5</text>
+          <rect class="d-box" x="132" y="40" width="48" height="40" rx="6"/><text class="d-tb" x="156" y="60" text-anchor="middle">7</text>
+          <text class="d-sm d-at" x="192" y="60">← minCount</text>
+          <rect class="d-soft" x="20" y="94" width="40" height="40" rx="6"/><text class="d-t" x="40" y="114" text-anchor="middle">2</text>
+          <rect class="d-box" x="72" y="94" width="48" height="40" rx="6"/><text class="d-tb" x="96" y="114" text-anchor="middle">3</text>
+          <rect class="d-soft" x="20" y="148" width="40" height="40" rx="6"/><text class="d-t" x="40" y="168" text-anchor="middle">3</text>
+          <rect class="d-box" x="72" y="148" width="48" height="40" rx="6"/><text class="d-tb" x="96" y="168" text-anchor="middle">1</text>
+          <rect class="d-box" x="132" y="148" width="48" height="40" rx="6"/><text class="d-tb" x="156" y="168" text-anchor="middle">4</text>
+
+          <rect class="d-soft" x="390" y="40" width="40" height="40" rx="6"/><text class="d-t" x="410" y="60" text-anchor="middle">1</text>
+          <rect class="d-box" x="442" y="40" width="48" height="40" rx="6"/><text class="d-tb" x="466" y="60" text-anchor="middle">7</text>
+          <text class="d-sm d-at" x="502" y="60">← minCount</text>
+          <rect class="d-soft" x="390" y="94" width="40" height="40" rx="6"/><text class="d-t" x="410" y="114" text-anchor="middle">2</text>
+          <rect class="d-box" x="442" y="94" width="48" height="40" rx="6"/><text class="d-tb" x="466" y="114" text-anchor="middle">3</text>
+          <rect class="d-acc" x="502" y="94" width="48" height="40" rx="6"/><text class="d-tb" x="526" y="114" text-anchor="middle">5</text>
+          <rect class="d-soft" x="390" y="148" width="40" height="40" rx="6"/><text class="d-t" x="410" y="168" text-anchor="middle">3</text>
+          <rect class="d-box" x="442" y="148" width="48" height="40" rx="6"/><text class="d-tb" x="466" y="168" text-anchor="middle">1</text>
+          <rect class="d-box" x="502" y="148" width="48" height="40" rx="6"/><text class="d-tb" x="526" y="168" text-anchor="middle">4</text>
+
+          <text class="d-s d-at" x="335" y="206" text-anchor="middle">increaseCount(5): count 1 → 2</text>
+          <line class="d-line-acc" x1="250" y1="220" x2="420" y2="220" marker-end="url(#lfuB-m)"/>
+        </svg>
+        </div>
+        <figcaption><b>One use.</b> <code>get(5)</code> raises key 5's count from 1 to 2, so it leaves row 1 and joins the end of row 2. Row 1 still holds 7, so <code>minCount</code> stays 1. If row 1 had emptied, <code>minCount</code> would have moved up to 2.</figcaption>
+      </figure>
+    </div>
+  </section>
+</div>
+
+<script>
+(() => {
+  const CAP = 3, W = 64, H = 52, G = 12;
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* ---------- Java source shown next to the stage ---------- */
+  const LRU_CODE = [
+    'public int get(int key) {',
+    '    if (!cache.containsKey(key)) {',
+    '        return -1;',
+    '    }',
+    '    int value = cache.remove(key);',
+    '    cache.put(key, value);       // re-insert at the end',
+    '    return value;',
+    '}',
+    '',
+    'public void put(int key, int value) {',
+    '    cache.remove(key);           // old spot, if any',
+    '    if (cache.size() == capacity) {',
+    '        cache.pollFirstEntry();  // evict the oldest',
+    '    }',
+    '    cache.put(key, value);       // add at the end',
+    '}'
+  ];
+  const LFU_CODE = [
+    'public int get(int key) {',
+    '    if (!values.containsKey(key)) return -1;',
+    '    increaseCount(key);',
+    '    return values.get(key);',
+    '}',
+    '',
+    'public void put(int key, int value) {',
+    '    if (values.containsKey(key)) {',
+    '        values.put(key, value);',
+    '        increaseCount(key);',
+    '        return;',
+    '    }',
+    '    if (values.size() == capacity) evict();',
+    '    values.put(key, value);',
+    '    counts.put(key, 1);',
+    '    keysByCount.get(1).add(key);',
+    '    minCount = 1;',
+    '}',
+    '',
+    'void increaseCount(int key) {',
+    '    int count = counts.get(key);',
+    '    counts.put(key, count + 1);',
+    '    keysByCount.get(count).remove(key);',
+    '    keysByCount.get(count + 1).add(key);',
+    '    if (count == minCount && keysByCount.get(count).isEmpty())',
+    '        minCount++;',
+    '}',
+    '',
+    'void evict() {',
+    '    int key = keysByCount.get(minCount).removeFirst();',
+    '    values.remove(key);',
+    '    counts.remove(key);',
+    '}'
+  ];
+
+  /* ---------- simulations: one snapshot per operation ---------- */
+  const fmt = ([t, k, v]) => t === 'get' ? `get(${k})` : `put(${k}, ${v})`;
+
+  function simulateLRU(ops) {
+    let order = [], vals = {};
+    const snaps = [{ op: null, order: [], vals: {}, kind: 'idle', chip: 'empty',
+      text: 'An empty cache with room for 3 keys. Press Next to run the first operation.', lines: [] }];
+    for (const op of ops) {
+      const [t, k, v] = op;
+      const s = { op, touched: null, evicted: null, isNew: false };
+      if (t === 'get') {
+        if (!(k in vals)) {
+          Object.assign(s, { kind: 'miss', chip: 'returns -1', lines: [0, 1, 2],
+            text: `Key ${k} is not in the cache, so get returns -1 and nothing moves.` });
+        } else {
+          order = order.filter(x => x !== k); order.push(k);
+          Object.assign(s, { kind: 'hit', chip: `returns ${vals[k]}`, touched: k, lines: [0, 1, 4, 5, 6],
+            text: `Hit. Key ${k} is removed and put back, so it moves to the newest end. ${order[0]} is now the oldest.` });
+        }
+      } else if (k in vals) {
+        order = order.filter(x => x !== k); order.push(k); vals[k] = v;
+        Object.assign(s, { kind: 'update', chip: 'updated', touched: k, lines: [9, 10, 11, 14],
+          text: `Key ${k} already exists. Its value becomes ${v}, and removing then re-adding it moves it to the newest end.` });
+      } else if (order.length === CAP) {
+        const e = order.shift(); delete vals[e];
+        order.push(k); vals[k] = v;
+        Object.assign(s, { kind: 'evict', chip: `evicts ${e}`, touched: k, isNew: true, evicted: e, lines: [9, 10, 11, 12, 14],
+          text: `The cache is full. pollFirstEntry() drops key ${e} from the front because it went longest without use. Then ${k} is added at the end.` });
+      } else {
+        order.push(k); vals[k] = v;
+        Object.assign(s, { kind: 'insert', chip: 'added', touched: k, isNew: true, lines: [9, 10, 11, 14],
+          text: `There is still room (${order.length} of ${CAP}), so key ${k} is simply added at the newest end.` });
+      }
+      s.order = [...order]; s.vals = { ...vals };
+      s.meta = `order: [${order.join(', ')}]`;
+      snaps.push(s);
+    }
+    snaps[0].meta = 'order: []';
+    return snaps;
+  }
+
+  function simulateLFU(ops) {
+    let vals = {}, counts = {}, rows = {}, min = 0;
+    const copyRows = () => Object.fromEntries(Object.entries(rows).map(([c, r]) => [c, [...r]]));
+    const inc = (k, lines) => {
+      const c = counts[k];
+      counts[k] = c + 1;
+      rows[c] = rows[c].filter(x => x !== k);
+      (rows[c + 1] ||= []).push(k);
+      lines.push(19, 20, 21, 22, 23, 24);
+      let bumped = false;
+      if (c === min && rows[c].length === 0) { min++; lines.push(25); bumped = true; }
+      return { c, bumped };
+    };
+    const snaps = [{ op: null, rows: {}, vals: {}, counts: {}, minCount: 0, kind: 'idle', chip: 'empty',
+      text: 'An empty cache with room for 3 keys. Each row holds the keys used that many times.', lines: [], meta: 'minCount = 0' }];
+    for (const op of ops) {
+      const [t, k, v] = op;
+      const s = { op, touched: null, evicted: null, isNew: false };
+      if (t === 'get') {
+        if (!(k in vals)) {
+          Object.assign(s, { kind: 'miss', chip: 'returns -1', lines: [0, 1],
+            text: `Key ${k} is not in the cache, so get returns -1 and no count changes.` });
+        } else {
+          const lines = [0, 1, 2, 3];
+          const { c, bumped } = inc(k, lines);
+          Object.assign(s, { kind: 'hit', chip: `returns ${vals[k]}`, touched: k, lines,
+            text: `Hit. Key ${k}'s count goes ${c} → ${c + 1}, so it moves to the end of row ${c + 1}.` +
+              (bumped ? ` Row ${c} is now empty and it was the lowest, so minCount becomes ${min}.` : '') });
+        }
+      } else if (k in vals) {
+        vals[k] = v;
+        const lines = [6, 7, 8, 9, 10];
+        const { c, bumped } = inc(k, lines);
+        Object.assign(s, { kind: 'update', chip: 'updated', touched: k, lines,
+          text: `Key ${k} already exists. Its value becomes ${v} and the update counts as a use, so it moves from row ${c} to row ${c + 1}.` +
+            (bumped ? ` minCount becomes ${min}.` : '') });
+      } else if (Object.keys(vals).length === CAP) {
+        const row = rows[min], tied = row.length > 1 ? [...row] : null;
+        const e = row.shift(), from = min;
+        delete vals[e]; delete counts[e];
+        vals[k] = v; counts[k] = 1; (rows[1] ||= []).push(k); min = 1;
+        Object.assign(s, { kind: 'evict', chip: `evicts ${e}`, touched: k, isNew: true, evicted: e,
+          lines: [6, 7, 12, 28, 29, 30, 31, 13, 14, 15, 16],
+          text: `The cache is full. The lowest count is ${from}, so evict() takes the first key in row ${from}: key ${e}.` +
+            (tied ? ` Keys ${tied.join(' and ')} tie on count, and ${e} has waited longest.` : '') +
+            ` Then ${k} starts in row 1 and minCount resets to 1.` });
+      } else {
+        vals[k] = v; counts[k] = 1; (rows[1] ||= []).push(k); min = 1;
+        Object.assign(s, { kind: 'insert', chip: 'added', touched: k, isNew: true, lines: [6, 7, 12, 13, 14, 15, 16],
+          text: `There is room, so key ${k} is added with count 1 at the end of row 1. A new key always has the lowest count, so minCount is 1.` });
+      }
+      s.rows = copyRows(); s.vals = { ...vals }; s.counts = { ...counts }; s.minCount = min;
+      s.meta = `minCount = ${min}`;
+      snaps.push(s);
+    }
+    return snaps;
+  }
+
+  const LRU_OPS = [['put',1,10],['put',2,20],['put',3,30],['get',1],['put',4,40],['get',3],['get',2],['put',5,50],['put',4,44],['get',1]];
+  const LFU_OPS = [['put',1,10],['put',2,20],['put',3,30],['get',1],['get',1],['get',2],['put',4,40],['get',4],['put',5,50],['get',5],['get',5],['put',6,60]];
+
+  /* ---------- layouts: key -> {x, y} on the stage ---------- */
+  const LRU_TOP = 26;
+  const lru = {
+    name: 'lru', snaps: simulateLRU(LRU_OPS), code: LRU_CODE, title: 'SimpleLRUCache.java',
+    rule: 'Evicts the key that went longest without being used.',
+    size: { w: CAP * (W + G) - G, h: LRU_TOP + H + 92 },
+    drawStatic(stage) {
+      for (let i = 0; i < CAP; i++) {
+        const s = document.createElement('div');
+        s.className = 'slot';
+        s.style.left = i * (W + G) + 'px'; s.style.top = LRU_TOP + 'px';
+        stage.append(s);
+      }
+      stage.insertAdjacentHTML('beforeend',
+        `<span class="stage-label evict" style="left:0;top:0">oldest · evicted first</span>
+         <span class="stage-label acc" style="right:0;top:${LRU_TOP + H + 8}px">newest</span>`);
+    },
+    layout(s) {
+      const pos = {};
+      s.order.forEach((k, i) => pos[k] = { x: i * (W + G), y: LRU_TOP });
+      return pos;
+    },
+    label: (s, k) => `= ${s.vals[k]}`,
+    afterRender() {}
+  };
+
+  const LFU_ROWS = 3, LABEL_W = 84, ROW_GAP = 14;
+  const lfu = {
+    name: 'lfu', snaps: simulateLFU(LFU_OPS), code: LFU_CODE, title: 'SimpleLFUCache.java (condensed)',
+    rule: 'Evicts the key used the fewest times. Ties go to the oldest in that row.',
+    size: { w: LABEL_W + CAP * (W + G) + 70, h: LFU_ROWS * (H + ROW_GAP) + 40 },
+    tracks: [],
+    drawStatic(stage) {
+      this.tracks = [];
+      for (let c = 1; c <= LFU_ROWS; c++) {
+        const t = document.createElement('div');
+        t.className = 'track';
+        t.style.left = '0px'; t.style.top = (c - 1) * (H + ROW_GAP) + 'px';
+        t.style.width = this.size.w + 'px';
+        t.innerHTML = `<span class="rl">count ${c}</span><span class="mintag">min</span>`;
+        stage.append(t);
+        this.tracks.push(t);
+      }
+    },
+    layout(s) {
+      const pos = {};
+      for (const [c, keys] of Object.entries(s.rows)) {
+        keys.forEach((k, j) => pos[k] = { x: LABEL_W + j * (W + G), y: (c - 1) * (H + ROW_GAP) });
+      }
+      return pos;
+    },
+    label: (s, k) => `= ${s.vals[k]}`,
+    afterRender(s) {
+      this.tracks.forEach((t, i) => t.classList.toggle('is-min', s.minCount === i + 1));
+    }
+  };
+
+  /* ---------- player ---------- */
+  const $ = id => document.getElementById(id);
+  const stage = $('stage'), codeEl = $('code'), opsEl = $('ops');
+  let view = null, cur = 0, tokens = new Map(), ghosts = [], timer = null;
+
+  const place = (el, p, dy = 0) => { el.style.transform = `translate(${p.x}px, ${p.y + dy}px)`; el._pos = p; };
+
+  function load(v, startAt) {
+    stop();
+    view = v; tokens = new Map(); ghosts = [];
+    stage.innerHTML = '';
+    stage.style.width = v.size.w + 'px';
+    stage.style.height = v.size.h + 'px';
+    v.drawStatic(stage);
+    codeEl.innerHTML = v.code.map(l => `<span class="ln">${l.replace(/</g, '&lt;') || ' '}</span>`).join('');
+    $('code-title').textContent = v.title;
+    $('rule').textContent = v.rule;
+    opsEl.innerHTML = v.snaps.slice(1).map((s, i) =>
+      `<li><button data-i="${i + 1}">${fmt(s.op)}</button></li>`).join('');
+    cur = -1;
+    render(startAt, false);
+  }
+
+  function render(i, animate = true) {
+    const forward = animate && i === cur + 1;
+    const s = view.snaps[i];
+    ghosts.forEach(g => g.remove()); ghosts = [];
+    const pos = view.layout(s);
+
+    for (const [k, el] of tokens) {
+      if (k in pos) continue;
+      tokens.delete(k);
+      if (forward && s.evicted == k && !reduced) {
+        el.classList.remove('is-touched', 'is-new');
+        el.classList.add('is-evicted');
+        place(el, el._pos, 70);
+        ghosts.push(el);
+        setTimeout(() => el.remove(), 900);
+      } else el.remove();
+    }
+
+    for (const [key, p] of Object.entries(pos)) {
+      const k = Number(key);
+      let el = tokens.get(k);
+      if (!el) {
+        el = document.createElement('div');
+        el.className = 'tok';
+        el.innerHTML = `<span class="k">${k}</span><span class="v"></span>`;
+        stage.append(el);
+        tokens.set(k, el);
+        if (animate && !reduced) {
+          el.classList.add('enter');
+          place(el, p, -26);
+          el.getBoundingClientRect();
+          el.classList.remove('enter');
+        }
+      }
+      place(el, p);
+      el.querySelector('.v').textContent = view.label(s, k);
+      el.classList.toggle('is-new', s.isNew && s.touched === k);
+      el.classList.toggle('is-touched', !s.isNew && s.touched === k);
+    }
+    view.afterRender(s);
+
+    $('op-name').textContent = s.op ? fmt(s.op) : 'new cache';
+    const chip = $('op-chip');
+    chip.textContent = s.chip; chip.className = 'chip ' + s.kind;
+    $('explain').textContent = s.text;
+    $('meta').textContent = s.meta;
+
+    const hl = new Set(s.lines);
+    [...codeEl.children].forEach((ln, n) => {
+      ln.classList.toggle('hl', hl.has(n));
+      ln.classList.toggle('dim', hl.size > 0 && !hl.has(n));
+    });
+
+    [...opsEl.querySelectorAll('button')].forEach(b => {
+      const n = Number(b.dataset.i);
+      b.classList.toggle('done', n <= i);
+      if (n === i) b.setAttribute('aria-current', 'step'); else b.removeAttribute('aria-current');
+    });
+
+    const last = view.snaps.length - 1;
+    $('counter').textContent = `step ${i} of ${last}`;
+    $('b-back').disabled = i === 0;
+    $('b-next').disabled = i === last;
+    cur = i;
+    if (i === last) stop();
+  }
+
+  function stop() { clearInterval(timer); timer = null; $('b-play').textContent = 'Play'; }
+  function play() {
+    if (timer) return stop();
+    if (cur === view.snaps.length - 1) render(0, false);
+    $('b-play').textContent = 'Pause';
+    timer = setInterval(() => render(cur + 1), 1700);
+  }
+
+  $('b-next').onclick = () => { stop(); if (cur < view.snaps.length - 1) render(cur + 1); };
+  $('b-back').onclick = () => { stop(); if (cur > 0) render(cur - 1); };
+  $('b-reset').onclick = () => { stop(); render(0, false); };
+  $('b-play').onclick = play;
+  opsEl.onclick = e => {
+    const b = e.target.closest('button'); if (!b) return;
+    stop(); render(Number(b.dataset.i));
+  };
+
+  const pick = (v) => {
+    $('pick-lru').setAttribute('aria-pressed', v === lru);
+    $('pick-lfu').setAttribute('aria-pressed', v === lfu);
+    load(v, 3);
+    try { localStorage.setItem('cv-cache', v.name); } catch (e) {}
+  };
+  $('pick-lru').onclick = () => pick(lru);
+  $('pick-lfu').onclick = () => pick(lfu);
+
+  document.addEventListener('keydown', e => {
+    if ($('view-step').hidden || e.target.closest('input, textarea')) return;
+    if (e.key === 'ArrowRight') $('b-next').click();
+    if (e.key === 'ArrowLeft') $('b-back').click();
+  });
+
+  /* ---------- tabs ---------- */
+  const tabs = { step: [$('tab-step'), $('view-step')], diagrams: [$('tab-diagrams'), $('view-diagrams')] };
+  function showTab(name) {
+    for (const [n, [t, p]] of Object.entries(tabs)) {
+      t.setAttribute('aria-selected', n === name);
+      p.hidden = n !== name;
+    }
+    if (name !== 'step') stop();
+  }
+  $('tab-step').onclick = () => showTab('step');
+  $('tab-diagrams').onclick = () => showTab('diagrams');
+
+  let saved = null;
+  try { saved = localStorage.getItem('cv-cache'); } catch (e) {}
+  pick(saved === 'lfu' ? lfu : lru);
+  showTab(location.hash === '#diagrams' ? 'diagrams' : 'step');
+})();
+</script>
+
+</body></html>

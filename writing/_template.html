@@ -1,0 +1,108 @@
+<!doctype html>
+<!--
+  ARTICLE TEMPLATE for armantik.com
+
+  1. Copy this file and rename it:  writing/YYYY-MM-short-title.html   (example: writing/2026-11-java-virtual-threads.html)
+  2. Replace everything marked [LIKE THIS]: the <title>, the description, the headline, the date and the body.
+  3. Write the body between  ARTICLE START  and  ARTICLE END.  The building blocks you can use are shown below
+     (heading, paragraph, list, code, quote, table, note). Delete the ones you don't need.
+  4. Add one entry to WRITING in /content.js with  href: "writing/your-file-name.html"  and  source: "armantik.com".
+  5. Push to GitHub. The article appears on the home page and on /writing/ automatically.
+
+  Leave the header, footer and the two <script> lines at the bottom as they are.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>[Article title] · Arman Ajabkhani</title>
+<meta name="description" content="[One or two sentences that describe the article. Shown in search results and link previews.]">
+<meta property="og:title" content="[Article title]">
+<meta property="og:description" content="[Same one or two sentences.]">
+<meta property="og:type" content="article">
+<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+<script src="../assets/theme.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Schibsted+Grotesk:wght@400;500;600;700;800&display=swap">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body data-root="../">
+
+<div class="wrap">
+  <header class="site-head">
+    <a class="wordmark" href="../index.html">
+      <svg viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="14" style="fill:var(--petrol)"/><path d="M18 49 L32 15 L46 49 M23.5 37 H40.5" style="fill:none;stroke:var(--on-petrol)" stroke-width="6.5" stroke-linecap="square"/></svg>
+      Arman Ajabkhani
+    </a>
+    <nav class="site-nav" aria-label="Main">
+      <a href="../lab/index.html">Lab</a>
+      <a href="../index.html#about">About</a>
+      <a href="index.html" data-show="writing">Writing</a>
+      <a href="../index.html#contact">Contact</a>
+      <button class="theme-btn" type="button" data-theme-toggle aria-label="Switch theme">Theme</button>
+    </nav>
+  </header>
+
+  <article class="article">
+    <header class="article-head">
+      <p class="crumb"><a href="index.html">writing</a></p>
+      <h1>[Article title]</h1>
+      <p class="standfirst">[One or two sentences that tell the reader what they will get from this article.]</p>
+      <p class="meta"><span>[2 Nov 2026]</span><span>[6 min read]</span><span>[Java · Concurrency]</span></p>
+    </header>
+
+    <div class="article-body">
+<!-- ===================== ARTICLE START ===================== -->
+
+      <p>[A normal paragraph. Keep paragraphs short. You can use <b>bold</b>, <a href="https://example.com">links</a> and <code>inline code</code>.]</p>
+
+      <h2>[A section heading]</h2>
+      <p>[Text under the heading.]</p>
+
+      <ul>
+        <li>[A bullet point]</li>
+        <li>[Another bullet point]</li>
+      </ul>
+
+      <pre><code>// [A code block. Paste code here. Replace &lt; with &amp;lt; and &gt; with &amp;gt; inside code.]
+var executor = Executors.newVirtualThreadPerTaskExecutor();</code></pre>
+
+      <blockquote>[A quote or a key takeaway you want to stand out.]</blockquote>
+
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>[Column]</th><th>[Column]</th></tr></thead>
+          <tbody>
+            <tr><td>[Row label]</td><td>[Value]</td></tr>
+            <tr><td>[Row label]</td><td>[Value]</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <figure>
+        <img src="../assets/[your-image].png" alt="[Describe the image for people who can't see it]">
+        <figcaption>[Caption under the image. Put image files in /assets/.]</figcaption>
+      </figure>
+
+      <p class="callout"><b>[Note:]</b> [A short highlighted note.]</p>
+
+<!-- ===================== ARTICLE END ===================== -->
+    </div>
+
+    <footer class="article-foot">
+      <a href="index.html">← All writing</a>
+      <span>Questions or thoughts? <a href="../index.html#contact">Get in touch</a></span>
+    </footer>
+  </article>
+
+  <footer class="site-foot">
+    <span>© <span data-year>2026</span> Arman Ajabkhani · <a href="../index.html">armantik.com</a></span>
+    <span class="fa" lang="fa" dir="rtl" data-show="persianName">آرمان عجب‌خانی</span>
+  </footer>
+</div>
+
+<script src="../content.js"></script>
+<script src="../assets/site.js"></script>
+</body>
+</html>

@@ -1,0 +1,722 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style>
+<title>Merge Intervals Visualizer · Arman Ajabkhani</title>
+<meta name="description" content="Merge Intervals three ways in Java: sort and sweep, an overlap graph, and a sweep line.">
+<meta property="og:title" content="Merge Intervals Visualizer">
+<meta property="og:description" content="Merge Intervals three ways in Java: sort and sweep, an overlap graph, and a sweep line.">
+<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+<script src="../assets/theme.js"></script>
+<style>
+/* armantik.com bar: links this guide back to the site */
+.aa-labbar { --aa-ink: #16211F; --aa-muted: #4A5855; --aa-line: #DCE3E0; --aa-accent: #0F5C55;
+  max-width: 1160px; margin: 0 auto 14px; padding: 0 0 10px; border-bottom: 1px solid var(--aa-line);
+  display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 6px 18px;
+  font: 500 13px/1.4 "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .aa-labbar { --aa-ink: #E3EAE7; --aa-muted: #A3B1AD; --aa-line: #2B3633; --aa-accent: #5BB8AA; } }
+:root[data-theme="dark"] .aa-labbar { --aa-ink: #E3EAE7; --aa-muted: #A3B1AD; --aa-line: #2B3633; --aa-accent: #5BB8AA; }
+.aa-labbar a { color: var(--aa-muted); text-decoration: none; display: inline-flex; align-items: center; gap: 8px; min-height: 32px; }
+.aa-labbar a:hover { color: var(--aa-accent); }
+.aa-labbar .aa-home { color: var(--aa-ink); font-weight: 600; }
+.aa-labbar.aa-pad { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-top: 12px; }
+.aa-right { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 6px 16px; }
+.aa-labbar .aa-crumb { color: var(--aa-muted); }
+.aa-labbar button { display: inline-flex; align-items: center; gap: 6px; min-height: 32px; padding: 0 10px; border: 1px solid var(--aa-line); border-radius: 999px;
+  background: transparent; color: var(--aa-muted); font: inherit; cursor: pointer; }
+.aa-labbar button:hover { color: var(--aa-accent); border-color: var(--aa-accent); }
+.aa-prob { max-width: 1160px; margin: -4px auto 16px; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px;
+  font: 500 13px/1.5 "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace; color: var(--aa-muted, #4A5855); }
+.aa-prob { --aa-muted: #4A5855; --aa-accent: #0F5C55; --aa-line: #DCE3E0; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .aa-prob { --aa-muted: #A3B1AD; --aa-accent: #5BB8AA; --aa-line: #2B3633; } }
+:root[data-theme="dark"] .aa-prob { --aa-muted: #A3B1AD; --aa-accent: #5BB8AA; --aa-line: #2B3633; }
+.aa-prob b { font-weight: 600; color: var(--aa-accent); text-transform: uppercase; letter-spacing: .06em; font-size: 11.5px; }
+.aa-prob a { color: var(--aa-accent); }
+.aa-prob span.aa-own { color: var(--aa-muted); }
+</style>
+</head>
+<body>
+<nav class="aa-labbar" aria-label="armantik.com"><a class="aa-home" href="../index.html"><svg viewBox="0 0 64 64" width="20" height="20" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#0F5C55"/><path d="M18 49 L32 15 L46 49 M23.5 37 H40.5" fill="none" stroke="#FAFBF9" stroke-width="6.5" stroke-linecap="square"/></svg>Arman Ajabkhani</a><span class="aa-right"><a class="aa-crumb" href="index.html#algorithms">Lab / Algorithms</a><a href="index.html">← All Lab guides</a><button type="button" data-theme-toggle aria-label="Switch theme">Theme</button></span></nav>
+<p class="aa-prob"><b>Problem</b> <a href="https://leetcode.com/problems/merge-intervals/" target="_blank" rel="noopener">LeetCode 56. Merge Intervals ↗</a> · <a href="https://neetcode.io/problems/merge-intervals" target="_blank" rel="noopener">NeetCode ↗</a><span class="aa-own">· The solutions on this page are my own.</span></p>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap">
+<style>
+  /* Layout: header, algorithm + input pickers, then the number line (and graph / events) on the left and the Java source on the right */
+  :root {
+    --bg: #f2f6f6;
+    --surface: #ffffff;
+    --ink: #162024;
+    --muted: #586a70;
+    --line: #d3dee0;
+    --line-strong: #98abb0;
+    --accent: #2457d6;
+    --accent-soft: #e3eafc;
+    --wait: #b06a00;
+    --bar: #dfe7ea;
+    --bar-line: #a9bbc0;
+    --code-bg: #edf2f3;
+    --err: #b3261e;
+    --c-1: #f1a7c1; --c-2: #a9c4f7; --c-3: #f6c08f; --c-4: #b9a8f0; --c-5: #8fd4c3; --c-6: #e9d27a;
+    --display: "Bricolage Grotesque", "Avenir Next", system-ui, sans-serif;
+    --body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+    --mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0f1517; --surface: #172024; --ink: #e5eef0; --muted: #93a7ad;
+      --line: #29373b; --line-strong: #4f6469; --accent: #84a5ff; --accent-soft: #1d2a4d;
+      --wait: #f0b54d; --bar: #243136; --bar-line: #4a5f65; --code-bg: #121a1d; --err: #ff8a80;
+      --c-1: #8a3a58; --c-2: #2f4f8f; --c-3: #8a5426; --c-4: #54428f; --c-5: #22685a; --c-6: #7a6a1f;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0f1517; --surface: #172024; --ink: #e5eef0; --muted: #93a7ad;
+    --line: #29373b; --line-strong: #4f6469; --accent: #84a5ff; --accent-soft: #1d2a4d;
+    --wait: #f0b54d; --bar: #243136; --bar-line: #4a5f65; --code-bg: #121a1d; --err: #ff8a80;
+    --c-1: #8a3a58; --c-2: #2f4f8f; --c-3: #8a5426; --c-4: #54428f; --c-5: #22685a; --c-6: #7a6a1f;
+    color-scheme: dark;
+  }
+
+  * { box-sizing: border-box; }
+  body { background: var(--bg); color: var(--ink); font: 15px/1.55 var(--body); padding: 28px 20px 48px; }
+  .wrap { max-width: 1080px; margin: 0 auto; display: grid; gap: 18px; }
+  header { display: grid; gap: 6px; }
+  h1 { font: 700 clamp(28px, 5vw, 40px)/1.1 var(--display); letter-spacing: -0.02em; margin: 0; text-wrap: balance; }
+  .lede { color: var(--muted); margin: 0; max-width: 66ch; }
+  code { font: 500 0.88em var(--mono); color: var(--ink); }
+
+  .pickers { display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center; }
+  .pick-label { font: 600 12px var(--body); letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+  .seg { display: inline-flex; flex-wrap: wrap; border: 1px solid var(--line-strong); border-radius: 8px; overflow: hidden; }
+  .seg button { appearance: none; border: 0; background: var(--surface); color: var(--muted); font: 600 14px var(--body); padding: 7px 13px; cursor: pointer; }
+  .seg button + button { border-left: 1px solid var(--line-strong); }
+  .seg button[aria-pressed="true"] { background: var(--ink); color: var(--bg); }
+  button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .summary { margin: 0; color: var(--muted); font-size: 14px; max-width: 74ch; }
+
+  .in-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .in-row input { flex: 1 1 220px; min-width: 0; font: 500 14px var(--mono); padding: 8px 10px; border-radius: 8px; border: 1px solid var(--line-strong); background: var(--surface); color: var(--ink); }
+  .in-err { margin: 0; font-size: 13px; color: var(--err); min-height: 1.2em; }
+  .in-hint { font-size: 13px; color: var(--muted); }
+
+  .grid2 { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 20px; align-items: start; }
+  @media (max-width: 880px) { .grid2 { grid-template-columns: minmax(0, 1fr); } }
+  .panel { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 18px; min-width: 0; display: grid; gap: 14px; }
+
+  .stats { display: flex; flex-wrap: wrap; gap: 10px 26px; }
+  .stat { display: grid; gap: 0; }
+  .stat .n { font: 700 28px/1.1 var(--display); font-variant-numeric: tabular-nums; }
+  .stat .k { font-size: 12px; color: var(--muted); }
+  .stat.warn .n { color: var(--wait); }
+
+  /* number line */
+  .nl-scroll { overflow-x: auto; border-radius: 8px; background: var(--code-bg); }
+  .nl { position: relative; margin: 0; }
+  .tick { position: absolute; top: 4px; transform: translateX(-50%); font: 400 10px var(--mono); color: var(--muted); }
+  .tick::after { content: ""; position: absolute; left: 50%; top: 15px; width: 1px; height: var(--grid-h); background: var(--line); }
+  .row { position: absolute; left: 0; right: 0; height: 22px; transition: top 0.45s ease; }
+  .row .lab { position: absolute; left: 8px; top: 2px; font: 500 11.5px var(--mono); color: var(--muted); white-space: nowrap; }
+  .row .lab b { color: var(--ink); font-weight: 700; margin-right: 4px; }
+  .row.res .lab { color: var(--ink); font-weight: 700; letter-spacing: 0.04em; }
+  .bar { position: absolute; top: 2px; height: 18px; border-radius: 5px; background: var(--bar); border: 1.5px solid var(--bar-line);
+    transition: left 0.4s ease, width 0.4s ease, background 0.3s, border-color 0.3s, box-shadow 0.2s; }
+  .bar.cur { box-shadow: 0 0 0 2.5px var(--accent); z-index: 2; }
+  .bar.other { box-shadow: 0 0 0 2.5px var(--accent); border-style: dashed; }
+  .bar.open { border-color: var(--wait); border-width: 2.5px; }
+  .bar.rb { font: 700 11px/15px var(--mono); color: var(--ink); text-align: center; white-space: nowrap; overflow: visible; }
+  .bar.rb.active { box-shadow: 0 0 0 2.5px var(--accent); }
+  .bar.rb.new { animation: pop 0.35s ease-out; }
+  .sep { position: absolute; left: 0; right: 0; border-top: 1px dashed var(--line-strong); }
+  .scan { position: absolute; top: 18px; width: 0; border-left: 2.5px solid var(--accent); transition: left 0.4s ease; z-index: 3; pointer-events: none; }
+  .scan span { position: absolute; top: -16px; left: 4px; font: 700 11px var(--mono); color: var(--accent); white-space: nowrap; }
+
+  /* overlap graph */
+  .graph-wrap { display: grid; gap: 6px; }
+  .graph-wrap svg { width: 100%; max-width: 340px; height: auto; margin: 0 auto; display: block; }
+
+  .strip { display: grid; gap: 6px; }
+  .strip-head { display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; font-size: 12px; color: var(--muted); }
+  .strip-head b { font: 600 12px var(--body); color: var(--ink); letter-spacing: 0.06em; text-transform: uppercase; }
+  .chips { display: flex; flex-wrap: wrap; gap: 5px; min-height: 38px; align-items: center; padding: 6px; border-radius: 8px; background: var(--code-bg); }
+  .chips .empty { font-size: 13px; color: var(--muted); padding: 0 6px; }
+  .chip { display: inline-grid; place-items: center; height: 26px; padding: 0 7px; border-radius: 6px; font: 600 12px var(--mono); background: var(--surface); border: 1.5px solid var(--line-strong); }
+  .chip.past { opacity: 0.45; }
+  .chip.wait { border-color: var(--wait); }
+  .chip.top { border-color: var(--accent); background: var(--accent-soft); }
+  .chip.new { animation: pop 0.35s ease-out; }
+  @keyframes pop { from { transform: translateY(-6px); opacity: 0; } }
+
+  .explain { margin: 0; min-height: 3.1em; max-width: 62ch; }
+  .controls { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .btn { appearance: none; font: 600 14px var(--body); padding: 8px 14px; border-radius: 8px; cursor: pointer; border: 1px solid var(--line-strong); background: var(--surface); color: var(--ink); }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: var(--surface); }
+  .btn:disabled { opacity: 0.4; cursor: default; }
+  .counter { margin-left: auto; font: 500 13px var(--mono); color: var(--muted); font-variant-numeric: tabular-nums; }
+
+  .legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 13px; color: var(--muted); }
+  .legend i { display: inline-block; width: 22px; height: 12px; border-radius: 4px; vertical-align: -1px; margin-right: 6px; border: 1.5px solid transparent; }
+  .l-idle { background: var(--bar); border-color: var(--bar-line) !important; }
+  .l-done { background: linear-gradient(90deg, var(--c-1) 50%, var(--c-2) 50%); }
+  .l-cur { background: var(--bar); box-shadow: 0 0 0 2.5px var(--accent); }
+  .l-open { background: var(--bar); border-color: var(--wait) !important; border-width: 2.5px !important; }
+  .l-scan { width: 3px !important; height: 14px !important; background: var(--accent); border-radius: 0 !important; }
+
+  .code-head { display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+  .code-head h3 { margin: 0; font: 600 14px var(--mono); }
+  .code-head span { font-size: 12px; color: var(--muted); }
+  pre.code { margin: 0; background: var(--code-bg); border-radius: 8px; padding: 10px 0; font: 400 12.5px/1.6 var(--mono); overflow-x: auto; }
+  pre.code .ln { display: block; padding: 0 14px; white-space: pre; border-left: 3px solid transparent; transition: background 0.25s; }
+  pre.code .ln.hl { background: var(--accent-soft); border-left-color: var(--accent); }
+  pre.code .ln.dim { color: var(--muted); }
+  .note { margin: 0; font-size: 14px; color: var(--muted); }
+  .note b { color: var(--ink); }
+
+  .cx { display: grid; gap: 10px; }
+  .cx h4, .cmp h4 { margin: 0; font: 600 12px var(--body); letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+  .cx-row { display: flex; flex-wrap: wrap; gap: 10px; }
+  .cx-box { flex: 1 1 140px; min-width: 0; border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; display: grid; gap: 2px; }
+  .cx-box .big { font: 700 18px var(--mono); }
+  .cx-box .k { font-size: 12px; color: var(--muted); }
+  .cx-box.warn { border-color: var(--wait); }
+  .cx-box.warn .big { color: var(--wait); }
+  .cx p { margin: 0; font-size: 14px; color: var(--muted); }
+  .cx p b { color: var(--ink); }
+
+  .cmp { display: grid; gap: 8px; }
+  .cmp-scroll { overflow-x: auto; }
+  .cmp table { border-collapse: collapse; width: 100%; font-size: 13px; min-width: 460px; }
+  .cmp th, .cmp td { text-align: left; padding: 7px 8px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+  .cmp th { font: 600 12px var(--body); color: var(--muted); }
+  .cmp td.mono { font: 500 12.5px var(--mono); }
+  .cmp tr.sel td { background: var(--accent-soft); }
+  .cmp tr.sel td:first-child { box-shadow: inset 3px 0 0 var(--accent); font-weight: 600; }
+  .cmp .bad { color: var(--wait); font-weight: 600; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .row, .bar, .scan, pre.code .ln { transition: none !important; }
+    .bar.rb.new, .chip.new { animation: none !important; }
+  }
+  @media (max-width: 480px) {
+    body { padding: 20px 16px 40px; }
+    .panel { padding: 14px; }
+    .counter { margin-left: 0; width: 100%; }
+  }
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>Merge Intervals Visualizer</h1>
+    <p class="lede">LeetCode 56 three ways, from <code>org.example.intervals</code>: sort and sweep once, build an overlap graph, or sweep a line over start and end events. Touching intervals such as <code>[1,4]</code> and <code>[4,5]</code> count as overlapping.</p>
+  </header>
+
+  <div class="pickers">
+    <span class="pick-label">Algorithm</span>
+    <div class="seg" role="group" aria-label="Algorithm" id="algos"></div>
+  </div>
+  <div class="pickers">
+    <span class="pick-label">Input</span>
+    <div class="seg" role="group" aria-label="Input preset" id="presets"></div>
+  </div>
+  <div>
+    <div class="in-row">
+      <input id="ivin" type="text" spellcheck="false" autocomplete="off" aria-label="Intervals as start,end pairs separated by spaces" aria-describedby="in-err">
+      <button class="btn" id="b-apply">Apply</button>
+      <span class="in-hint">start,end pairs, e.g. <code>1,3 2,6 8,10</code> (1 to 12 intervals, values 0 to 99)</span>
+    </div>
+    <p class="in-err" id="in-err" aria-live="polite"></p>
+  </div>
+  <p class="summary" id="summary"></p>
+
+  <div class="grid2">
+    <div class="panel">
+      <div class="stats">
+        <div class="stat"><span class="n" id="s1">0</span><span class="k">merged intervals</span></div>
+        <div class="stat"><span class="n" id="s2">0</span><span class="k" id="s2k"></span></div>
+        <div class="stat warn"><span class="n" id="s3">0</span><span class="k" id="s3k"></span></div>
+      </div>
+
+      <div class="nl-scroll"><div class="nl" id="nl" role="img" aria-label="Intervals drawn on a number line, with the merged result in the bottom row"></div></div>
+
+      <div class="graph-wrap" id="graph-wrap" hidden>
+        <div class="strip-head"><b>Overlap graph</b><span>edge = the two intervals overlap</span></div>
+        <svg id="graph" viewBox="0 0 300 220" role="img" aria-label="Overlap graph"></svg>
+      </div>
+
+      <div class="strip">
+        <div class="strip-head"><b id="chips-name"></b><span id="chips-dir"></span></div>
+        <div class="chips" id="chips"></div>
+      </div>
+
+      <p class="explain" id="explain" aria-live="polite"></p>
+
+      <div class="controls">
+        <button class="btn" id="b-reset">Reset</button>
+        <button class="btn" id="b-back">Back</button>
+        <button class="btn primary" id="b-next">Next</button>
+        <button class="btn" id="b-play">Play</button>
+        <button class="btn" id="b-end">Skip to end</button>
+        <span class="counter" id="counter"></span>
+      </div>
+
+      <div class="legend">
+        <span><i class="l-idle"></i>not merged yet</span>
+        <span><i class="l-done"></i>colored by merged interval</span>
+        <span><i class="l-cur"></i>current</span>
+        <span id="lg-open"><i class="l-open"></i><span id="lg-open-t">open</span></span>
+        <span id="lg-scan"><i class="l-scan"></i>scan line</span>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="code-head"><h3 id="code-title"></h3><span>lines that run are highlighted</span></div>
+      <pre class="code" id="code"></pre>
+      <p class="note" id="note"></p>
+
+      <div class="cx">
+        <h4>Complexity · n intervals</h4>
+        <div class="cx-row">
+          <div class="cx-box"><span class="big" id="cx-time"></span><span class="k">time</span></div>
+          <div class="cx-box" id="cx-space-box"><span class="big" id="cx-space"></span><span class="k">extra space</span></div>
+        </div>
+        <p id="cx-why"></p>
+      </div>
+
+      <div class="cmp">
+        <h4>All three compared</h4>
+        <div class="cmp-scroll">
+          <table>
+            <thead><tr><th>Variant</th><th>Time</th><th>Extra space</th><th>Sorts?</th><th>Idea</th></tr></thead>
+            <tbody id="cmp-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(() => {
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* SIM-START */
+  const L = i => String.fromCharCode(65 + i);
+  const fmt = iv => `[${iv[0]},${iv[1]}]`;
+  const plural = (n, w) => `${n} ${w}${n === 1 ? '' : 's'}`;
+
+  function simSort(iv) {
+    const n = iv.length, snaps = [];
+    let order = iv.map((_, i) => i), sorted = false, cur = null, active = -1, processed = 0;
+    const comp = Array(n).fill(-1), merged = [];
+    const snap = (text, lines, quick = false) => snaps.push({
+      order: [...order], comp: [...comp], cur, other: null, open: [], result: merged.map(m => [...m]), active, scanX: null,
+      chips: order.map(i => ({ t: `${L(i)} ${fmt(iv[i])}`, cls: i === cur ? 'top' : (sorted && comp[i] < 0 ? '' : sorted ? 'past' : '') })),
+      stats: [merged.length, processed, active >= 0 ? merged[active][1] : '–'], graph: null, text, lines, quick
+    });
+    snap(`The input in its original order: ${order.map(i => L(i) + ' ' + fmt(iv[i])).join(', ')}.`, [0]);
+    order = [...order].sort((a, b) => iv[a][0] - iv[b][0]);
+    sorted = true;
+    snap(`Sort by start: ${order.map(L).join(' ')}. Intervals that overlap are now next to each other.`, [1, 2]);
+    for (const k of order) {
+      cur = k;
+      const [s, e] = iv[k];
+      if (!merged.length) {
+        merged.push([s, e]); active = 0; comp[k] = 0;
+        snap(`${L(k)} ${fmt(iv[k])} is the first interval, so it becomes the current merged interval.`, [4, 5, 6, 7]);
+      } else if (merged[active][1] < s) {
+        const done = merged[active];
+        merged.push([s, e]); active = merged.length - 1; comp[k] = active;
+        snap(`${L(k)} starts at ${s}, after the current end ${done[1]}. There is a gap, so ${fmt(done)} is final and ${L(k)} starts a new merged interval.`, [5, 6, 7]);
+      } else {
+        const old = merged[active][1];
+        merged[active][1] = Math.max(old, e); comp[k] = active;
+        const touch = s === old ? ' (touching counts)' : '';
+        snap(e > old
+          ? `${L(k)} starts at ${s} ≤ current end ${old}${touch}: overlap, so stretch the end from ${old} to ${e}.`
+          : `${L(k)} starts at ${s} ≤ current end ${old}${touch} and ends at ${e} ≤ ${old}: it lies inside, the end stays ${old}.`,
+          [5, 6, 8, 9, 10]);
+      }
+      processed++;
+    }
+    cur = null; active = -1;
+    snap(`Done after one pass: ${plural(merged.length, 'merged interval')}, ${merged.map(fmt).join(' ')}.`, [13]);
+    return snaps;
+  }
+
+  function simGraph(iv) {
+    const n = iv.length, snaps = [];
+    const comp = Array(n).fill(-1), merged = [], edges = [], nb = iv.map(() => []), visited = Array(n).fill(false);
+    let cur = null, other = null, pair = null, pairHit = false, active = -1, checked = 0, stack = [], dfs = false;
+    const snap = (text, lines, quick = false) => snaps.push({
+      order: iv.map((_, i) => i), comp: [...comp], cur, other, open: stack.slice(), result: merged.map(m => [...m]), active, scanX: null,
+      chips: stack.map((i, k) => ({ t: `${L(i)} ${fmt(iv[i])}`, cls: k === stack.length - 1 ? 'top' : 'wait' })),
+      stats: [merged.length, checked, edges.length],
+      graph: { edges: edges.map(e => [...e]), pair: pair && [...pair], pairHit, stack: stack.slice(), dfs }, text, lines, quick
+    });
+    snap('Every interval is a node. Check every pair: two intervals overlap when a.start ≤ b.end and b.start ≤ a.end.', [0, 1, 2]);
+    for (let i = 0; i < n; i++) for (let j = i + 1; j < n; j++) {
+      const a = iv[i], b = iv[j];
+      pair = [i, j]; cur = i; other = j; checked++;
+      pairHit = a[0] <= b[1] && b[0] <= a[1];
+      if (pairHit) {
+        edges.push([i, j]); nb[i].push(j); nb[j].push(i);
+        snap(`${L(i)} ${fmt(a)} and ${L(j)} ${fmt(b)} overlap (${a[0]} ≤ ${b[1]} and ${b[0]} ≤ ${a[1]}), so add the edge ${L(i)}–${L(j)}.`, [3, 4, 5, 6, 7, 15, 16]);
+      } else {
+        const why = a[0] > b[1] ? `${a[0]} > ${b[1]}` : `${b[0]} > ${a[1]}`;
+        snap(`${L(i)} ${fmt(a)} and ${L(j)} ${fmt(b)} do not overlap (${why}), no edge.`, [3, 4, 5, 15, 16], true);
+      }
+    }
+    pair = null; cur = null; other = null; dfs = true;
+    snap(`All ${plural(checked, 'pair')} checked, ${plural(edges.length, 'edge')} found. Each connected component is now one merged interval.`, [9]);
+    for (let i = 0; i < n; i++) {
+      if (visited[i]) {
+        cur = i;
+        snap(`${L(i)} is already in component #${comp[i] + 1}, skip it.`, [10, 11], true);
+        continue;
+      }
+      let minS = iv[i][0], maxE = iv[i][1];
+      merged.push([minS, maxE]); active = merged.length - 1;
+      visited[i] = true; comp[i] = active; stack.push(i); cur = i;
+      snap(`${L(i)} is not visited yet: start component #${active + 1} and run a DFS from it.`, [10, 11, 19, 20, 21]);
+      while (stack.length) {
+        const node = stack.pop();
+        cur = node;
+        minS = Math.min(minS, iv[node][0]); maxE = Math.max(maxE, iv[node][1]);
+        merged[active] = [minS, maxE];
+        const pushed = [];
+        for (const next of nb[node]) if (!visited[next]) { visited[next] = true; comp[next] = active; stack.push(next); pushed.push(L(next)); }
+        snap(`Pop ${L(node)} ${fmt(iv[node])}: the component spans [${minS},${maxE}] so far.` +
+          (pushed.length ? ` Push its unvisited neighbour${pushed.length > 1 ? 's' : ''} ${pushed.join(', ')}.` : ' No unvisited neighbours.'),
+          pushed.length ? [22, 23, 24, 25, 26, 27] : [22, 23, 24, 25, 26]);
+      }
+      cur = null;
+      snap(`The stack is empty, so component #${active + 1} is complete: ${fmt(merged[active])}.`, [28, 29, 11], true);
+    }
+    active = -1; cur = null;
+    snap(`Done: ${plural(merged.length, 'component')}, ${merged.map(fmt).join(' ')}. Output is in node order, not sorted.`, [12]);
+    return snaps;
+  }
+
+  function simSweep(iv) {
+    const n = iv.length, snaps = [];
+    let events = [];
+    iv.forEach(([s, e], i) => { events.push({ x: s, t: 0, i }); events.push({ x: e, t: 1, i }); });
+    const comp = Array(n).fill(-1), isOpen = Array(n).fill(false), merged = [];
+    let cur = null, active = -1, open = 0, mergedStart = 0, evIdx = -1, scanX = null, processed = 0;
+    const snap = (text, lines, quick = false) => snaps.push({
+      order: iv.map((_, i) => i), comp: [...comp], cur, other: null, open: iv.map((_, i) => i).filter(i => isOpen[i]),
+      result: merged.map(m => [...m]), active, scanX,
+      chips: events.map((ev, k) => ({ t: `${ev.x}${ev.t ? '−' : '+'}${L(ev.i)}`, cls: k === evIdx ? 'top' : k < evIdx ? 'past' : '' })),
+      stats: [merged.length, processed, open], graph: null, text, lines, quick
+    });
+    snap(`Each interval becomes two events: +1 at its start and −1 at its end, ${plural(events.length, 'event')} in total.`, [1, 2, 3, 4, 5]);
+    events = [...events].sort((a, b) => a.x - b.x || a.t - b.t);
+    snap('Sort the events by coordinate. At the same coordinate, starts come before ends, so touching intervals stay in one block.', [6]);
+    for (let k = 0; k < events.length; k++) {
+      const ev = events[k];
+      evIdx = k; scanX = ev.x; cur = ev.i; processed++;
+      if (ev.t === 0) {
+        if (open === 0) {
+          mergedStart = ev.x; merged.push([ev.x, ev.x]); active = merged.length - 1;
+          open++; isOpen[ev.i] = true; comp[ev.i] = active;
+          snap(`Scan reaches ${ev.x}: ${L(ev.i)} starts. The count was 0, so a new merged interval starts at ${ev.x}. open = ${open}.`, [8, 9, 10, 11, 12]);
+        } else {
+          open++; isOpen[ev.i] = true; comp[ev.i] = active;
+          merged[active][1] = Math.max(merged[active][1], ev.x);
+          snap(`Scan reaches ${ev.x}: ${L(ev.i)} starts while others are open, so it joins the current block. open = ${open}.`, [9, 10, 12]);
+        }
+      } else {
+        open--; isOpen[ev.i] = false;
+        merged[active][1] = ev.x;
+        if (open === 0) {
+          snap(`Scan reaches ${ev.x}: ${L(ev.i)} ends and the count drops to 0. Nothing is open, so emit [${mergedStart},${ev.x}].`, [9, 13, 14, 15]);
+          active = -1;
+        } else {
+          snap(`Scan reaches ${ev.x}: ${L(ev.i)} ends, but ${plural(open, 'interval')} still open, so the block continues. open = ${open}.`, [9, 13, 14, 15], true);
+        }
+      }
+    }
+    cur = null; scanX = null; evIdx = events.length;
+    snap(`Sweep finished: ${plural(merged.length, 'merged interval')}, ${merged.map(fmt).join(' ')}.`, [18]);
+    return snaps;
+  }
+
+  function parseIntervals(text) {
+    const nums = (text.match(/-?\d+/g) || []).map(Number);
+    if (!nums.length) return { error: 'Enter at least one interval, e.g. 1,3 2,6.' };
+    if (nums.length % 2) return { error: 'Every interval needs a start and an end (odd number of values).' };
+    if (nums.some(v => v < 0 || v > 99)) return { error: 'Use values from 0 to 99.' };
+    const iv = [];
+    for (let k = 0; k < nums.length; k += 2) iv.push([nums[k], nums[k + 1]]);
+    if (iv.length > 12) return { error: 'Use at most 12 intervals so the graph stays readable.' };
+    const bad = iv.find(([s, e]) => s > e);
+    if (bad) return { error: `[${bad[0]},${bad[1]}] has start > end.` };
+    return { iv };
+  }
+  /* SIM-END */
+
+  /* ---------- Java source shown per algorithm ---------- */
+  const CODE = {
+    sort: ['public int[][] merge(int[][] intervals) {', '    int[][] sorted = intervals.clone();', '    Arrays.sort(sorted, Comparator.comparingInt(interval -> interval[0]));', '', '    List<int[]> merged = new ArrayList<>();', '    for (int[] interval : sorted) {', '        if (merged.isEmpty() || merged.getLast()[1] < interval[0]) {', '            merged.add(new int[]{interval[0], interval[1]}); // gap: new', '        } else {', '            int[] current = merged.getLast();', '            current[1] = Math.max(current[1], interval[1]);  // stretch', '        }', '    }', '    return merged.toArray(new int[0][]);', '}'],
+    graph: ['public int[][] merge(int[][] intervals) {', '    int n = intervals.length;', '    // neighbours.get(i) = intervals that overlap i', '    for (int i = 0; i < n; i++)', '        for (int j = i + 1; j < n; j++)', '            if (overlaps(intervals[i], intervals[j])) {', '                neighbours.get(i).add(j);', '                neighbours.get(j).add(i);', '            }', '    boolean[] visited = new boolean[n];', '    for (int i = 0; i < n; i++)', '        if (!visited[i]) merged.add(mergeComponent(..., i));', '    return merged.toArray(new int[0][]);', '}', '', 'private boolean overlaps(int[] a, int[] b) {', '    return a[0] <= b[1] && b[0] <= a[1];', '}', '', 'private int[] mergeComponent(..., int start) {', '    int minStart = intervals[start][0], maxEnd = intervals[start][1];', '    visited[start] = true; stack.push(start);', '    while (!stack.isEmpty()) {', '        int node = stack.pop();', '        minStart = Math.min(minStart, intervals[node][0]);', '        maxEnd = Math.max(maxEnd, intervals[node][1]);', '        for (int next : neighbours.get(node))', '            if (!visited[next]) { visited[next] = true; stack.push(next); }', '    }', '    return new int[]{minStart, maxEnd};', '}'],
+    sweep: ['public int[][] merge(int[][] intervals) {', '    List<int[]> events = new ArrayList<>();      // {x, START or END}', '    for (int[] interval : intervals) {', '        events.add(new int[]{interval[0], START});', '        events.add(new int[]{interval[1], END});', '    }', '    events.sort(by x, then START (0) before END (1));', '', '    int open = 0, mergedStart = 0;', '    for (int[] event : events) {', '        if (event[1] == START) {', '            if (open == 0) mergedStart = event[0];', '            open++;', '        } else {', '            open--;', '            if (open == 0) merged.add(new int[]{mergedStart, event[0]});', '        }', '    }', '    return merged.toArray(new int[0][]);', '}']
+  };
+
+  const ALGOS = [
+    { id: 'sort', label: 'Sort + scan', title: 'MergeIntervalsSort.java', run: simSort,
+      chips: 'Sorted order', dir: 'left → right', s2: 'intervals processed', s3: 'current end', open: null,
+      summary: 'Sort by start, then walk once. Keep one "current merged" interval: stretch its end on overlap, start a new one on a gap.',
+      note: '<b>Why sorting is enough:</b> after sorting, an interval can only overlap the current merged interval or something later, never an earlier finished one. So one comparison against the last end decides everything. <code>&lt;</code> (not <code>&lt;=</code>) in the gap test is what merges touching intervals.',
+      cx: { time: 'O(n log n)', space: 'O(n)', sorts: 'yes', idea: 'sort, extend the last',
+        why: '<b>Time:</b> the sort costs O(n log n); the merge pass is a single O(n) loop. <b>Space:</b> O(n) for the output list, plus O(log n) to O(n) for the sort itself (TimSort on objects needs up to n/2 temporary slots).' } },
+    { id: 'graph', label: 'Overlap graph', title: 'MergeIntervalsGraph.java (condensed)', run: simGraph,
+      chips: 'DFS stack', dir: 'bottom → top', s2: 'pairs checked', s3: 'edges', open: 'on DFS stack',
+      summary: 'The brute-force idea: connect every pair of overlapping intervals, then each connected component is one merged interval [min start, max end].',
+      note: '<b>Chains merge too:</b> two intervals that do not touch each other can still end up in one component through a third one that overlaps both. That is exactly what "merge all overlapping" means, and why a component, not a single edge, is the unit.',
+      cx: { time: 'O(n²)', space: 'O(n²)', sorts: 'no', idea: 'components of overlap graph', risky: true,
+        why: '<b>Time:</b> every one of the n(n−1)/2 pairs is tested; the DFS afterwards is O(n + edges). <b>Space:</b> if every interval overlaps every other, the adjacency lists hold n(n−1) entries. Fine for 12 intervals, hopeless for 10⁴ (LeetCode\'s limit), which is why the sort version is the expected answer.' } },
+    { id: 'sweep', label: 'Sweep line', title: 'MergeIntervalsSweepLine.java (condensed)', run: simSweep,
+      chips: 'Events', dir: 'x then +/−', s2: 'events processed', s3: 'open count', open: 'open at scan line',
+      summary: 'Turn intervals into +1/−1 events, sort them and sweep left to right counting open intervals. A merged interval runs from 0 → 1 to the next 1 → 0.',
+      note: '<b>The tie-break matters:</b> try the Touching preset. At x = 2 the start of the next interval is processed before the end of the previous one, so the count never hits 0 and the intervals stay merged. Swap the order and they would split.',
+      cx: { time: 'O(n log n)', space: 'O(n)', sorts: 'yes (2n events)', idea: 'count open intervals',
+        why: '<b>Time:</b> sorting 2n events is O(n log n), the sweep is O(n). <b>Space:</b> 2n event objects plus the output. Same big-O as the sort version, but the counter idea generalises to "max overlapping meetings" and similar problems.' } }
+  ];
+
+  const PRESETS = [
+    { id: 'mixed', label: 'Shuffled', text: '2,6 8,10 1,3 15,18 9,12 5,7' },
+    { id: 'lc1', label: 'LeetCode 1', text: '1,3 2,6 8,10 15,18' },
+    { id: 'lc2', label: 'LeetCode 2', text: '1,4 4,5' },
+    { id: 'touch', label: 'Touching', text: '1,2 2,3 3,5 7,8 8,10' },
+    { id: 'nested', label: 'Nested', text: '1,12 2,4 5,8 6,7 9,11 14,16' },
+    { id: 'random', label: 'Random', text: null }
+  ];
+  const randomText = () => {
+    const n = 5 + Math.floor(Math.random() * 4);
+    return Array.from({ length: n }, () => { const s = Math.floor(Math.random() * 22); return `${s},${s + Math.floor(Math.random() * 6)}`; }).join(' ');
+  };
+
+  /* ---------- player ---------- */
+  const $ = id => document.getElementById(id);
+  let algo = ALGOS[0], preset = PRESETS[0], iv = parseIntervals(PRESETS[0].text).iv;
+  let snaps = [], cur = 0, timer = null, geo = null, rowEls = [], resEls = [], scanEl = null;
+
+  function renderPickers() {
+    $('algos').replaceChildren(...ALGOS.map(a => {
+      const b = document.createElement('button');
+      b.textContent = a.label; b.setAttribute('aria-pressed', a === algo);
+      b.onclick = () => { algo = a; renderPickers(); run(0); };
+      return b;
+    }));
+    $('presets').replaceChildren(...PRESETS.map(p => {
+      const b = document.createElement('button');
+      b.textContent = p.label; b.setAttribute('aria-pressed', p === preset);
+      b.onclick = () => {
+        preset = p;
+        $('ivin').value = p.text || randomText();
+        apply(true);
+      };
+      return b;
+    }));
+  }
+
+  function apply(fromPreset) {
+    const r = parseIntervals($('ivin').value);
+    if (r.error) { $('in-err').textContent = r.error; return; }
+    $('in-err').textContent = '';
+    iv = r.iv;
+    if (!fromPreset) preset = PRESETS.find(p => p.text === $('ivin').value.trim()) || null;
+    renderPickers(); buildLine(); run(0);
+  }
+
+  /* number line: built once per input, then updated per step */
+  function buildLine() {
+    const n = iv.length;
+    const lo = Math.min(...iv.map(x => x[0])), hi = Math.max(...iv.map(x => x[1]));
+    const range = Math.max(hi - lo, 1);
+    const unit = Math.max(12, Math.min(40, 520 / range));
+    const gutter = 92, pad = 14, top = 26, rowH = 28;
+    const width = gutter + pad * 2 + range * unit + 10;
+    const resTop = top + n * rowH + 14;
+    const height = resTop + rowH + 6;
+    geo = { lo, unit, gutter, pad, top, rowH, resTop, x: v => gutter + pad + (v - lo) * unit };
+    const nl = $('nl');
+    nl.style.width = width + 'px'; nl.style.height = height + 'px';
+    nl.style.setProperty('--grid-h', (height - 20) + 'px');
+    nl.replaceChildren();
+    const step = [1, 2, 5, 10, 20].find(s => range / s <= 14) || 20;
+    for (let v = Math.ceil(lo / step) * step; v <= hi; v += step) {
+      const t = document.createElement('span'); t.className = 'tick'; t.style.left = geo.x(v) + 'px'; t.textContent = v; nl.append(t);
+    }
+    rowEls = iv.map((x, i) => {
+      const row = document.createElement('div'); row.className = 'row';
+      row.innerHTML = `<span class="lab"><b>${L(i)}</b>${fmt(x)}</span>`;
+      const bar = document.createElement('div'); bar.className = 'bar';
+      const w = (x[1] - x[0]) * unit;
+      bar.style.left = (geo.x(x[0]) - (w < 8 ? (8 - w) / 2 : 0)) + 'px'; bar.style.width = Math.max(8, w) + 'px';
+      row.append(bar); nl.append(row);
+      return { row, bar };
+    });
+    const sep = document.createElement('div'); sep.className = 'sep'; sep.style.top = (resTop - 7) + 'px'; nl.append(sep);
+    const resRow = document.createElement('div'); resRow.className = 'row res'; resRow.style.top = resTop + 'px';
+    resRow.innerHTML = '<span class="lab">RESULT</span>';
+    nl.append(resRow);
+    resEls = { row: resRow, bars: [] };
+    scanEl = document.createElement('div'); scanEl.className = 'scan'; scanEl.style.height = (height - 22) + 'px';
+    scanEl.innerHTML = '<span></span>'; nl.append(scanEl);
+  }
+
+  const compColor = c => `var(--c-${(c % 6) + 1})`;
+
+  function renderLine(s, forward) {
+    s.order.forEach((i, k) => { rowEls[i].row.style.top = (geo.top + k * geo.rowH) + 'px'; });
+    const openSet = new Set(s.open);
+    rowEls.forEach(({ bar }, i) => {
+      bar.className = 'bar';
+      bar.style.background = s.comp[i] >= 0 ? compColor(s.comp[i]) : '';
+      if (s.cur === i) bar.classList.add('cur');
+      if (s.other === i) bar.classList.add('other');
+      if (openSet.has(i) && s.cur !== i) bar.classList.add('open');
+    });
+    const bars = resEls.bars;
+    while (bars.length < s.result.length) {
+      const b = document.createElement('div'); b.className = 'bar rb'; resEls.row.append(b); bars.push(b);
+    }
+    bars.forEach((b, k) => {
+      const r = s.result[k];
+      if (!r) { b.style.display = 'none'; return; }
+      const isNew = b.style.display === 'none' || !b.dataset.shown;
+      b.style.display = ''; b.dataset.shown = '1';
+      const w = (r[1] - r[0]) * geo.unit;
+      b.style.left = (geo.x(r[0]) - (w < 8 ? (8 - w) / 2 : 0)) + 'px'; b.style.width = Math.max(8, w) + 'px';
+      b.style.background = compColor(k);
+      b.textContent = fmt(r);
+      b.className = 'bar rb' + (k === s.active ? ' active' : '') + (isNew && forward && !reduced ? ' new' : '');
+    });
+    if (s.scanX === null) scanEl.style.display = 'none';
+    else {
+      scanEl.style.display = '';
+      scanEl.style.left = geo.x(s.scanX) + 'px';
+      scanEl.querySelector('span').textContent = `x=${s.scanX} · open ${s.stats[2]}`;
+    }
+  }
+
+  function renderGraph(s) {
+    const g = s.graph, n = iv.length, svg = $('graph');
+    const pos = iv.map((_, i) => n === 1 ? [150, 110]
+      : [150 + 88 * Math.cos(-Math.PI / 2 + 2 * Math.PI * i / n), 110 + 88 * Math.sin(-Math.PI / 2 + 2 * Math.PI * i / n)]);
+    const onStack = new Set(g.stack);
+    let h = '';
+    g.edges.forEach(([a, b]) => {
+      h += `<line x1="${pos[a][0]}" y1="${pos[a][1]}" x2="${pos[b][0]}" y2="${pos[b][1]}" style="stroke:var(--line-strong);stroke-width:2"/>`;
+    });
+    if (g.pair) {
+      const [a, b] = g.pair;
+      h += `<line x1="${pos[a][0]}" y1="${pos[a][1]}" x2="${pos[b][0]}" y2="${pos[b][1]}" style="stroke:var(--accent);stroke-width:3;${g.pairHit ? '' : 'stroke-dasharray:5 5;opacity:.7'}"/>`;
+    }
+    pos.forEach(([x, y], i) => {
+      const fill = s.comp[i] >= 0 ? compColor(s.comp[i]) : 'var(--surface)';
+      const stroke = s.cur === i || s.other === i ? 'var(--accent)' : onStack.has(i) ? 'var(--wait)' : 'var(--line-strong)';
+      const sw = s.cur === i || s.other === i ? 3.5 : onStack.has(i) ? 3 : 1.5;
+      h += `<circle cx="${x}" cy="${y}" r="16" style="fill:${fill};stroke:${stroke};stroke-width:${sw}"/>`;
+      h += `<text x="${x}" y="${y + 4.5}" text-anchor="middle" style="fill:var(--ink);font:700 13px var(--mono)">${L(i)}</text>`;
+    });
+    svg.innerHTML = h;
+  }
+
+  function run(at) {
+    stop();
+    snaps = algo.run(iv);
+    $('code').innerHTML = CODE[algo.id].map(l => `<span class="ln">${l.replace(/&/g, '&amp;').replace(/</g, '&lt;') || ' '}</span>`).join('');
+    $('code-title').textContent = algo.title;
+    $('summary').textContent = algo.summary;
+    $('note').innerHTML = algo.note;
+    $('chips-name').textContent = algo.chips;
+    $('chips-dir').textContent = algo.dir;
+    $('s2k').textContent = algo.s2;
+    $('s3k').textContent = algo.s3;
+    $('lg-open').hidden = !algo.open;
+    $('lg-open-t').textContent = algo.open || '';
+    $('lg-scan').hidden = algo.id !== 'sweep';
+    $('graph-wrap').hidden = algo.id !== 'graph';
+    $('cx-time').textContent = algo.cx.time;
+    $('cx-space').textContent = algo.cx.space;
+    $('cx-space-box').classList.toggle('warn', !!algo.cx.risky);
+    $('cx-why').innerHTML = algo.cx.why;
+    $('cmp-body').innerHTML = ALGOS.map(a => `<tr class="${a === algo ? 'sel' : ''}">
+      <td>${a.label}</td><td class="mono${a.cx.risky ? ' bad' : ''}">${a.cx.time}</td><td class="mono${a.cx.risky ? ' bad' : ''}">${a.cx.space}</td>
+      <td>${a.cx.sorts}</td><td>${a.cx.idea}</td></tr>`).join('');
+    resEls.bars.forEach(b => { b.style.display = 'none'; delete b.dataset.shown; });
+    cur = -1;
+    render(Math.min(at, snaps.length - 1), false);
+  }
+
+  function render(i, animate = true) {
+    const s = snaps[i], p = snaps[i - 1];
+    const forward = animate && !!p && i === cur + 1;
+    renderLine(s, forward);
+    if (s.graph) renderGraph(s);
+
+    const box = $('chips');
+    if (!s.chips.length) box.innerHTML = '<span class="empty">empty</span>';
+    else {
+      const grew = forward && p.chips.length < s.chips.length;
+      box.innerHTML = s.chips.map((c, k) =>
+        `<span class="chip ${c.cls}${grew && k === s.chips.length - 1 && !reduced ? ' new' : ''}">${c.t}</span>`).join('');
+    }
+
+    $('s1').textContent = s.stats[0];
+    $('s2').textContent = s.stats[1];
+    $('s3').textContent = s.stats[2];
+    $('explain').textContent = s.text;
+
+    const hl = new Set(s.lines);
+    [...$('code').children].forEach((ln, n) => {
+      ln.classList.toggle('hl', hl.has(n));
+      ln.classList.toggle('dim', hl.size > 0 && !hl.has(n));
+    });
+
+    const last = snaps.length - 1;
+    $('counter').textContent = `step ${i + 1} of ${last + 1}`;
+    $('b-back').disabled = i === 0;
+    $('b-next').disabled = i === last;
+    $('b-end').disabled = i === last;
+    cur = i;
+  }
+
+  function stop() { clearTimeout(timer); timer = null; $('b-play').textContent = 'Play'; }
+  function tick() {
+    if (cur >= snaps.length - 1) return stop();
+    render(cur + 1);
+    timer = setTimeout(tick, snaps[cur].quick ? 380 : 1000);
+  }
+  function play() {
+    if (timer) return stop();
+    if (cur === snaps.length - 1) render(0, false);
+    $('b-play').textContent = 'Pause';
+    timer = setTimeout(tick, 200);
+  }
+
+  $('b-next').onclick = () => { stop(); if (cur < snaps.length - 1) render(cur + 1); };
+  $('b-back').onclick = () => { stop(); if (cur > 0) render(cur - 1); };
+  $('b-reset').onclick = () => { stop(); render(0, false); };
+  $('b-end').onclick = () => { stop(); render(snaps.length - 1, false); };
+  $('b-play').onclick = play;
+  $('b-apply').onclick = () => apply(false);
+  $('ivin').addEventListener('keydown', e => { if (e.key === 'Enter') apply(false); });
+  document.addEventListener('keydown', e => {
+    if (e.target.closest && e.target.closest('input, .seg')) return;
+    if (e.key === 'ArrowRight') $('b-next').click();
+    if (e.key === 'ArrowLeft') $('b-back').click();
+  });
+
+  $('ivin').value = PRESETS[0].text;
+  renderPickers(); buildLine();
+  run(4); // open mid-way: sorted, and the first merged interval is being stretched
+})();
+</script>
+
+</body></html>

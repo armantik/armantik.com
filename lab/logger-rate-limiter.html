@@ -1,0 +1,489 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style>
+<title>Logger Rate Limiter Visualizer · Arman Ajabkhani</title>
+<meta name="description" content="Three ways to suppress repeated log messages within 10 seconds, and how much memory each keeps.">
+<meta property="og:title" content="Logger Rate Limiter Visualizer">
+<meta property="og:description" content="Three ways to suppress repeated log messages within 10 seconds, and how much memory each keeps.">
+<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+<script src="../assets/theme.js"></script>
+<style>
+/* armantik.com bar: links this guide back to the site */
+.aa-labbar { --aa-ink: #16211F; --aa-muted: #4A5855; --aa-line: #DCE3E0; --aa-accent: #0F5C55;
+  max-width: 1160px; margin: 0 auto 14px; padding: 0 0 10px; border-bottom: 1px solid var(--aa-line);
+  display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 6px 18px;
+  font: 500 13px/1.4 "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .aa-labbar { --aa-ink: #E3EAE7; --aa-muted: #A3B1AD; --aa-line: #2B3633; --aa-accent: #5BB8AA; } }
+:root[data-theme="dark"] .aa-labbar { --aa-ink: #E3EAE7; --aa-muted: #A3B1AD; --aa-line: #2B3633; --aa-accent: #5BB8AA; }
+.aa-labbar a { color: var(--aa-muted); text-decoration: none; display: inline-flex; align-items: center; gap: 8px; min-height: 32px; }
+.aa-labbar a:hover { color: var(--aa-accent); }
+.aa-labbar .aa-home { color: var(--aa-ink); font-weight: 600; }
+.aa-labbar.aa-pad { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-top: 12px; }
+.aa-right { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 6px 16px; }
+.aa-labbar .aa-crumb { color: var(--aa-muted); }
+.aa-labbar button { display: inline-flex; align-items: center; gap: 6px; min-height: 32px; padding: 0 10px; border: 1px solid var(--aa-line); border-radius: 999px;
+  background: transparent; color: var(--aa-muted); font: inherit; cursor: pointer; }
+.aa-labbar button:hover { color: var(--aa-accent); border-color: var(--aa-accent); }
+.aa-prob { max-width: 1160px; margin: -4px auto 16px; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px;
+  font: 500 13px/1.5 "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace; color: var(--aa-muted, #4A5855); }
+.aa-prob { --aa-muted: #4A5855; --aa-accent: #0F5C55; --aa-line: #DCE3E0; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .aa-prob { --aa-muted: #A3B1AD; --aa-accent: #5BB8AA; --aa-line: #2B3633; } }
+:root[data-theme="dark"] .aa-prob { --aa-muted: #A3B1AD; --aa-accent: #5BB8AA; --aa-line: #2B3633; }
+.aa-prob b { font-weight: 600; color: var(--aa-accent); text-transform: uppercase; letter-spacing: .06em; font-size: 11.5px; }
+.aa-prob a { color: var(--aa-accent); }
+.aa-prob span.aa-own { color: var(--aa-muted); }
+</style>
+</head>
+<body>
+<nav class="aa-labbar" aria-label="armantik.com"><a class="aa-home" href="../index.html"><svg viewBox="0 0 64 64" width="20" height="20" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#0F5C55"/><path d="M18 49 L32 15 L46 49 M23.5 37 H40.5" fill="none" stroke="#FAFBF9" stroke-width="6.5" stroke-linecap="square"/></svg>Arman Ajabkhani</a><span class="aa-right"><a class="aa-crumb" href="index.html#algorithms">Lab / Algorithms</a><a href="index.html">← All Lab guides</a><button type="button" data-theme-toggle aria-label="Switch theme">Theme</button></span></nav>
+<p class="aa-prob"><b>Problem</b> <a href="https://leetcode.com/problems/logger-rate-limiter/" target="_blank" rel="noopener">LeetCode 359. Logger Rate Limiter ↗</a> · <a href="https://neetcode.io/problems/logger-rate-limiter" target="_blank" rel="noopener">NeetCode ↗</a><span class="aa-own">· The solutions on this page are my own.</span></p>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap">
+<style>
+  /* Layout: header, control bar (scenario, play, message buttons, clock), per-message timeline, console log, three implementation panels, complexity */
+  :root {
+    --bg: #f3f5f4;
+    --surface: #ffffff;
+    --ink: #172019;
+    --muted: #5a675e;
+    --line: #d6ddd8;
+    --line-strong: #9caaa1;
+    --accent: #2f6fd0;
+    --accent-soft: #e2ebfa;
+    --cool: rgba(47, 111, 208, 0.13);
+    --ok: #1d8455;
+    --ok-soft: #ddf2e6;
+    --bad: #c23d2b;
+    --bad-soft: #fbe6e2;
+    --old: #a8651f;
+    --old-soft: #f7ead9;
+    --term: #eef1ef;
+    --display: "Bricolage Grotesque", "Avenir Next", system-ui, sans-serif;
+    --body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+    --mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0f1411; --surface: #171e19; --ink: #e5ece7; --muted: #95a59a;
+      --line: #29332c; --line-strong: #4f5f54; --accent: #86a8ff; --accent-soft: #1e2a4a;
+      --cool: rgba(134, 168, 255, 0.16); --ok: #52c98f; --ok-soft: #15362a; --bad: #ff7d69; --bad-soft: #3d1f1a;
+      --old: #eaa45e; --old-soft: #3a2914; --term: #121814; color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0f1411; --surface: #171e19; --ink: #e5ece7; --muted: #95a59a;
+    --line: #29332c; --line-strong: #4f5f54; --accent: #86a8ff; --accent-soft: #1e2a4a;
+    --cool: rgba(134, 168, 255, 0.16); --ok: #52c98f; --ok-soft: #15362a; --bad: #ff7d69; --bad-soft: #3d1f1a;
+    --old: #eaa45e; --old-soft: #3a2914; --term: #121814; color-scheme: dark;
+  }
+
+  * { box-sizing: border-box; }
+  body { background: var(--bg); color: var(--ink); font: 15px/1.55 var(--body); padding: 28px 20px 48px; }
+  .wrap { max-width: 1140px; margin: 0 auto; display: grid; gap: 16px; }
+  header { display: grid; gap: 6px; }
+  h1 { font: 700 clamp(28px, 5vw, 40px)/1.1 var(--display); letter-spacing: -0.02em; margin: 0; text-wrap: balance; }
+  .lede { color: var(--muted); margin: 0; max-width: 72ch; }
+  code { font: 500 0.88em var(--mono); color: var(--ink); }
+
+  .bar { display: grid; gap: 10px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; }
+  .row { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; }
+  .grp { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+  .pick-label { font: 600 12px var(--body); letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+  .seg { display: inline-flex; flex-wrap: wrap; border: 1px solid var(--line-strong); border-radius: 8px; overflow: hidden; }
+  .seg button { appearance: none; border: 0; background: var(--surface); color: var(--muted); font: 600 13.5px var(--body); padding: 6px 12px; cursor: pointer; }
+  .seg button + button { border-left: 1px solid var(--line-strong); }
+  .seg button[aria-pressed="true"] { background: var(--ink); color: var(--bg); }
+  .btn { appearance: none; font: 600 14px var(--body); padding: 6px 12px; border-radius: 8px; cursor: pointer; border: 1px solid var(--line-strong); background: var(--surface); color: var(--ink); }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: var(--surface); min-width: 72px; }
+  .btn.msg { font: 600 13px var(--mono); border-color: var(--accent); color: var(--accent); }
+  button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .clock { margin-left: auto; font: 700 20px var(--mono); font-variant-numeric: tabular-nums; }
+  .clock small { font: 500 12px var(--body); color: var(--muted); margin-right: 6px; }
+  .scen-text { margin: 0; font-size: 14px; color: var(--muted); }
+
+  .card { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 16px; display: grid; gap: 10px; min-width: 0; align-content: start; }
+  .card h2 { margin: 0; font: 700 19px/1.2 var(--display); }
+  .card h2 small { display: block; font: 500 12px var(--mono); color: var(--muted); margin-top: 2px; }
+  .card-head { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 6px 12px; align-items: baseline; }
+  .mem { font: 600 12.5px var(--mono); padding: 3px 9px; border-radius: 999px; background: var(--term); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .mem.grow { color: var(--old); background: var(--old-soft); }
+
+  .top { display: grid; grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr); gap: 16px; }
+  @media (max-width: 900px) { .top { grid-template-columns: minmax(0, 1fr); } }
+  .tl-scroll { overflow-x: auto; }
+  .tl-scroll svg { display: block; width: 100%; min-width: 560px; height: auto; }
+  .legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 13px; color: var(--muted); }
+  .legend i { display: inline-block; vertical-align: -2px; margin-right: 6px; }
+  .lg-ok { width: 11px; height: 11px; border-radius: 50%; background: var(--ok); }
+  .lg-bad { width: 11px; height: 11px; position: relative; }
+  .lg-bad::before, .lg-bad::after { content: ""; position: absolute; left: 4.5px; top: -1px; width: 2px; height: 13px; background: var(--bad); }
+  .lg-bad::before { transform: rotate(45deg); } .lg-bad::after { transform: rotate(-45deg); }
+  .lg-cool { width: 22px; height: 10px; background: var(--cool); border: 1px solid var(--accent); border-radius: 3px; }
+
+  .console { background: var(--term); border-radius: 8px; padding: 8px 10px; font: 500 12.5px/1.7 var(--mono); max-height: 260px; overflow: auto; display: grid; align-content: start; }
+  .console .ln { display: flex; gap: 8px; white-space: nowrap; }
+  .console .ts { color: var(--muted); min-width: 52px; font-variant-numeric: tabular-nums; }
+  .console .ok { color: var(--ok); font-weight: 700; }
+  .console .no { color: var(--bad); font-weight: 700; }
+  .console .ln.latest { background: var(--accent-soft); border-radius: 4px; margin: 0 -4px; padding: 0 4px; }
+  .console .empty { color: var(--muted); }
+
+  .three { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+  @media (max-width: 1000px) { .three { grid-template-columns: minmax(0, 1fr); } }
+
+  .why { font: 500 12.5px/1.5 var(--mono); background: var(--term); border-radius: 8px; padding: 8px 10px; border-left: 3px solid var(--line-strong); }
+  .why.ok { border-left-color: var(--ok); }
+  .why.no { border-left-color: var(--bad); }
+
+  table.kv { border-collapse: collapse; width: 100%; font: 500 12.5px var(--mono); }
+  table.kv th { font: 600 11.5px var(--body); color: var(--muted); text-align: left; padding: 4px 6px; border-bottom: 1px solid var(--line); }
+  table.kv td { padding: 4px 6px; border-bottom: 1px solid var(--line); font-variant-numeric: tabular-nums; }
+  table.kv tr.old td { color: var(--old); background: var(--old-soft); }
+  table.kv tr.hot td { background: var(--accent-soft); }
+  .kv-wrap { max-height: 230px; overflow: auto; }
+  .more { font-size: 12.5px; color: var(--muted); }
+
+  .chips { display: flex; flex-wrap: wrap; gap: 4px; padding: 6px; border-radius: 8px; background: var(--term); min-height: 36px; align-content: flex-start; }
+  .chip { font: 600 11.5px var(--mono); padding: 3px 6px; border-radius: 5px; background: var(--ok-soft); border: 1px solid var(--ok); }
+  .chip.old { background: var(--old-soft); border: 1px dashed var(--old); color: var(--muted); }
+  .chip.set { background: var(--accent-soft); border-color: var(--accent); }
+  .chips .empty { font-size: 12.5px; color: var(--muted); padding: 2px 4px; }
+  .sub { font: 600 11.5px var(--body); color: var(--muted); letter-spacing: 0.05em; text-transform: uppercase; }
+
+  .maps { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .mapbox { border: 1px solid var(--line); border-radius: 8px; padding: 8px; display: grid; gap: 6px; align-content: start; min-width: 0; }
+  .mapbox.cur { border-color: var(--accent); }
+  .mapbox .chips { min-height: 60px; }
+  .tag { font: 600 11.5px var(--body); padding: 2px 8px; border-radius: 999px; background: var(--accent-soft); color: var(--accent); justify-self: start; }
+  .tag.clear { background: var(--old-soft); color: var(--old); }
+  .rotated { animation: rot 0.6s ease-out; }
+  @keyframes rot { from { box-shadow: 0 0 0 4px var(--accent-soft); } }
+
+  .how { margin: 0; font-size: 13.5px; color: var(--muted); }
+  .cx { font: 500 12px var(--mono); color: var(--muted); border-top: 1px solid var(--line); padding-top: 8px; display: flex; flex-wrap: wrap; gap: 4px 14px; }
+  .cx b { color: var(--ink); font-weight: 600; }
+
+  .cmp-scroll { overflow-x: auto; }
+  table.cmp { border-collapse: collapse; width: 100%; font-size: 13.5px; min-width: 640px; }
+  table.cmp th, table.cmp td { text-align: left; padding: 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  table.cmp th { font: 600 12px var(--body); color: var(--muted); }
+  table.cmp td.mono { font: 500 13px var(--mono); white-space: nowrap; }
+
+  @media (prefers-reduced-motion: reduce) { .rotated { animation: none; } }
+  @media (max-width: 480px) {
+    body { padding: 20px 16px 40px; }
+    .card { padding: 13px; }
+    .clock { margin-left: 0; width: 100%; }
+    .maps { grid-template-columns: minmax(0, 1fr); }
+  }
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>Logger Rate Limiter Visualizer</h1>
+    <p class="lede">LeetCode 359: print a message only if the same message was not printed in the last 10 seconds. <code>LoggerHashMap</code>, <code>LoggerQueue</code> and <code>LoggerTwoMaps</code> get the same calls; watch how much each one keeps in memory.</p>
+  </header>
+
+  <div class="bar">
+    <div class="row">
+      <div class="grp">
+        <span class="pick-label">Scenario</span>
+        <div class="seg" role="group" aria-label="Scenario" id="scen"></div>
+      </div>
+      <div class="grp">
+        <button class="btn primary" id="b-play">Play</button>
+        <button class="btn" id="b-step">Next call</button>
+        <button class="btn" id="b-reset">Restart</button>
+      </div>
+      <div class="clock"><small>timestamp</small><span id="clock">0</span></div>
+    </div>
+    <div class="row">
+      <div class="grp">
+        <span class="pick-label">Call yourself</span>
+        <button class="btn msg" data-msg="foo">"foo"</button>
+        <button class="btn msg" data-msg="bar">"bar"</button>
+        <button class="btn msg" data-msg="db timeout">"db timeout"</button>
+        <button class="btn msg" data-msg="*unique">unique message</button>
+      </div>
+      <div class="grp">
+        <span class="pick-label">Time</span>
+        <button class="btn" data-dt="1">+1 s</button>
+        <button class="btn" data-dt="3">+3 s</button>
+        <button class="btn" data-dt="10">+10 s</button>
+      </div>
+    </div>
+    <p class="scen-text" id="scen-text"></p>
+  </div>
+
+  <div class="top">
+    <div class="card">
+      <div class="card-head"><h2>Calls per message<small>shaded = the 10 s after a print, when the same message is blocked</small></h2></div>
+      <div class="tl-scroll"><svg id="tl" viewBox="0 0 720 200" role="img" aria-label="Timeline with one row per message"></svg></div>
+      <div class="legend">
+        <span><i class="lg-ok"></i>printed (true)</span>
+        <span><i class="lg-bad"></i>suppressed (false)</span>
+        <span><i class="lg-cool"></i>10 s cooldown</span>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-head"><h2>Console<small>what actually gets printed</small></h2></div>
+      <div class="console" id="console" aria-live="polite"></div>
+    </div>
+  </div>
+
+  <div class="three">
+    <div class="card">
+      <div class="card-head"><h2>HashMap<small>LoggerHashMap</small></h2><span class="mem grow" id="m-hm"></span></div>
+      <div class="why" id="w-hm"></div>
+      <div class="kv-wrap"><table class="kv"><thead><tr><th>message</th><th>next allowed</th><th></th></tr></thead><tbody id="hm"></tbody></table></div>
+      <p class="how" id="h-hm"></p>
+      <div class="cx"><span>time <b>O(1)</b></span><span>space <b>O(all distinct messages)</b></span></div>
+    </div>
+
+    <div class="card">
+      <div class="card-head"><h2>Queue + set<small>LoggerQueue</small></h2><span class="mem" id="m-q"></span></div>
+      <div class="why" id="w-q"></div>
+      <span class="sub">queue (time order)</span>
+      <div class="chips" id="q"></div>
+      <span class="sub">set of recent messages</span>
+      <div class="chips" id="qs"></div>
+      <p class="how" id="h-q"></p>
+      <div class="cx"><span>time <b>O(1) amortised</b></span><span>space <b>O(printed in last 10 s)</b></span></div>
+    </div>
+
+    <div class="card">
+      <div class="card-head"><h2>Two maps<small>LoggerTwoMaps</small></h2><span class="mem" id="m-tm"></span></div>
+      <div class="why" id="w-tm"></div>
+      <div class="maps">
+        <div class="mapbox" id="box-prev"><span class="sub">previous</span><div class="chips" id="tm-prev"></div></div>
+        <div class="mapbox cur" id="box-cur"><span class="sub" id="cur-label">current</span><div class="chips" id="tm-cur"></div></div>
+      </div>
+      <p class="how" id="h-tm"></p>
+      <div class="cx"><span>time <b>O(1)</b></span><span>space <b>O(printed in last ~20 s)</b></span></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Complexity</h2>
+    <div class="cmp-scroll">
+      <table class="cmp">
+        <thead><tr><th>Version</th><th>Time per call</th><th>Space</th><th>Removes old entries</th><th>Trade-off</th></tr></thead>
+        <tbody>
+          <tr><td>HashMap</td><td class="mono">O(1)</td><td class="mono">O(distinct messages ever)</td><td>Never</td><td>Simplest; grows forever with unique messages</td></tr>
+          <tr><td>Queue + set</td><td class="mono">O(1) amortised</td><td class="mono">O(printed in last 10 s)</td><td>One by one, on each call</td><td>Tightest memory; two structures to keep in sync</td></tr>
+          <tr><td>Two maps</td><td class="mono">O(1)</td><td class="mono">O(printed in last ~20 s)</td><td>A whole map at once, every 10 s</td><td>Bounded memory with no per-entry cleanup</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="how">Hashing a message costs O(length of the message), which every version pays. This is a rate limiter with a limit of 1, keyed by message instead of by client.</p>
+  </div>
+</div>
+
+<script>
+(() => {
+  const CD = 10;
+
+  /* ---------- the three loggers, same logic as the Java classes ---------- */
+  class HM {
+    constructor() { this.next = new Map(); }
+    call(t, m) {
+      const n = this.next.get(m);
+      if (n !== undefined && t < n) return { ok: false, why: `next["${m}"] = ${n}, and ${t} < ${n}: suppress` };
+      this.next.set(m, t + CD);
+      return { ok: true, why: n === undefined ? `"${m}" never seen: print, next = ${t + CD}` : `next["${m}"] = ${n}, ${t} ≥ ${n}: print, next = ${t + CD}` };
+    }
+  }
+  class Q {
+    constructor() { this.q = []; this.set = new Set(); }
+    call(t, m) {
+      let removed = 0;
+      while (this.q.length && this.q[0].t <= t - CD) { this.set.delete(this.q.shift().m); removed++; }
+      const pre = removed ? `removed ${removed} expired; ` : '';
+      if (this.set.has(m)) return { ok: false, why: `${pre}"${m}" is in the set: suppress` };
+      this.q.push({ t, m }); this.set.add(m);
+      return { ok: true, why: `${pre}"${m}" not in the set: print, add (${t}, ${m})` };
+    }
+  }
+  class TM {
+    constructor() { this.cur = new Map(); this.prev = new Map(); this.start = 0; this.lastRot = null; }
+    call(t, m) {
+      this.lastRot = null;
+      if (t >= this.start + 2 * CD) { this.prev = new Map(); this.cur = new Map(); this.lastRot = `cleared both (${t} ≥ ${this.start} + 20)`; this.start = t; }
+      else if (t >= this.start + CD) { this.prev = this.cur; this.cur = new Map(); this.lastRot = `rotated (${t} ≥ ${this.start} + 10)`; this.start = t; }
+      const pre = this.lastRot ? this.lastRot + '; ' : '';
+      const at = this.cur.has(m) ? this.cur.get(m) : this.prev.get(m);
+      if (at !== undefined && t - at < CD) return { ok: false, why: `${pre}"${m}" printed at ${at}, ${t} − ${at} < 10: suppress` };
+      this.cur.set(m, t);
+      return { ok: true, why: `${pre}${at === undefined ? `"${m}" not in either map` : `printed at ${at}, ${t} − ${at} ≥ 10`}: print` };
+    }
+  }
+
+  /* ---------- scenarios ---------- */
+  const SCEN = [
+    { id: 'lc', label: 'LeetCode example', text: 'The example from the problem. Expected output: true, true, false, false, false, true.',
+      calls: () => [[1, 'foo'], [2, 'bar'], [3, 'foo'], [8, 'bar'], [10, 'foo'], [11, 'foo']] },
+    { id: 'repeat', label: 'Repeating error', text: '"db timeout" every 3 seconds, "bar" now and then. Only one "db timeout" per 10 s reaches the console.',
+      calls: () => { const c = []; for (let t = 0; t <= 33; t += 3) { c.push([t, 'db timeout']); if (t % 9 === 0) c.push([t, 'bar']); } return c; } },
+    { id: 'unique', label: 'Unique messages', text: 'Every request logs its own id, so no message repeats. HashMap memory grows with every call; the other two stay small.',
+      calls: () => { const c = []; for (let t = 0; t <= 40; t += 2) { c.push([t, `GET /orders id=${1000 + t}`]); if (t % 4 === 0) c.push([t, 'db timeout']); } return c; } }
+  ];
+
+  /* ---------- state ---------- */
+  const $ = id => document.getElementById(id);
+  let scen = SCEN[0], script = [], pos = 0, t = 0, impls, log, timer = null, uid = 1, rotatedFlag = false;
+
+  function reset() {
+    impls = { hm: new HM(), q: new Q(), tm: new TM() };
+    log = []; t = 0; pos = 0; script = scen.calls(); uid = 1;
+  }
+  function call(ts, m) {
+    t = ts;
+    const r = { t: ts, m, hm: impls.hm.call(ts, m), q: impls.q.call(ts, m), tm: impls.tm.call(ts, m) };
+    rotatedFlag = !!impls.tm.lastRot;
+    log.push(r);
+  }
+
+  /* ---------- rendering ---------- */
+  const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
+
+  function renderTimeline() {
+    const svg = $('tl');
+    const end = Math.max(t + 3, 24), start = Math.max(0, end - 36);
+    const span = end - start, L = 150, R = 708, X = s => L + (s - start) / span * (R - L);
+    const order = [];
+    for (let i = log.length - 1; i >= 0 && order.length < 6; i--) if (!order.includes(log[i].m)) order.push(log[i].m);
+    order.reverse();
+    const rowH = 28, top = 8, H = top + Math.max(order.length, 1) * rowH + 30;
+    svg.setAttribute('viewBox', `0 0 720 ${H}`);
+    let out = '';
+    for (let s = Math.ceil(start / 5) * 5; s <= end; s += 5) {
+      out += `<line x1="${X(s)}" x2="${X(s)}" y1="${top}" y2="${H - 22}" style="stroke:var(--line);stroke-width:1"/>`;
+      out += `<text x="${X(s)}" y="${H - 8}" text-anchor="middle" style="fill:var(--muted);font:500 10.5px var(--mono)">${s}</text>`;
+    }
+    if (!order.length) out += `<text x="${L}" y="${top + 18}" style="fill:var(--muted);font:500 12px var(--body)">No calls yet. Press Play or click a message.</text>`;
+    order.forEach((m, r) => {
+      const y = top + r * rowH + rowH / 2;
+      const label = m.length > 20 ? m.slice(0, 19) + '…' : m;
+      out += `<text x="${L - 10}" y="${y + 4}" text-anchor="end" style="fill:var(--ink);font:500 11.5px var(--mono)">${esc(label)}</text>`;
+      out += `<line x1="${L}" x2="${R}" y1="${y}" y2="${y}" style="stroke:var(--line);stroke-width:1;stroke-dasharray:2 4"/>`;
+      for (const c of log) {
+        if (c.m !== m || !c.hm.ok) continue;
+        const x0 = Math.max(L, X(c.t)), x1 = Math.min(R, X(c.t + CD));
+        if (x1 > x0) out += `<rect x="${x0}" y="${y - 9}" width="${x1 - x0}" height="18" rx="4" style="fill:var(--cool);stroke:var(--accent);stroke-width:1"/>`;
+      }
+      for (const c of log) {
+        if (c.m !== m || c.t < start) continue;
+        const x = X(c.t);
+        out += c.hm.ok
+          ? `<circle cx="${x}" cy="${y}" r="5.5" style="fill:var(--ok)"/>`
+          : `<path d="M${x - 4.5} ${y - 4.5} L${x + 4.5} ${y + 4.5} M${x + 4.5} ${y - 4.5} L${x - 4.5} ${y + 4.5}" style="stroke:var(--bad);stroke-width:2.2"/>`;
+      }
+    });
+    out += `<line x1="${X(t)}" x2="${X(t)}" y1="${top - 4}" y2="${H - 22}" style="stroke:var(--accent);stroke-width:2"/>`;
+    out += `<text x="${X(t)}" y="${top + 2}" text-anchor="start" dx="4" style="fill:var(--accent);font:700 10.5px var(--mono)">now</text>`;
+    svg.innerHTML = out;
+  }
+
+  function renderConsole() {
+    const box = $('console');
+    if (!log.length) { box.innerHTML = '<span class="empty">// nothing logged yet</span>'; return; }
+    box.innerHTML = log.slice(-40).map((c, i, arr) => `<div class="ln${i === arr.length - 1 ? ' latest' : ''}">
+      <span class="ts">[t=${c.t}]</span><span class="${c.hm.ok ? 'ok' : 'no'}">${c.hm.ok ? 'true ' : 'false'}</span>
+      <span>${c.hm.ok ? esc(c.m) : '<span style="color:var(--muted)">' + esc(c.m) + ' (suppressed)</span>'}</span></div>`).join('');
+    box.scrollTop = box.scrollHeight;
+  }
+
+  function why(id, r) {
+    const el = $(id);
+    if (!r) { el.className = 'why'; el.textContent = 'No call yet.'; return; }
+    el.className = 'why ' + (r.ok ? 'ok' : 'no');
+    el.textContent = r.why;
+  }
+
+  function renderPanels() {
+    const last = log.at(-1);
+    why('w-hm', last && last.hm); why('w-q', last && last.q); why('w-tm', last && last.tm);
+
+    const hm = impls.hm.next, rows = [...hm.entries()];
+    const staleHm = rows.filter(([, n]) => n <= t).length;
+    $('hm').innerHTML = rows.slice(-14).map(([m, n]) => `<tr class="${n <= t ? 'old' : ''}${last && last.m === m ? ' hot' : ''}">
+      <td>${esc(m.length > 18 ? m.slice(0, 17) + '…' : m)}</td><td>${n}</td><td>${n <= t ? 'expired, kept' : 'blocking'}</td></tr>`).join('')
+      + (rows.length > 14 ? `<tr><td colspan="3" class="more">+${rows.length - 14} older entries</td></tr>` : '')
+      + (!rows.length ? '<tr><td colspan="3" class="more">empty</td></tr>' : '');
+    $('m-hm').textContent = `${hm.size} entr${hm.size === 1 ? 'y' : 'ies'}`;
+    $('h-hm').textContent = staleHm
+      ? `${staleHm} entr${staleHm === 1 ? 'y has' : 'ies have'} expired but ${staleHm === 1 ? 'is' : 'are'} never removed. With unique messages this table only grows.`
+      : 'One entry per distinct message. Nothing is ever deleted.';
+
+    const q = impls.q;
+    $('q').innerHTML = q.q.length ? q.q.map(e => `<span class="chip${e.t <= t - CD ? ' old' : ''}">${e.t} · ${esc(e.m.length > 14 ? e.m.slice(0, 13) + '…' : e.m)}</span>`).join('') : '<span class="empty">empty</span>';
+    $('qs').innerHTML = q.set.size ? [...q.set].map(m => `<span class="chip set">${esc(m.length > 16 ? m.slice(0, 15) + '…' : m)}</span>`).join('') : '<span class="empty">empty</span>';
+    $('m-q').textContent = `${q.q.length + q.set.size} entries`;
+    const staleQ = q.q.filter(e => e.t <= t - CD).length;
+    $('h-q').textContent = staleQ
+      ? `${staleQ} entr${staleQ === 1 ? 'y is' : 'ies are'} older than 10 s and will be removed at the start of the next call.`
+      : 'Only messages printed in the last 10 s are kept. Suppressed calls are never added.';
+
+    const tm = impls.tm;
+    const chipsFor = map => map.size ? [...map.entries()].map(([m, at]) => `<span class="chip${t - at >= CD ? ' old' : ''}">${esc(m.length > 12 ? m.slice(0, 11) + '…' : m)} @${at}</span>`).join('') : '<span class="empty">empty</span>';
+    $('tm-prev').innerHTML = chipsFor(tm.prev);
+    $('tm-cur').innerHTML = chipsFor(tm.cur);
+    $('cur-label').textContent = `current, since t=${tm.start}`;
+    $('m-tm').textContent = `${tm.prev.size + tm.cur.size} entries`;
+    $('h-tm').textContent = `The next call at t ≥ ${tm.start + CD} rotates: current becomes previous. At t ≥ ${tm.start + 2 * CD} both maps are dropped.`;
+    if (rotatedFlag) {
+      for (const id of ['box-prev', 'box-cur']) { const b = $(id); b.classList.remove('rotated'); void b.offsetWidth; b.classList.add('rotated'); }
+      rotatedFlag = false;
+    }
+  }
+
+  function render() {
+    $('clock').textContent = t;
+    renderTimeline(); renderConsole(); renderPanels();
+    $('b-step').disabled = pos >= script.length;
+  }
+
+  /* ---------- controls ---------- */
+  function step() {
+    if (pos >= script.length) return false;
+    const [ts, m] = script[pos++];
+    call(ts, m); render();
+    return pos < script.length;
+  }
+  function stop() { clearInterval(timer); timer = null; $('b-play').textContent = 'Play'; }
+  $('b-play').onclick = () => {
+    if (timer) return stop();
+    if (pos >= script.length) { reset(); render(); }
+    $('b-play').textContent = 'Pause';
+    timer = setInterval(() => { if (!step()) stop(); }, 900);
+  };
+  $('b-step').onclick = () => { stop(); step(); };
+  $('b-reset').onclick = () => { stop(); reset(); render(); };
+  document.querySelectorAll('[data-msg]').forEach(b => b.onclick = () => {
+    stop(); pos = script.length;
+    const m = b.dataset.msg === '*unique' ? `GET /orders id=${9000 + uid++}` : b.dataset.msg;
+    call(t, m); render();
+  });
+  document.querySelectorAll('[data-dt]').forEach(b => b.onclick = () => { stop(); t += Number(b.dataset.dt); render(); });
+
+  function renderPickers() {
+    $('scen').replaceChildren(...SCEN.map(s => {
+      const b = document.createElement('button');
+      b.textContent = s.label; b.setAttribute('aria-pressed', s === scen);
+      b.onclick = () => { stop(); scen = s; renderPickers(); reset(); render(); };
+      return b;
+    }));
+    $('scen-text').textContent = scen.text;
+  }
+
+  renderPickers(); reset();
+  while (step()) {}   // open with the LeetCode example already played
+  render();
+})();
+</script>
+
+</body></html>

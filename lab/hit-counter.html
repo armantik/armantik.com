@@ -1,0 +1,470 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style>
+<title>Hit Counter Visualizer · Arman Ajabkhani</title>
+<meta name="description" content="A queue of timestamps against a ring of buckets: two hit counter designs under the same traffic.">
+<meta property="og:title" content="Hit Counter Visualizer">
+<meta property="og:description" content="A queue of timestamps against a ring of buckets: two hit counter designs under the same traffic.">
+<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+<script src="../assets/theme.js"></script>
+<style>
+/* armantik.com bar: links this guide back to the site */
+.aa-labbar { --aa-ink: #16211F; --aa-muted: #4A5855; --aa-line: #DCE3E0; --aa-accent: #0F5C55;
+  max-width: 1160px; margin: 0 auto 14px; padding: 0 0 10px; border-bottom: 1px solid var(--aa-line);
+  display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 6px 18px;
+  font: 500 13px/1.4 "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .aa-labbar { --aa-ink: #E3EAE7; --aa-muted: #A3B1AD; --aa-line: #2B3633; --aa-accent: #5BB8AA; } }
+:root[data-theme="dark"] .aa-labbar { --aa-ink: #E3EAE7; --aa-muted: #A3B1AD; --aa-line: #2B3633; --aa-accent: #5BB8AA; }
+.aa-labbar a { color: var(--aa-muted); text-decoration: none; display: inline-flex; align-items: center; gap: 8px; min-height: 32px; }
+.aa-labbar a:hover { color: var(--aa-accent); }
+.aa-labbar .aa-home { color: var(--aa-ink); font-weight: 600; }
+.aa-labbar.aa-pad { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-top: 12px; }
+.aa-right { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 6px 16px; }
+.aa-labbar .aa-crumb { color: var(--aa-muted); }
+.aa-labbar button { display: inline-flex; align-items: center; gap: 6px; min-height: 32px; padding: 0 10px; border: 1px solid var(--aa-line); border-radius: 999px;
+  background: transparent; color: var(--aa-muted); font: inherit; cursor: pointer; }
+.aa-labbar button:hover { color: var(--aa-accent); border-color: var(--aa-accent); }
+.aa-prob { max-width: 1160px; margin: -4px auto 16px; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px;
+  font: 500 13px/1.5 "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace; color: var(--aa-muted, #4A5855); }
+.aa-prob { --aa-muted: #4A5855; --aa-accent: #0F5C55; --aa-line: #DCE3E0; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .aa-prob { --aa-muted: #A3B1AD; --aa-accent: #5BB8AA; --aa-line: #2B3633; } }
+:root[data-theme="dark"] .aa-prob { --aa-muted: #A3B1AD; --aa-accent: #5BB8AA; --aa-line: #2B3633; }
+.aa-prob b { font-weight: 600; color: var(--aa-accent); text-transform: uppercase; letter-spacing: .06em; font-size: 11.5px; }
+.aa-prob a { color: var(--aa-accent); }
+.aa-prob span.aa-own { color: var(--aa-muted); }
+</style>
+</head>
+<body>
+<nav class="aa-labbar" aria-label="armantik.com"><a class="aa-home" href="../index.html"><svg viewBox="0 0 64 64" width="20" height="20" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#0F5C55"/><path d="M18 49 L32 15 L46 49 M23.5 37 H40.5" fill="none" stroke="#FAFBF9" stroke-width="6.5" stroke-linecap="square"/></svg>Arman Ajabkhani</a><span class="aa-right"><a class="aa-crumb" href="index.html#algorithms">Lab / Algorithms</a><a href="index.html">← All Lab guides</a><button type="button" data-theme-toggle aria-label="Switch theme">Theme</button></span></nav>
+<p class="aa-prob"><b>Problem</b> <a href="https://leetcode.com/problems/design-hit-counter/" target="_blank" rel="noopener">LeetCode 362. Design Hit Counter ↗</a> · <a href="https://neetcode.io/problems/design-hit-counter" target="_blank" rel="noopener">NeetCode ↗</a><span class="aa-own">· The solutions on this page are my own.</span></p>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap">
+<style>
+  /* Layout: header, control bar with clock, per-second traffic chart, then queue version and bucket ring side by side, query result, comparison */
+  :root {
+    --bg: #f4f5f8;
+    --surface: #ffffff;
+    --ink: #1a1c26;
+    --muted: #5d6273;
+    --line: #d9dce5;
+    --line-strong: #9da3b4;
+    --accent: #4a4fd1;
+    --accent-soft: #e6e7fb;
+    --shade: rgba(74, 79, 209, 0.10);
+    --live: #1d8455;
+    --live-soft: #ddf2e6;
+    --stale: #b0602a;
+    --stale-soft: #f8e9dc;
+    --code-bg: #eff0f4;
+    --display: "Bricolage Grotesque", "Avenir Next", system-ui, sans-serif;
+    --body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+    --mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #101118; --surface: #181a24; --ink: #e7e8f0; --muted: #9a9eb0;
+      --line: #2b2e3b; --line-strong: #525769; --accent: #9a9eff; --accent-soft: #252862;
+      --shade: rgba(154, 158, 255, 0.13); --live: #52c98f; --live-soft: #15362a; --stale: #f0a066; --stale-soft: #3d2715;
+      --code-bg: #13151d; color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #101118; --surface: #181a24; --ink: #e7e8f0; --muted: #9a9eb0;
+    --line: #2b2e3b; --line-strong: #525769; --accent: #9a9eff; --accent-soft: #252862;
+    --shade: rgba(154, 158, 255, 0.13); --live: #52c98f; --live-soft: #15362a; --stale: #f0a066; --stale-soft: #3d2715;
+    --code-bg: #13151d; color-scheme: dark;
+  }
+
+  * { box-sizing: border-box; }
+  body { background: var(--bg); color: var(--ink); font: 15px/1.55 var(--body); padding: 28px 20px 48px; }
+  .wrap { max-width: 1120px; margin: 0 auto; display: grid; gap: 16px; }
+  header { display: grid; gap: 6px; }
+  h1 { font: 700 clamp(28px, 5vw, 40px)/1.1 var(--display); letter-spacing: -0.02em; margin: 0; text-wrap: balance; }
+  .lede { color: var(--muted); margin: 0; max-width: 70ch; }
+  code, .rule { font: 500 0.88em var(--mono); color: var(--ink); }
+  .rule { background: var(--code-bg); padding: 2px 6px; border-radius: 4px; }
+
+  .bar { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; }
+  .grp { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .pick-label { font: 600 12px var(--body); letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+  .seg { display: inline-flex; flex-wrap: wrap; border: 1px solid var(--line-strong); border-radius: 8px; overflow: hidden; }
+  .seg button { appearance: none; border: 0; background: var(--surface); color: var(--muted); font: 600 13.5px var(--body); padding: 6px 12px; cursor: pointer; }
+  .seg button + button { border-left: 1px solid var(--line-strong); }
+  .seg button[aria-pressed="true"] { background: var(--ink); color: var(--bg); }
+  .btn { appearance: none; font: 600 14px var(--body); padding: 7px 13px; border-radius: 8px; cursor: pointer; border: 1px solid var(--line-strong); background: var(--surface); color: var(--ink); }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: var(--surface); min-width: 72px; }
+  .btn.query { border-color: var(--accent); color: var(--accent); }
+  button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .chk { display: inline-flex; gap: 6px; align-items: center; font-size: 14px; color: var(--muted); cursor: pointer; }
+  .clock { margin-left: auto; font: 700 20px var(--mono); font-variant-numeric: tabular-nums; }
+  .clock small { font: 500 12px var(--body); color: var(--muted); margin-right: 6px; }
+
+  .card { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 16px; display: grid; gap: 10px; min-width: 0; }
+  .card h2 { margin: 0; font: 700 19px/1.2 var(--display); }
+  .card h2 small { display: block; font: 500 12px var(--mono); color: var(--muted); margin-top: 2px; }
+  .card-head { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 6px 12px; align-items: baseline; }
+  .mem { font: 600 12.5px var(--mono); padding: 3px 9px; border-radius: 999px; background: var(--code-bg); font-variant-numeric: tabular-nums; }
+  .mem.grow { color: var(--stale); background: var(--stale-soft); }
+  .chart-scroll { overflow-x: auto; }
+  .chart-scroll svg { display: block; width: 100%; min-width: 520px; height: auto; }
+
+  .two { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+  @media (max-width: 880px) { .two { grid-template-columns: minmax(0, 1fr); } }
+
+  .chips { display: flex; flex-wrap: wrap; gap: 4px; padding: 8px; border-radius: 8px; background: var(--code-bg); min-height: 120px; align-content: flex-start; }
+  .chip { font: 600 11.5px var(--mono); padding: 3px 6px; border-radius: 5px; background: var(--live-soft); color: var(--ink); border: 1px solid var(--live); font-variant-numeric: tabular-nums; }
+  .chip.stale { background: var(--stale-soft); border-color: var(--stale); border-style: dashed; color: var(--muted); }
+  .chip.new { animation: pop 0.35s ease-out; }
+  .chip.gone { animation: drop 0.45s ease-in forwards; }
+  .chips .more, .chips .empty { font-size: 12.5px; color: var(--muted); padding: 3px 4px; }
+  @keyframes pop { from { transform: translateY(-6px); opacity: 0; } }
+  @keyframes drop { to { transform: translateY(8px); opacity: 0; } }
+
+  .ring svg { display: block; width: 100%; max-width: 360px; height: auto; margin: 0 auto; }
+  .bk circle { fill: var(--surface); stroke: var(--line-strong); stroke-width: 2; transition: fill 0.3s, stroke 0.3s; }
+  .bk .cnt { fill: var(--ink); font: 700 15px var(--mono); text-anchor: middle; dominant-baseline: central; }
+  .bk .sec { fill: var(--muted); font: 500 9.5px var(--mono); text-anchor: middle; dominant-baseline: central; }
+  .bk .idx { fill: var(--muted); font: 500 10px var(--mono); text-anchor: middle; dominant-baseline: central; }
+  .bk.live circle { fill: var(--live-soft); stroke: var(--live); }
+  .bk.stale circle { fill: var(--stale-soft); stroke: var(--stale); stroke-dasharray: 4 3; }
+  .bk.cur circle { stroke: var(--accent); stroke-width: 3.5; }
+  .bk.flash circle { animation: flash 0.5s ease-out; transform-box: fill-box; transform-origin: center; }
+  .bk.reset circle { animation: reset 0.6s ease-out; transform-box: fill-box; transform-origin: center; }
+  @keyframes flash { 40% { transform: scale(1.14); } }
+  @keyframes reset { 0% { fill: var(--stale); } 100% {} }
+  .hand { stroke: var(--accent); stroke-width: 2.5; stroke-linecap: round; transition: transform 0.4s cubic-bezier(.3,.7,.3,1); transform-origin: 170px 170px; }
+  .hub { fill: var(--accent); }
+  .ring-c { fill: var(--muted); font: 500 11px var(--mono); text-anchor: middle; }
+
+  .how { margin: 0; font-size: 13.5px; color: var(--muted); }
+  .how b { color: var(--ink); }
+  .cx { font: 500 12px var(--mono); color: var(--muted); border-top: 1px solid var(--line); padding-top: 8px; display: flex; flex-wrap: wrap; gap: 4px 14px; }
+  .cx b { color: var(--ink); font-weight: 600; }
+
+  .result { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; }
+  .res { border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; display: grid; gap: 2px; }
+  .res .n { font: 700 26px/1.1 var(--display); font-variant-numeric: tabular-nums; }
+  .res .k { font-size: 13px; color: var(--muted); }
+  .match { font: 600 13px var(--body); color: var(--live); }
+
+  .legend { display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 13px; color: var(--muted); }
+  .legend i { display: inline-block; width: 14px; height: 14px; border-radius: 4px; vertical-align: -2px; margin-right: 6px; border: 2px solid; }
+  .lg-live { background: var(--live-soft); border-color: var(--live) !important; }
+  .lg-stale { background: var(--stale-soft); border-color: var(--stale) !important; border-style: dashed !important; }
+  .lg-win { background: var(--shade); border-color: var(--accent) !important; }
+  .lg-cur { background: transparent; border-color: var(--accent) !important; border-width: 3px !important; border-radius: 50% !important; }
+
+  .cmp-scroll { overflow-x: auto; }
+  table { border-collapse: collapse; width: 100%; font-size: 13.5px; min-width: 640px; }
+  th, td { text-align: left; padding: 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { font: 600 12px var(--body); color: var(--muted); }
+  td.mono { font: 500 13px var(--mono); white-space: nowrap; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .chip.new, .chip.gone, .bk.flash circle, .bk.reset circle { animation: none !important; }
+    .hand, .bk circle { transition: none !important; }
+  }
+  @media (max-width: 480px) {
+    body { padding: 20px 16px 40px; }
+    .card { padding: 13px; }
+    .clock { margin-left: 0; width: 100%; }
+  }
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>Hit Counter Visualizer</h1>
+    <p class="lede"><code>HitCounterQueue</code> and <code>HitCounterBuckets</code> receive the same hits. To keep it watchable the window here is <span class="rule">WINDOW = 12 s</span>; the Java classes use 300 s, with exactly the same code.</p>
+  </header>
+
+  <div class="bar">
+    <div class="grp">
+      <button class="btn primary" id="b-play">Play</button>
+      <button class="btn" id="b-hit">hit()</button>
+      <button class="btn" id="b-hit10">hit() × 10</button>
+      <button class="btn query" id="b-query">getHits(now)</button>
+      <button class="btn" id="b-reset">Clear</button>
+    </div>
+    <div class="grp">
+      <span class="pick-label">Traffic</span>
+      <div class="seg" role="group" aria-label="Automatic traffic" id="traffic"></div>
+    </div>
+    <div class="grp">
+      <span class="pick-label">Speed</span>
+      <div class="seg" role="group" aria-label="Speed" id="speed"></div>
+    </div>
+    <label class="chk"><input type="checkbox" id="auto-q" checked> getHits every 4 s</label>
+    <div class="clock"><small>timestamp</small><span id="clock">0</span></div>
+  </div>
+
+  <div class="card">
+    <div class="card-head">
+      <h2>Hits per second<small>shaded = the window getHits(now) counts: (now − 12, now]</small></h2>
+    </div>
+    <div class="chart-scroll"><svg id="chart" viewBox="0 0 720 150" role="img" aria-label="Bar chart of hits per second for the last 24 seconds"></svg></div>
+    <div class="legend">
+      <span><i class="lg-live"></i>inside the window</span>
+      <span><i class="lg-stale"></i>outside the window but still stored</span>
+      <span><i class="lg-win"></i>window</span>
+      <span><i class="lg-cur"></i>bucket for the current second</span>
+    </div>
+  </div>
+
+  <div class="two">
+    <div class="card">
+      <div class="card-head">
+        <h2>Queue of timestamps<small>HitCounterQueue</small></h2>
+        <span class="mem grow" id="q-mem"></span>
+      </div>
+      <div class="chips" id="q-chips"></div>
+      <p class="how" id="q-how"></p>
+      <div class="cx"><span>hit <b>O(1)</b></span><span>getHits <b>O(1) amortised</b></span><span>space <b>O(hits in window)</b>, grows with traffic</span></div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <h2>Circle of 12 buckets<small>HitCounterBuckets</small></h2>
+        <span class="mem" id="b-mem">24 ints, always</span>
+      </div>
+      <div class="ring"><svg id="ring" viewBox="0 0 340 340" role="img" aria-label="12 buckets in a circle, one per second"></svg></div>
+      <p class="how" id="b-how"></p>
+      <div class="cx"><span>hit <b>O(1)</b></span><span>getHits <b>O(WINDOW)</b> = O(1)</span><span>space <b>O(WINDOW)</b>, fixed</span></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-head"><h2 id="res-title">Last getHits call</h2><span class="match" id="res-match"></span></div>
+    <div class="result">
+      <div class="res"><span class="n" id="res-q">–</span><span class="k" id="res-q-k">queue</span></div>
+      <div class="res"><span class="n" id="res-b">–</span><span class="k" id="res-b-k">buckets</span></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Complexity</h2>
+    <div class="cmp-scroll">
+      <table>
+        <thead><tr><th>Algorithm</th><th>hit()</th><th>getHits()</th><th>Space</th><th>Precision</th><th>Best for</th></tr></thead>
+        <tbody>
+          <tr><td>Queue of timestamps</td><td class="mono">O(1)</td><td class="mono">O(1) amortised</td><td class="mono">O(hits in window)</td><td>Exact timestamps</td><td>Low traffic</td></tr>
+          <tr><td>Circle of buckets</td><td class="mono">O(1)</td><td class="mono">O(WINDOW)</td><td class="mono">O(WINDOW)</td><td>1-second buckets</td><td>High traffic, the usual follow-up answer</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="how"><b>Versus a rate limiter:</b> a hit counter only records and reports; it never rejects anything. Add <code>if (getHits(now) &lt; limit) hit(now)</code> as one locked step and the queue version becomes <code>SlidingWindowLogRateLimiter</code>.</p>
+  </div>
+</div>
+
+<script>
+(() => {
+  const W = 12, SHOW = 24, AUTO_Q_EVERY = 4;
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* ---------- the two counters, same logic as the Java classes ---------- */
+  let queue, times, hits, history, lastQuery, flashes, gone;
+  function clearAll() {
+    queue = []; times = Array(W).fill(0); hits = Array(W).fill(0);
+    history = new Map(); lastQuery = null; flashes = new Map(); gone = [];
+  }
+  function hit(ts) {
+    queue.push(ts);                                   // HitCounterQueue.hit
+    const i = ts % W;                                 // HitCounterBuckets.hit
+    let reset = false;
+    if (times[i] !== ts) { reset = hits[i] > 0; times[i] = ts; hits[i] = 0; }
+    hits[i]++;
+    history.set(ts, (history.get(ts) || 0) + 1);
+    flashes.set(i, reset ? 'reset' : 'flash');
+  }
+  function getHits(ts) {
+    const dropped = [];
+    while (queue.length && queue[0] <= ts - W) dropped.push(queue.shift());
+    let total = 0, summed = 0;
+    for (let i = 0; i < W; i++) if (ts - times[i] < W) { total += hits[i]; if (hits[i]) summed++; }
+    gone = dropped;
+    lastQuery = { ts, q: queue.length, dropped: dropped.length, b: total, summed };
+  }
+
+  /* ---------- time and traffic ---------- */
+  const TRAFFIC = [
+    { id: 'off', label: 'Off', perSecond: () => 0 },
+    { id: 'steady', label: 'Steady 3/s', perSecond: () => 3 },
+    { id: 'spiky', label: 'Spiky', perSecond: rnd => rnd() < 0.45 ? 3 + Math.floor(rnd() * 8) : 0 }
+  ];
+  const SPEEDS = [1, 2, 4];
+  let traffic = TRAFFIC[2], speed = 2, autoQ = true, t = 0, pending = [], running = false, lastFrame = 0, lastSec = -1;
+  let rnd = Math.random;
+
+  function enterSecond(s) {
+    const n = traffic.perSecond(rnd);
+    for (let k = 0; k < n; k++) pending.push(s + (k + rnd() * 0.8) / Math.max(n, 1));
+    pending.sort((a, b) => a - b);
+  }
+  function advance(target) {
+    while (true) {
+      const nextSec = Math.floor(t) + 1;
+      const nextPending = pending.length ? pending[0] : Infinity;
+      const stop = Math.min(target, nextPending, nextSec);
+      t = stop;
+      if (pending.length && pending[0] <= t) { pending.shift(); hit(Math.floor(t)); }
+      if (Math.floor(t) !== lastSec) {
+        lastSec = Math.floor(t);
+        enterSecond(lastSec);
+        if (autoQ && lastSec > 0 && lastSec % AUTO_Q_EVERY === 0) getHits(lastSec);
+      }
+      if (t >= target) break;
+    }
+  }
+
+  /* ---------- rendering ---------- */
+  const $ = id => document.getElementById(id);
+  const NS = 'http://www.w3.org/2000/svg';
+  const now = () => Math.floor(t);
+
+  function renderChart() {
+    const ts = now(), svg = $('chart');
+    const end = Math.max(ts, SHOW - 1), start = end - SHOW + 1;
+    const left = 30, right = 712, top = 10, bottom = 120, bw = (right - left) / SHOW;
+    let max = 5; for (let s = start; s <= end; s++) max = Math.max(max, history.get(s) || 0);
+    let out = '';
+    const winStart = Math.max(start, ts - W + 1);
+    if (ts >= start) out += `<rect x="${left + (winStart - start) * bw}" y="${top - 6}" width="${(ts - winStart + 1) * bw}" height="${bottom - top + 6}" rx="4" style="fill:var(--shade);stroke:var(--accent);stroke-width:1;stroke-dasharray:4 3"/>`;
+    for (const v of [0, Math.round(max / 2), max]) {
+      const y = bottom - v / max * (bottom - top - 10);
+      out += `<line x1="${left}" x2="${right}" y1="${y}" y2="${y}" style="stroke:var(--line);stroke-width:1"/>`;
+      out += `<text x="${left - 6}" y="${y + 4}" text-anchor="end" style="fill:var(--muted);font:500 10px var(--mono)">${v}</text>`;
+    }
+    for (let s = start; s <= end; s++) {
+      const n = history.get(s) || 0, x = left + (s - start) * bw;
+      const inWin = ts - s < W && s <= ts;
+      const h = n / max * (bottom - top - 10);
+      if (n) out += `<rect x="${x + 3}" y="${bottom - h}" width="${bw - 6}" height="${h}" rx="3" style="fill:${s === ts ? 'var(--accent)' : inWin ? 'var(--live)' : 'var(--stale)'};opacity:${inWin ? 1 : 0.55}"/>`;
+      if (n) out += `<text x="${x + bw / 2}" y="${bottom - h - 4}" text-anchor="middle" style="fill:var(--ink);font:600 10px var(--mono)">${n}</text>`;
+      if (s % 2 === 0 || s === ts) out += `<text x="${x + bw / 2}" y="${bottom + 16}" text-anchor="middle" style="fill:${s === ts ? 'var(--accent)' : 'var(--muted)'};font:${s === ts ? 700 : 500} 10.5px var(--mono)">${s}</text>`;
+    }
+    out += `<text x="${right}" y="${bottom + 30}" text-anchor="end" style="fill:var(--muted);font:500 10.5px var(--body)">second (timestamp)</text>`;
+    svg.innerHTML = out;
+  }
+
+  let shownQueue = 0;
+  function renderQueue() {
+    const ts = now(), box = $('q-chips'), CAP = 180;
+    const staleCount = queue.filter(x => x <= ts - W).length;
+    const items = queue.slice(-CAP);
+    let html = '';
+    if (gone.length) html += gone.slice(-24).map(x => `<span class="chip stale gone">${x}</span>`).join('');
+    if (queue.length > CAP) html += `<span class="more">+${queue.length - CAP} older…</span>`;
+    html += items.map((x, k) => {
+      const isNew = !reduced && queue.length > shownQueue && k >= items.length - (queue.length - shownQueue);
+      return `<span class="chip${x <= ts - W ? ' stale' : ''}${isNew ? ' new' : ''}">${x}</span>`;
+    }).join('');
+    if (!queue.length && !gone.length) html = '<span class="empty">empty</span>';
+    box.innerHTML = html;
+    shownQueue = queue.length;
+    gone = [];
+    $('q-mem').textContent = `${queue.length} ints stored`;
+    $('q-how').innerHTML = staleCount
+      ? `<b>${staleCount} stale</b> timestamp${staleCount === 1 ? '' : 's'} (≤ ${ts - W}) are still in memory. They are only removed when <code>getHits</code> runs.`
+      : `Every stored timestamp is inside the window. <code>hit</code> appends to the back; <code>getHits</code> drops old ones from the front, then returns the size.`;
+  }
+
+  function renderRing() {
+    const ts = now(), svg = $('ring'), cx = 170, cy = 170, R = 128;
+    const cur = ts % W;
+    let out = `<circle cx="${cx}" cy="${cy}" r="${R}" style="fill:none;stroke:var(--line);stroke-width:1.5;stroke-dasharray:3 5"/>`;
+    const ang = i => (i / W) * Math.PI * 2 - Math.PI / 2;
+    out += `<line class="hand" x1="${cx}" y1="${cy}" x2="${cx}" y2="${cy - R + 34}" style="transform:rotate(${cur * 360 / W}deg)"/>`;
+    out += `<circle class="hub" cx="${cx}" cy="${cy}" r="5"/>`;
+    out += `<text class="ring-c" x="${cx}" y="${cy + 24}">${ts} % ${W} = ${cur}</text>`;
+    for (let i = 0; i < W; i++) {
+      const x = cx + R * Math.cos(ang(i)), y = cy + R * Math.sin(ang(i));
+      const live = hits[i] > 0 && ts - times[i] < W, stale = hits[i] > 0 && !live;
+      const fl = flashes.get(i);
+      const cls = ['bk', live ? 'live' : stale ? 'stale' : '', i === cur ? 'cur' : '', fl && !reduced ? fl : ''].join(' ');
+      out += `<g class="${cls}"><circle cx="${x}" cy="${y}" r="27"/>
+        <text class="cnt" x="${x}" y="${y - 5}">${hits[i]}</text>
+        <text class="sec" x="${x}" y="${y + 11}">${hits[i] ? 't=' + times[i] : '·'}</text></g>`;
+      const lx = cx + (R - 46) * Math.cos(ang(i)), ly = cy + (R - 46) * Math.sin(ang(i));
+      out += `<text class="ring-c" x="${lx}" y="${ly + 4}">${i}</text>`;
+    }
+    svg.innerHTML = out;
+    flashes = new Map();
+    const staleB = hits.filter((h, i) => h > 0 && ts - times[i] >= W).length;
+    $('b-how').innerHTML = `Second <b>${ts}</b> goes into bucket <b>${ts} % ${W} = ${cur}</b>. ` +
+      (staleB ? `${staleB} bucket${staleB === 1 ? ' holds' : 's hold'} an old second; ${staleB === 1 ? 'it is' : 'they are'} reset the next time that slot comes around, and <code>getHits</code> skips ${staleB === 1 ? 'it' : 'them'}.`
+              : 'A bucket that still holds an old second is reset as soon as a new hit lands in it.');
+  }
+
+  function renderResult() {
+    if (!lastQuery) {
+      $('res-title').textContent = 'Last getHits call';
+      $('res-q').textContent = '–'; $('res-b').textContent = '–'; $('res-match').textContent = '';
+      $('res-q-k').textContent = 'queue: press getHits(now)'; $('res-b-k').textContent = 'buckets';
+      return;
+    }
+    const r = lastQuery;
+    $('res-title').textContent = `getHits(${r.ts}) counts hits in (${r.ts - W}, ${r.ts}]`;
+    $('res-q').textContent = r.q;
+    $('res-q-k').textContent = `queue: dropped ${r.dropped} old timestamp${r.dropped === 1 ? '' : 's'} from the front, returned the size`;
+    $('res-b').textContent = r.b;
+    $('res-b-k').textContent = `buckets: checked all ${W}, summed the ${r.summed} with hits inside the window`;
+    $('res-match').textContent = r.q === r.b ? 'Both agree' : '';
+  }
+
+  function render() {
+    $('clock').textContent = now();
+    renderChart(); renderQueue(); renderRing(); renderResult();
+  }
+
+  /* ---------- controls ---------- */
+  function frame(ts) {
+    if (!running) return;
+    const dt = Math.min(100, ts - lastFrame) / 1000; lastFrame = ts;
+    const before = now(), q0 = queue.length, lq = lastQuery;
+    advance(t + dt * speed);
+    if (now() !== before || queue.length !== q0 || lastQuery !== lq) render();
+    requestAnimationFrame(frame);
+  }
+  function setRunning(on) {
+    running = on; $('b-play').textContent = on ? 'Pause' : 'Play';
+    if (on) { lastFrame = performance.now(); requestAnimationFrame(frame); }
+  }
+  $('b-play').onclick = () => setRunning(!running);
+  $('b-hit').onclick = () => { hit(now()); render(); };
+  $('b-hit10').onclick = () => { for (let k = 0; k < 10; k++) hit(now()); render(); };
+  $('b-query').onclick = () => { getHits(now()); render(); };
+  $('b-reset').onclick = () => { clearAll(); pending = []; shownQueue = 0; render(); };
+  $('auto-q').onchange = e => { autoQ = e.target.checked; };
+
+  function renderPickers() {
+    $('traffic').replaceChildren(...TRAFFIC.map(tr => {
+      const b = document.createElement('button');
+      b.textContent = tr.label; b.setAttribute('aria-pressed', tr === traffic);
+      b.onclick = () => { traffic = tr; pending = []; renderPickers(); };
+      return b;
+    }));
+    $('speed').replaceChildren(...SPEEDS.map(v => {
+      const b = document.createElement('button');
+      b.textContent = v + ' s/s'; b.setAttribute('aria-pressed', v === speed);
+      b.title = `${v} simulated second${v === 1 ? '' : 's'} per real second`;
+      b.onclick = () => { speed = v; renderPickers(); };
+      return b;
+    }));
+  }
+
+  /* ---------- start in a filled-in state ---------- */
+  let seed = 7;
+  rnd = () => { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; };
+  clearAll();
+  advance(21.5);
+  rnd = Math.random;
+  shownQueue = queue.length; gone = [];
+  renderPickers();
+  render();
+})();
+</script>
+
+</body></html>
