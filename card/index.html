@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Arman Ajabkhani</title>
+<meta name="robots" content="noindex">
+<meta name="description" content="Arman Ajabkhani, Senior Backend Engineer in Malmö. Connect on LinkedIn, save the contact, or explore the Learning Lab.">
+<meta property="og:title" content="Arman Ajabkhani, Senior Backend Engineer">
+<meta property="og:description" content="Java and Go backends, AI engineering, and interactive guides on system design, algorithms and Java.">
+<meta property="og:url" content="https://armantik.com/card/">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://armantik.com/assets/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Arman Ajabkhani, Senior Backend Engineer: Java and Go, AI engineering">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://armantik.com/assets/og-image.png">
+<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+<script src="../assets/theme.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Schibsted+Grotesk:wght@400;500;600;700;800&display=swap">
+<link rel="stylesheet" href="../assets/style.css">
+<style>
+  /* card page: the landing page for the NFC tag and the QR code on the business card */
+  .card { max-width: 460px; margin: 0 auto; padding-block: 28px 40px; display: grid; gap: 26px; }
+  .card-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .card-top .wordmark { font: 500 14px/1.2 var(--mono); color: var(--slate); }
+  .card-top .wordmark svg { width: 30px; height: 30px; }
+  .card h1 { margin: 0; font: 600 clamp(54px, 16vw, 76px)/0.92 var(--display); letter-spacing: -0.04em; }
+  .card h1 .surname { color: var(--petrol); }
+  .card-id { display: grid; gap: 12px; }
+  .card .role { font-size: 19px; }
+  .card .lede { font-size: 17px; }
+  .stack { display: grid; gap: 10px; }
+  .stack .btn { width: 100%; min-height: 54px; justify-content: space-between; font-size: 16.5px; padding: 0 18px; }
+  .talk { display: grid; gap: 10px; padding-top: 18px; border-top: 1px solid var(--mist); }
+  .talk h2 { margin: 0; font: 500 13px/1.4 var(--mono); color: var(--petrol); letter-spacing: 0.01em; }
+  .talk ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+  .talk li { display: grid; grid-template-columns: 16px minmax(0, 1fr); gap: 8px; color: var(--ink); }
+  .talk li::before { content: "/"; font-family: var(--mono); color: var(--petrol); }
+  .card-foot { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 10px 16px; padding-top: 18px; border-top: 1px solid var(--mist); font: 400 13px/1.5 var(--mono); color: var(--ink-3); }
+</style>
+</head>
+<body data-root="../">
+
+<main class="wrap">
+  <div class="card">
+    <div class="card-top">
+      <a class="wordmark" href="../index.html">
+        <svg viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="14" style="fill:var(--petrol)"/><path d="M18 49 L32 15 L46 49 M23.5 37 H40.5" style="fill:none;stroke:var(--on-petrol)" stroke-width="6.5" stroke-linecap="square"/></svg>
+        armantik.com
+      </a>
+      <button class="theme-btn" type="button" data-theme-toggle aria-label="Switch theme">Theme</button>
+    </div>
+
+    <div class="card-id">
+      <h1>Arman<br><span class="surname">Ajabkhani</span></h1>
+      <p class="role">Senior Backend Engineer · Java and Go · AI engineering</p>
+      <p class="lede">Twenty years of backends where privacy, correctness and uptime matter. These days I also put LLMs to work inside them.</p>
+      <p class="coords"><span>Malmö, Sweden</span><span>Writing backend code since 2006</span></p>
+    </div>
+
+    <nav class="stack" aria-label="Connect">
+      <a class="btn primary" data-link="linkedin" href="#" target="_blank" rel="noopener">Connect on LinkedIn <span class="arrow" aria-hidden="true">↗</span></a>
+      <a class="btn" id="save-contact" href="#" download="arman-ajabkhani.vcf" hidden>Save contact <span class="arrow" aria-hidden="true">↓</span></a>
+      <a class="btn" data-email-link href="#">Email me <span class="arrow" aria-hidden="true">→</span></a>
+      <a class="btn" href="../lab/index.html">Explore the Learning Lab <span class="arrow" aria-hidden="true">→</span></a>
+      <a class="btn" href="../index.html">The full site <span class="arrow" aria-hidden="true">→</span></a>
+    </nav>
+
+    <section class="talk" aria-labelledby="talk-h">
+      <h2 id="talk-h">/happy to talk about</h2>
+      <ul>
+        <li>System design and running services at scale</li>
+        <li>Modern Java, the JVM and Go</li>
+        <li>LLMs in real backends: MCP, RAG, agents and evals</li>
+        <li>Growing from senior to staff</li>
+      </ul>
+    </section>
+
+    <footer class="card-foot">
+      <span>Nice meeting you.</span>
+      <a href="../index.html">armantik.com</a>
+    </footer>
+  </div>
+</main>
+
+<script src="../content.js"></script>
+<script src="../assets/site.js"></script>
+<script>
+  /* Save contact: builds a vCard in the browser, so the email address never sits in the page source. */
+  (function () {
+    var SITE = window.SITE || {}, links = SITE.links || {}, email = '';
+    try { email = links.emailEncoded ? atob(links.emailEncoded) : ''; } catch (e) {}
+    var lines = [
+      'BEGIN:VCARD',
+      'VERSION:3.0',
+      'N:Ajabkhani;Arman;;;',
+      'FN:Arman Ajabkhani',
+      'TITLE:Senior Backend Engineer',
+      email ? 'EMAIL;TYPE=INTERNET:' + email : '',
+      'URL:https://armantik.com',
+      links.linkedin ? 'X-SOCIALPROFILE;TYPE=linkedin:' + links.linkedin : '',
+      links.linkedin ? 'URL;TYPE=LinkedIn:' + links.linkedin : '',
+      'ADR;TYPE=WORK:;;;Malmö;;;Sweden',
+      'END:VCARD'
+    ].filter(Boolean);
+    var a = document.getElementById('save-contact');
+    if (!a) return;
+    a.href = 'data:text/vcard;charset=utf-8,' + encodeURIComponent(lines.join('\r\n') + '\r\n');
+    a.hidden = false;
+  })();
+</script>
+</body>
+</html>

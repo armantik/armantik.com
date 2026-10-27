@@ -15,11 +15,13 @@ armantik.com/
 ├── writing/
 │   ├── index.html             all articles, posts and talks, built from content.js
 │   └── _template.html         copy this to write an article on your own site
+├── card/index.html            landing page for the NFC tag and the QR code on the business card (noindex; open armantik.com/card/)
 ├── brand/index.html           colors, type and the mark (not in the menu; open armantik.com/brand/)
 ├── assets/
 │   ├── style.css              shared look; change a color once and every page follows
 │   ├── site.js                builds the lists from content.js (no need to edit)
 │   ├── theme.js               the light and dark switch (no need to edit)
+│   ├── og-image.png           the 1200x630 image shown when a page is shared on LinkedIn, Slack and the like
 │   └── favicon.svg            the mark
 ├── 404.html                   shown for missing pages
 ├── CNAME                      tells GitHub Pages to serve this repo at armantik.com

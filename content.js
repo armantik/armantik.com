@@ -24,7 +24,7 @@ window.SITE = {
     writing: true,       // articles and posts
     talks: false,        // conference talks and meetups
     kairos: true,        // the "Now building" section
-    services: true,      // the "How I can help" section
+    services: false,     // the "How I can help" section (off until side work is approved)
     persianName: false   // your name in Persian in the footer (spelling is ready, just switch it on)
   },
 
