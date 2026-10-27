@@ -35,6 +35,7 @@
   .card .lede { font-size: 17px; }
   .stack { display: grid; gap: 10px; }
   .stack .btn { width: 100%; min-height: 54px; justify-content: space-between; font-size: 16.5px; padding: 0 18px; }
+  .stack .btn .num { font: 500 14.5px/1 var(--mono); font-variant-numeric: tabular-nums; white-space: nowrap; }
   .talk { display: grid; gap: 10px; padding-top: 18px; border-top: 1px solid var(--mist); }
   .talk h2 { margin: 0; font: 500 13px/1.4 var(--mono); color: var(--petrol); letter-spacing: 0.01em; }
   .talk ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
@@ -65,9 +66,10 @@
     <nav class="stack" aria-label="Connect">
       <a class="btn primary" data-link="linkedin" href="#" target="_blank" rel="noopener">Connect on LinkedIn <span class="arrow" aria-hidden="true">↗</span></a>
       <a class="btn" id="save-contact" href="#" download="arman-ajabkhani.vcf" hidden>Save contact <span class="arrow" aria-hidden="true">↓</span></a>
+      <a class="btn" id="call" href="#" hidden>Call or text <span class="num" id="call-num"></span></a>
       <a class="btn" data-email-link href="#">Email me <span class="arrow" aria-hidden="true">→</span></a>
+      <a class="btn" href="../mentoring/index.html" data-show="mentoring">Free mentoring <span class="arrow" aria-hidden="true">→</span></a>
       <a class="btn" href="../lab/index.html">Explore the Learning Lab <span class="arrow" aria-hidden="true">→</span></a>
-      <a class="btn" href="../index.html">The full site <span class="arrow" aria-hidden="true">→</span></a>
     </nav>
 
     <section class="talk" aria-labelledby="talk-h">
@@ -90,16 +92,28 @@
 <script src="../content.js"></script>
 <script src="../assets/site.js"></script>
 <script>
-  /* Save contact: builds a vCard in the browser, so the email address never sits in the page source. */
+  /* Call button and Save contact: built in the browser from content.js,
+     so neither the phone number nor the email address sits in the page source. */
   (function () {
-    var SITE = window.SITE || {}, links = SITE.links || {}, email = '';
+    var SITE = window.SITE || {}, links = SITE.links || {}, email = '', phone = '';
     try { email = links.emailEncoded ? atob(links.emailEncoded) : ''; } catch (e) {}
+    try { phone = links.phoneEncoded ? atob(links.phoneEncoded) : ''; } catch (e) {}
+    var tel = phone.replace(/[^+\d]/g, '');
+
+    var call = document.getElementById('call');
+    if (call && tel) {
+      call.href = 'tel:' + tel;
+      document.getElementById('call-num').textContent = phone;
+      call.hidden = false;
+    }
+
     var lines = [
       'BEGIN:VCARD',
       'VERSION:3.0',
       'N:Ajabkhani;Arman;;;',
       'FN:Arman Ajabkhani',
       'TITLE:Senior Backend Engineer',
+      tel ? 'TEL;TYPE=CELL:' + tel : '',
       email ? 'EMAIL;TYPE=INTERNET:' + email : '',
       'URL:https://armantik.com',
       links.linkedin ? 'X-SOCIALPROFILE;TYPE=linkedin:' + links.linkedin : '',

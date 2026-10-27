@@ -15,6 +15,7 @@ armantik.com/
 ├── writing/
 │   ├── index.html             all articles, posts and talks, built from content.js
 │   └── _template.html         copy this to write an article on your own site
+├── mentoring/index.html       free one to one mentoring: interview prep and developers in their first years (switch: show.mentoring)
 ├── card/index.html            landing page for the NFC tag and the QR code on the business card (noindex; open armantik.com/card/)
 ├── brand/index.html           colors, type and the mark (not in the menu; open armantik.com/brand/)
 ├── assets/
@@ -63,6 +64,10 @@ The "How I can help" cards come from `services: [` in `content.js`. Each card ha
 ### Your email address
 
 The address never appears in the page source, so bots that scan pages for addresses can't collect it. It's stored Base64 encoded in `links.emailEncoded` in `content.js` and put together in the browser. To change it, encode the new address (for example at base64encode.org) and paste the result there.
+
+### Your phone number
+
+Stored the same way, in `links.phoneEncoded`. It appears only on the card page (`/card/`), as the Call or text button and in the Save contact file. Leave it empty (`""`) to remove it from both.
 
 ### A talk
 
