@@ -34,9 +34,7 @@ window.SITE = {
     // Your email is not written anywhere in plain text, so spam bots that scan pages can't collect it.
     // It is stored here in Base64. To change it, encode the new address at base64encode.org and paste it in.
     emailEncoded: "YXJtYW5AYXJtYW50aWsuY29t",
-    // Phone number, Base64 encoded the same way. Shown only on the card page (/card/) and in its Save contact file.
-    // Leave it empty ("") to hide the Call button and keep the number out of the contact file.
-    phoneEncoded: "KzQ2IDc2MCAxNzAgMDcx",
+    // Your phone number is not here on purpose: it lives only in card/index.html (PHONE_ENCODED).
     linkedin: "https://www.linkedin.com/in/arman-ajabkhani/",
     github: "",          // e.g. "https://github.com/your-username"
     medium: "https://armantik.medium.com/"

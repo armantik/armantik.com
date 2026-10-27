@@ -5,9 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Arman Ajabkhani</title>
 <meta name="robots" content="noindex">
-<meta name="description" content="Arman Ajabkhani, Senior Backend Engineer in Malmö. Connect on LinkedIn, save the contact, or explore the Learning Lab.">
-<meta property="og:title" content="Arman Ajabkhani, Senior Backend Engineer">
-<meta property="og:description" content="Java and Go backends, AI engineering, and interactive guides on system design, algorithms and Java.">
+<meta name="description" content="Arman Ajabkhani, Senior Backend Consultant at Apple via 0+X, in Malmö. Connect on LinkedIn, save the contact, or ask about mentoring.">
+<meta property="og:title" content="Arman Ajabkhani, Senior Backend Consultant">
+<meta property="og:description" content="Java and Go backends and AI engineering. Consultant at Apple via 0+X, in Malmö.">
 <meta property="og:url" content="https://armantik.com/card/">
 <meta property="og:type" content="website">
 <meta property="og:image" content="https://armantik.com/assets/og-image.png">
@@ -58,8 +58,8 @@
 
     <div class="card-id">
       <h1>Arman<br><span class="surname">Ajabkhani</span></h1>
-      <p class="role">Senior Backend Engineer · Java and Go · AI engineering</p>
-      <p class="lede">Twenty years of backends where privacy, correctness and uptime matter. These days I also put LLMs to work inside them.</p>
+      <p class="role">Senior Backend Consultant at Apple, via 0+X</p>
+      <p class="lede">Twenty years of Java and Go backends where privacy, correctness and uptime matter. These days I also put LLMs to work inside them.</p>
       <p class="coords"><span>Malmö, Sweden</span><span>Writing backend code since 2006</span></p>
     </div>
 
@@ -68,8 +68,7 @@
       <a class="btn" id="save-contact" href="#" download="arman-ajabkhani.vcf" hidden>Save contact <span class="arrow" aria-hidden="true">↓</span></a>
       <a class="btn" id="call" href="#" hidden>Call or text <span class="num" id="call-num"></span></a>
       <a class="btn" data-email-link href="#">Email me <span class="arrow" aria-hidden="true">→</span></a>
-      <a class="btn" href="../mentoring/index.html" data-show="mentoring">Free mentoring <span class="arrow" aria-hidden="true">→</span></a>
-      <a class="btn" href="../lab/index.html">Explore the Learning Lab <span class="arrow" aria-hidden="true">→</span></a>
+      <a class="btn" href="../mentoring/index.html" data-show="mentoring">Mentoring <span class="arrow" aria-hidden="true">→</span></a>
     </nav>
 
     <section class="talk" aria-labelledby="talk-h">
@@ -92,12 +91,17 @@
 <script src="../content.js"></script>
 <script src="../assets/site.js"></script>
 <script>
-  /* Call button and Save contact: built in the browser from content.js,
-     so neither the phone number nor the email address sits in the page source. */
+  /* Your phone number lives only here, on the card page, Base64 encoded so bots that scan pages can't read it.
+     To change it, encode the new number (for example at base64encode.org) and paste it in.
+     Leave it empty ("") to hide the Call button and keep the number out of the Save contact file. */
+  var PHONE_ENCODED = "KzQ2IDc2MCAxNzAgMDcx";
+
+  /* Call button and Save contact: built in the browser, so neither the phone number
+     nor the email address sits in the page source. */
   (function () {
     var SITE = window.SITE || {}, links = SITE.links || {}, email = '', phone = '';
     try { email = links.emailEncoded ? atob(links.emailEncoded) : ''; } catch (e) {}
-    try { phone = links.phoneEncoded ? atob(links.phoneEncoded) : ''; } catch (e) {}
+    try { phone = PHONE_ENCODED ? atob(PHONE_ENCODED) : ''; } catch (e) {}
     var tel = phone.replace(/[^+\d]/g, '');
 
     var call = document.getElementById('call');
@@ -112,7 +116,8 @@
       'VERSION:3.0',
       'N:Ajabkhani;Arman;;;',
       'FN:Arman Ajabkhani',
-      'TITLE:Senior Backend Engineer',
+      'TITLE:Senior Backend Consultant at Apple',
+      'ORG:0+X',
       tel ? 'TEL;TYPE=CELL:' + tel : '',
       email ? 'EMAIL;TYPE=INTERNET:' + email : '',
       'URL:https://armantik.com',

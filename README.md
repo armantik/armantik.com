@@ -15,7 +15,7 @@ armantik.com/
 ├── writing/
 │   ├── index.html             all articles, posts and talks, built from content.js
 │   └── _template.html         copy this to write an article on your own site
-├── mentoring/index.html       free one to one mentoring: interview prep and developers in their first years (switch: show.mentoring)
+├── mentoring/index.html       one to one mentoring: interview prep and developers in their first years (switch: show.mentoring)
 ├── card/index.html            landing page for the NFC tag and the QR code on the business card (noindex; open armantik.com/card/)
 ├── brand/index.html           colors, type and the mark (not in the menu; open armantik.com/brand/)
 ├── assets/
@@ -67,7 +67,7 @@ The address never appears in the page source, so bots that scan pages for addres
 
 ### Your phone number
 
-Stored the same way, in `links.phoneEncoded`. It appears only on the card page (`/card/`), as the Call or text button and in the Save contact file. Leave it empty (`""`) to remove it from both.
+It lives only in the card page, `card/index.html`, Base64 encoded in `PHONE_ENCODED` near the bottom. No other page loads it. It shows as the Call or text button and goes into the Save contact file. Leave it empty (`""`) to remove it from both.
 
 ### A talk
 
