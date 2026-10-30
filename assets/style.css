@@ -387,3 +387,9 @@ dl.rows { margin: 0; }
   .levels .stop .step { border-left-color: var(--flag); }
   .levels .lv-t { margin-top: 4px; }
 }
+
+/* ---------- hand-drawn icons (made with rough.js): ink follows the text color, the scribble fill is petrol ---------- */
+.ico { display: block; flex: none; overflow: visible; }
+.ico path { stroke: currentColor; }
+.ico .a { stroke: var(--petrol); opacity: .55; }
+.btn.primary .ico .a { stroke: var(--on-petrol); opacity: .45; }

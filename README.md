@@ -25,6 +25,7 @@ armantik.com/
 │   ├── style.css              shared look; change a color once and every page follows
 │   ├── site.js                builds the lists from content.js (no need to edit)
 │   ├── theme.js               the light and dark switch (no need to edit)
+│   ├── icons/                 hand-drawn icons as separate SVG files (for print, slides and posts)
 │   ├── og-image.png           the 1200x630 image shown when a page is shared on LinkedIn, Slack and the like
 │   └── favicon.svg            the mark
 ├── 404.html                   shown for missing pages
@@ -83,6 +84,10 @@ Write the phone number with country code and no spaces. Set `emailBytes` or `C` 
 ### The How I help pages
 
 Each page in `help/` has the same four parts: a one line summary, a "How I can help" paragraph with a short list, "The plan" (a numbered step diagram) and "Interested?" with the contact buttons. To change a step in the plan, edit its `<li>` inside `<ol class="plan">`: `s` is the step name, `d` what happens, `w` how long or when. Three to five steps fit best. `show.help: false` in `content.js` hides the links to these pages in the menus, on the home page and on the card.
+
+### Hand-drawn icons
+
+The marker style icons on the card (connect, phone, email, save, and one per help page) are drawn with rough.js by `tools/icons.js`. They sit inline in `card/index.html`, so their ink follows the theme and the scribble fill is petrol (styles: `.ico` in `assets/style.css`). Copies with fixed colors are in `assets/icons/` for print or slides. To redraw or add one: `npm install roughjs`, edit the shapes in `tools/icons.js`, run `node tools/icons.js assets/style.css`, and paste the new SVG from `icons.json`.
 
 ### A talk
 
