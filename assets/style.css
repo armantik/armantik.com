@@ -361,3 +361,29 @@ dl.rows { margin: 0; }
 .more-help span { color: var(--ink-3); }
 /* links inside a help page list read as links (the contact list's .topics a style is plain text) */
 .topics span a { color: var(--petrol); text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px; }
+
+/* ---------- levels diagram (AI-assisted development): a staircase, each level a taller step ----------
+   On narrow screens the steps turn into bars that grow wider. Level 1 carries the "most people stop here" flag. */
+.levels { list-style: none; margin: 6px 0 4px; padding: 0; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 0 10px; }
+.levels li { display: grid; grid-template-rows: auto auto 1fr; gap: 4px; align-content: start; min-width: 0; }
+.levels .rise { height: 172px; display: flex; flex-direction: column; justify-content: flex-end; gap: 8px; border-bottom: 2px solid var(--mist-strong); }
+.levels .step {
+  height: calc(var(--i) * 28px + 4px); display: flex; align-items: flex-start; padding: 8px 10px;
+  background: var(--wash); border-top: 3px solid var(--petrol); border-radius: 4px 4px 0 0;
+  font: 500 12px/1 var(--mono); color: var(--petrol); white-space: nowrap;
+}
+.levels .stop .step { background: var(--flag-wash); border-top-color: var(--flag); color: var(--flag); }
+.levels .flag { font: 500 12px/1.3 var(--mono); color: var(--flag); }
+.levels .lv-t { font-weight: 600; line-height: 1.35; margin-top: 8px; }
+.levels .lv-d { font-size: 14.5px; line-height: 1.5; color: var(--slate); }
+@media (max-width: 1024px) {
+  .levels { grid-template-columns: minmax(0, 1fr); gap: 20px; }
+  .levels li { grid-template-rows: none; }
+  .levels .rise { height: auto; flex-direction: row-reverse; justify-content: flex-end; align-items: center; gap: 10px; border-bottom: 0; }
+  .levels .step {
+    height: 30px; width: calc(var(--i) * 18% + 10%); flex: none; align-items: center;
+    border-top: 0; border-left: 3px solid var(--petrol); border-radius: 0 4px 4px 0;
+  }
+  .levels .stop .step { border-left-color: var(--flag); }
+  .levels .lv-t { margin-top: 4px; }
+}

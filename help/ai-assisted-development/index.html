@@ -52,14 +52,31 @@
     <p class="sec-label">/how</p>
     <div class="sec-body">
       <h2 id="how-h">How I can help</h2>
-      <p>Most teams install a coding agent and stop there. Costs climb, results vary from person to person, and nobody is sure what the agent is allowed to touch. I help you set it up so it knows your codebase and conventions, spends its context on what matters, and works inside clear limits. I use Claude Code every day for implementation, refactoring, tests and review, so this comes from practice.</p>
-      <h3>What we look at</h3>
+      <p>Most people use AI tools the way they came out of the box: default settings, the same long instructions typed every day, and one model for everything. That&#x27;s level 1 of 5. Each level above it makes the tool cheaper to run and more useful, and I help you climb them, with Claude Code as the main tool. I use it every day for implementation, refactoring, tests and review, so this comes from practice.</p>
+
+    </div>
+  </section>
+
+  <section class="sec" id="levels" aria-labelledby="levels-h">
+    <p class="sec-label">/levels</p>
+    <div class="sec-body">
+      <h2 id="levels-h">The five levels</h2>
+      <p class="intro">Each level builds on the one below. Most people stop at the first.</p>
+      <ol class="levels">
+        <li style="--i:1" class="stop"><span class="rise"><span class="flag">Most people stop here</span><span class="step">Level 1</span></span><span class="lv-t">Out of the box</span><span class="lv-d">A chat window or a coding agent on default settings. It starts from zero every session, and you type the same long prompts again.</span></li>
+        <li style="--i:2"><span class="rise"><span class="step">Level 2</span></span><span class="lv-t">Context</span><span class="lv-d">The agent knows your project: a short, current CLAUDE.md, the right files in view, and a clean context between tasks.</span></li>
+        <li style="--i:3"><span class="rise"><span class="step">Level 3</span></span><span class="lv-t">Model and limits</span><span class="lv-d">A fast model for routine work, the strongest one for design and hard bugs. Clear permissions, so it works without constant questions.</span></li>
+        <li style="--i:4"><span class="rise"><span class="step">Level 4</span></span><span class="lv-t">Skills and tools</span><span class="lv-d">Skills for the work you repeat, MCP tools for your issue tracker, database, docs and logs, and hooks that run your checks.</span></li>
+        <li style="--i:5"><span class="rise"><span class="step">Level 5</span></span><span class="lv-t">A system that improves</span><span class="lv-d">One setup the whole team shares in the repo. Cost and results are measured, and skills and context grow with your system.</span></li>
+      </ol>
+      <h3>Where it usually goes wrong</h3>
       <ul class="topics">
-        <li><span>Context: a short, current CLAUDE.md, so the agent doesn't relearn your repo every session</span></li>
-        <li><span>Skills and MCP tools for the tasks you repeat, instead of long prompts</span></li>
-        <li><span>Cost: the right model for each job, and a clean context between tasks</span></li>
-        <li><span>Limits: what the agent may run, change or push, and how its changes get reviewed</span></li>
-        <li><span>Habits: plan first, keep diffs small, and let tests be the judge</span></li>
+        <li><span>No skills: the same long instructions typed again and again, instead of a skill the agent loads when it needs it</span></li>
+        <li><span>Context left to chance: no CLAUDE.md at all, or one so long it costs tokens on every request</span></li>
+        <li><span>One model for everything: the most expensive model for simple edits, or a cheap one for hard design work</span></li>
+        <li><span>Too few tools: no MCP servers for the systems you use, so the agent guesses instead of looking</span></li>
+        <li><span>MCP used badly: too many servers and tools loaded at once, filling the context before the work starts</span></li>
+        <li><span>A setup that never improves: written once, then left behind while the codebase and the process move on</span></li>
       </ul>
     </div>
   </section>
@@ -69,10 +86,10 @@
     <div class="sec-body">
       <h2 id="plan-h">The plan</h2>
       <ol class="plan">
-        <li><span class="s">Look</span><span class="d">How you use AI tools today, and where the time and money go</span><span class="w">one session</span></li>
-        <li><span class="s">Set up</span><span class="d">CLAUDE.md, skills, MCP tools and permissions, in your repo</span><span class="w">a few days</span></li>
-        <li><span class="s">Pair</span><span class="d">Work through real tasks together with the new setup</span><span class="w">a few sessions</span></li>
-        <li><span class="s">Measure</span><span class="d">Compare cost and time with before, then adjust</span><span class="w">after a few weeks</span></li>
+        <li><span class="s">Look</span><span class="d">Find your level: how you use AI tools today, and where the time and money go</span><span class="w">one session</span></li>
+        <li><span class="s">Set up</span><span class="d">Context, model choice, permissions, and the first skills and MCP tools, in your repo</span><span class="w">a few days</span></li>
+        <li><span class="s">Pair</span><span class="d">Real tasks together, turning the work you repeat into skills</span><span class="w">a few sessions</span></li>
+        <li><span class="s">Measure</span><span class="d">Compare cost and time with before, then keep improving</span><span class="w">after a few weeks</span></li>
       </ol>
     </div>
   </section>
