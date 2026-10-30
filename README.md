@@ -67,7 +67,16 @@ The address never appears in the page source, so bots that scan pages for addres
 
 ### Your phone number
 
-It lives only in the card page, `card/index.html`, Base64 encoded in `PHONE_ENCODED` near the bottom. No other page loads it. It shows as the Call or text button and goes into the Save contact file. Leave it empty (`""`) to remove it from both.
+It lives only in the card page, `card/index.html`, in the script at the bottom. No other page loads it. It is never written there as text: it is stored as scrambled bytes in `C`, and the page only puts it together after a person taps, scrolls or types, so crawlers don't find it. It then shows on the Call or text button and goes into the Save contact file.
+
+To change the number, open the browser console on any page, paste this with your new number, and copy the result into `C`:
+
+```js
+var K = [133, 28, 142, 76, 200], n = "+46700000000";
+JSON.stringify(n.split("").map(function (c, i) { return c.charCodeAt(0) ^ K[i % K.length]; }).reverse())
+```
+
+Use the number with country code and no spaces. Set `C` to `[]` to remove the button and keep the number out of the contact file.
 
 ### A talk
 

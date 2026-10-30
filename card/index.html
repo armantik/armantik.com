@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Arman Ajabkhani</title>
 <meta name="robots" content="noindex">
-<meta name="description" content="Arman Ajabkhani, Senior Backend Consultant at Apple via 0+X, in Malmö. Connect on LinkedIn, save the contact, or ask about mentoring.">
+<meta name="description" content="Arman Ajabkhani, Senior Backend Consultant at Apple via 0+X, in Malmö. Connect on LinkedIn, save the contact, or ask about interview prep and mentoring.">
 <meta property="og:title" content="Arman Ajabkhani, Senior Backend Consultant">
 <meta property="og:description" content="Java and Go backends and AI engineering. Consultant at Apple via 0+X, in Malmö.">
 <meta property="og:url" content="https://armantik.com/card/">
@@ -36,11 +36,16 @@
   .stack { display: grid; gap: 10px; }
   .stack .btn { width: 100%; min-height: 54px; justify-content: space-between; font-size: 16.5px; padding: 0 18px; }
   .stack .btn .num { font: 500 14.5px/1 var(--mono); font-variant-numeric: tabular-nums; white-space: nowrap; }
-  .talk { display: grid; gap: 10px; padding-top: 18px; border-top: 1px solid var(--mist); }
-  .talk h2 { margin: 0; font: 500 13px/1.4 var(--mono); color: var(--petrol); letter-spacing: 0.01em; }
-  .talk ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
-  .talk li { display: grid; grid-template-columns: 16px minmax(0, 1fr); gap: 8px; color: var(--ink); }
-  .talk li::before { content: "/"; font-family: var(--mono); color: var(--petrol); }
+  .help { display: grid; gap: 4px; padding-top: 18px; border-top: 1px solid var(--mist); }
+  .help h2 { margin: 0 0 6px; font: 500 13px/1.4 var(--mono); color: var(--petrol); letter-spacing: 0.01em; }
+  .help ul { list-style: none; margin: 0; padding: 0; display: grid; }
+  .help li + li { border-top: 1px solid var(--mist); }
+  .help .item { display: grid; grid-template-columns: 16px minmax(0, 1fr) auto; gap: 2px 8px; padding-block: 11px; color: var(--ink); text-decoration: none; }
+  .help .item::before { content: "/"; grid-row: 1 / span 2; font: 500 15px/1.5 var(--mono); color: var(--petrol); }
+  .help .t { font-weight: 600; line-height: 1.4; }
+  .help .d { grid-column: 2; font-size: 15px; line-height: 1.45; color: var(--slate); }
+  .help .go { grid-row: 1 / span 2; grid-column: 3; align-self: center; font: 400 15px/1 var(--mono); color: var(--petrol); }
+  .help a.item:hover .t { color: var(--petrol); }
   .card-foot { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 10px 16px; padding-top: 18px; border-top: 1px solid var(--mist); font: 400 13px/1.5 var(--mono); color: var(--ink-3); }
 </style>
 </head>
@@ -66,18 +71,18 @@
     <nav class="stack" aria-label="Connect">
       <a class="btn primary" data-link="linkedin" href="#" target="_blank" rel="noopener">Connect on LinkedIn <span class="arrow" aria-hidden="true">↗</span></a>
       <a class="btn" id="save-contact" href="#" download="arman-ajabkhani.vcf" hidden>Save contact <span class="arrow" aria-hidden="true">↓</span></a>
-      <a class="btn" id="call" href="#" hidden>Call or text <span class="num" id="call-num"></span></a>
+      <a class="btn" id="c-btn" href="#" hidden>Call or text <span class="num" id="c-num"><span class="arrow" aria-hidden="true">→</span></span></a>
       <a class="btn" data-email-link href="#">Email me <span class="arrow" aria-hidden="true">→</span></a>
-      <a class="btn" href="../mentoring/index.html" data-show="mentoring">Mentoring <span class="arrow" aria-hidden="true">→</span></a>
     </nav>
 
-    <section class="talk" aria-labelledby="talk-h">
-      <h2 id="talk-h">/happy to talk about</h2>
+    <section class="help" aria-labelledby="help-h">
+      <h2 id="help-h">/happy to help with</h2>
       <ul>
-        <li>System design and running services at scale</li>
-        <li>Modern Java, the JVM and Go</li>
-        <li>LLMs in real backends: MCP, RAG, agents and evals</li>
-        <li>Growing from senior to staff</li>
+        <li><a class="item" href="../mentoring/index.html#interviews"><span class="t">Interview prep</span><span class="d">Mock system design and coding interviews, with notes on what to fix</span><span class="go" aria-hidden="true">→</span></a></li>
+        <li><a class="item" href="../mentoring/index.html#juniors"><span class="t">Mentoring</span><span class="d">For developers in their first years, or moving into backend</span><span class="go" aria-hidden="true">→</span></a></li>
+        <li><div class="item"><span class="t">Design reviews</span><span class="d">A second pair of eyes on a design before you build it</span></div></li>
+        <li><div class="item"><span class="t">LLMs in your backend</span><span class="d">MCP servers, RAG and agents in Java, Go or Python</span></div></li>
+        <li><div class="item"><span class="t">JVM performance</span><span class="d">GC tuning, profiling and production troubleshooting</span></div></li>
       </ul>
     </section>
 
@@ -91,45 +96,65 @@
 <script src="../content.js"></script>
 <script src="../assets/site.js"></script>
 <script>
-  /* Your phone number lives only here, on the card page, Base64 encoded so bots that scan pages can't read it.
-     To change it, encode the new number (for example at base64encode.org) and paste it in.
-     Leave it empty ("") to hide the Call button and keep the number out of the Save contact file. */
-  var PHONE_ENCODED = "KzQ2IDc2MCAxNzAgMDcx";
+  /* Contact details for the Call or text and Save contact buttons.
 
-  /* Call button and Save contact: built in the browser, so neither the phone number
-     nor the email address sits in the page source. */
+     The number is never in this file as text. It is stored as scrambled bytes (C, reversed and XOR'ed
+     with K), and it is only put together after a real person interacts with the page: a tap, a scroll,
+     a key press or a mouse move. Simple crawlers that read the source find no number, and headless
+     crawlers that run the script but never touch the page don't get it either.
+     To change the number, see "Your phone number" in README.md. Set C to [] to hide the button. */
   (function () {
-    var SITE = window.SITE || {}, links = SITE.links || {}, email = '', phone = '';
-    try { email = links.emailEncoded ? atob(links.emailEncoded) : ''; } catch (e) {}
-    try { phone = PHONE_ENCODED ? atob(PHONE_ENCODED) : ''; } catch (e) {}
-    var tel = phone.replace(/[^+\d]/g, '');
+    var K = [133, 28, 142, 76, 200];
+    var C = [45, 178, 248, 124, 185, 45, 181, 254, 123, 184, 40, 174];
 
-    var call = document.getElementById('call');
-    if (call && tel) {
-      call.href = 'tel:' + tel;
-      document.getElementById('call-num').textContent = phone;
-      call.hidden = false;
+    var SITE = window.SITE || {}, links = SITE.links || {};
+    var btn = document.getElementById('c-btn'), num = document.getElementById('c-num');
+    var save = document.getElementById('save-contact');
+    var v = '';
+
+    function unpack() {
+      if (!v && C.length) {
+        v = C.slice().reverse().map(function (c, i) { return String.fromCharCode(c ^ K[i % K.length]); }).join('');
+      }
+      return v;
+    }
+    function pretty(n) { /* +46701234567 becomes +46 701 234 567 */
+      return n.slice(0, 3) + ' ' + n.slice(3).replace(/(\d{3})(?=\d)/g, '$1 ');
+    }
+    function card() {
+      var email = '';
+      try { email = links.emailEncoded ? atob(links.emailEncoded) : ''; } catch (e) {}
+      var n = unpack();
+      return [
+        'BEGIN:VCARD', 'VERSION:3.0',
+        'N:Ajabkhani;Arman;;;', 'FN:Arman Ajabkhani',
+        'TITLE:Senior Backend Consultant at Apple', 'ORG:0+X',
+        n ? 'TEL;TYPE=CELL:' + n : '',
+        email ? 'EMAIL;TYPE=INTERNET:' + email : '',
+        'URL:https://armantik.com',
+        links.linkedin ? 'X-SOCIALPROFILE;TYPE=linkedin:' + links.linkedin : '',
+        links.linkedin ? 'URL;TYPE=LinkedIn:' + links.linkedin : '',
+        'ADR;TYPE=WORK:;;;Malmö;;;Sweden', 'END:VCARD'
+      ].filter(Boolean).join('\r\n') + '\r\n';
     }
 
-    var lines = [
-      'BEGIN:VCARD',
-      'VERSION:3.0',
-      'N:Ajabkhani;Arman;;;',
-      'FN:Arman Ajabkhani',
-      'TITLE:Senior Backend Consultant at Apple',
-      'ORG:0+X',
-      tel ? 'TEL;TYPE=CELL:' + tel : '',
-      email ? 'EMAIL;TYPE=INTERNET:' + email : '',
-      'URL:https://armantik.com',
-      links.linkedin ? 'X-SOCIALPROFILE;TYPE=linkedin:' + links.linkedin : '',
-      links.linkedin ? 'URL;TYPE=LinkedIn:' + links.linkedin : '',
-      'ADR;TYPE=WORK:;;;Malmö;;;Sweden',
-      'END:VCARD'
-    ].filter(Boolean);
-    var a = document.getElementById('save-contact');
-    if (!a) return;
-    a.href = 'data:text/vcard;charset=utf-8,' + encodeURIComponent(lines.join('\r\n') + '\r\n');
-    a.hidden = false;
+    /* after the first real interaction: show the number and arm both buttons */
+    var armed = false;
+    var EVENTS = ['pointerdown', 'touchstart', 'keydown', 'scroll', 'wheel', 'mousemove', 'focusin'];
+    function arm() {
+      if (armed) return;
+      armed = true;
+      EVENTS.forEach(function (e) { window.removeEventListener(e, arm, true); });
+      var n = unpack();
+      if (btn && n) { btn.href = 'tel:' + n; num.textContent = pretty(n); }
+      if (save) save.href = 'data:text/vcard;charset=utf-8,' + encodeURIComponent(card());
+    }
+    EVENTS.forEach(function (e) { window.addEventListener(e, arm, { capture: true, passive: true }); });
+    /* a tap straight on a button also arms it before the browser follows the link */
+    [btn, save].forEach(function (el) { if (el) el.addEventListener('click', arm); });
+
+    if (btn && C.length) btn.hidden = false;
+    if (save) save.hidden = false;
   })();
 </script>
 </body>
