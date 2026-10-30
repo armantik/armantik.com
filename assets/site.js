@@ -89,7 +89,7 @@
           '<span class="cat-title">' + esc(g.title) + '</span>' +
           '<span class="cat-sum">' + esc(g.summary) + '</span>' +
           '<ul class="cat-list">' + shown + more + '</ul>' +
-          '<span class="cat-more">Open ' + esc(g.title.toLowerCase()) + ' →</span></a>';
+          '<span class="cat-more">Open ' + esc(/^(Java|Go|AI)\b/.test(g.title) ? g.title : g.title.toLowerCase()) + ' →</span></a>';
       }).join('');
     } else {
       /* lab page: every guide, grouped */
