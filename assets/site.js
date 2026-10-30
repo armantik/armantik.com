@@ -154,19 +154,51 @@
     }).join('');
   });
 
-  /* ---- email: never in the page source. Built here from content.js, so scraping bots that
-     read the HTML don't find it. <span data-email></span> shows it, <a data-email-link> becomes a mail link,
-     <button data-copy-email> copies it. ---- */
+  /* ---- contact details are never in the page as text ----
+     The email (links.emailBytes in content.js) and the phone number (on the card page) are stored as
+     scrambled bytes: reversed, then XOR'ed with KEY. Pages only put them together after a person
+     interacts, so bots that read the source, or run the page without touching it, find nothing.
+     window.AA.unscramble(bytes) decodes; window.AA.email() returns the address once revealed. */
+  var KEY = [133, 28, 142, 76, 200];
+  function unscramble(bytes) {
+    return (bytes || []).slice().reverse().map(function (c, i) { return String.fromCharCode(c ^ KEY[i % KEY.length]); }).join('');
+  }
+  var EMAIL_BYTES = (SITE.links && SITE.links.emailBytes) || [];
   var EMAIL = '';
-  try { EMAIL = SITE.links && SITE.links.emailEncoded ? atob(SITE.links.emailEncoded) : ''; } catch (e) {}
-  /* shown as arman[at]armantik.com; Copy email and Email me still use the real address */
-  document.querySelectorAll('[data-email]').forEach(function (el) { if (EMAIL) el.textContent = EMAIL.replace('@', '[at]'); });
+  function email() { if (!EMAIL && EMAIL_BYTES.length) EMAIL = unscramble(EMAIL_BYTES); return EMAIL; }
+  window.AA = { unscramble: unscramble, email: email };
+
+  /* <span data-email>Show email</span> becomes name[at]domain after the first interaction (or a tap on it).
+     <a data-email-link> becomes a mail link when tapped. <button data-copy-email> copies the address. */
+  var emailShown = false;
+  var WAKE = ['pointerdown', 'touchstart', 'keydown', 'scroll', 'wheel', 'mousemove', 'focusin'];
+  function showEmail() {
+    if (emailShown) return;
+    emailShown = true;
+    WAKE.forEach(function (e) { window.removeEventListener(e, showEmail, true); });
+    var addr = email();
+    document.querySelectorAll('[data-email]').forEach(function (el) {
+      var span = document.createElement('span');
+      span.className = 'email';
+      span.textContent = addr.replace('@', '[at]');
+      el.replaceWith(span);
+    });
+    document.querySelectorAll('[data-copy-email]').forEach(function (btn) { btn.setAttribute('data-copy', addr); });
+  }
+  if (EMAIL_BYTES.length) {
+    WAKE.forEach(function (e) { window.addEventListener(e, showEmail, { capture: true, passive: true }); });
+    document.querySelectorAll('[data-email]').forEach(function (el) { el.addEventListener('click', showEmail); });
+  } else {
+    document.querySelectorAll('[data-email], [data-copy-email]').forEach(function (el) { el.hidden = true; });
+  }
   document.querySelectorAll('[data-email-link]').forEach(function (el) {
-    if (!EMAIL) { el.hidden = true; return; }
-    el.addEventListener('click', function () { el.href = 'mailto:' + EMAIL; });
-    el.href = '#contact';
+    if (!EMAIL_BYTES.length) { el.hidden = true; return; }
+    el.addEventListener('click', function () { el.href = 'mailto:' + email(); });
   });
-  document.querySelectorAll('[data-copy-email]').forEach(function (btn) { btn.setAttribute('data-copy', EMAIL); });
+  document.querySelectorAll('[data-copy-email]').forEach(function (btn) {
+    btn.addEventListener('click', showEmail, true);
+    btn.setAttribute('data-copy', '');
+  });
 
   /* ---- copy buttons: <button data-copy="text"> ---- */
   document.querySelectorAll('[data-copy]').forEach(function (btn) {

@@ -61,22 +61,21 @@ Tip: inside `<pre><code>`, write `&lt;` instead of `<` and `&gt;` instead of `>`
 
 The "How I can help" cards come from `services: [` in `content.js`. Each card has a title, one sentence and up to four points. The card titles are also listed in the Contact section, under the consulting line. `show.services: false` hides the section, that list and the consulting line together.
 
-### Your email address
+### Your email address and phone number
 
-The address never appears in the page source, so bots that scan pages for addresses can't collect it. It's stored Base64 encoded in `links.emailEncoded` in `content.js` and put together in the browser. To change it, encode the new address (for example at base64encode.org) and paste the result there.
+Neither is written anywhere as text, so spam bots and crawlers can't collect them. Both are stored as scrambled bytes (reversed, then XOR'ed with a key in `assets/site.js`) and put together in the browser only when a person is there:
 
-### Your phone number
+- **Email** (`links.emailBytes` in `content.js`): every page shows a "Show email" link in its place, which turns into the address after the first tap, scroll or key press. Email me and Copy email work as usual.
+- **Phone** (`C` in the script at the bottom of `card/index.html`, the only page that has it): the Call or text button says "Show number". The first tap shows the number, the second one calls. Save contact builds its contact file when it is tapped.
 
-It lives only in the card page, `card/index.html`, in the script at the bottom. No other page loads it. It is never written there as text: it is stored as scrambled bytes in `C`, and the page only puts it together after a person taps, scrolls or types, so crawlers don't find it. It then shows on the Call or text button and goes into the Save contact file.
-
-To change the number, open the browser console on any page, paste this with your new number, and copy the result into `C`:
+To change either one, open the browser console on any page of the site, run this with the new value, and paste the result into `emailBytes` or `C`:
 
 ```js
-var K = [133, 28, 142, 76, 200], n = "+46700000000";
-JSON.stringify(n.split("").map(function (c, i) { return c.charCodeAt(0) ^ K[i % K.length]; }).reverse())
+AA.scramble = function (s) { var K = [133, 28, 142, 76, 200]; return JSON.stringify(s.split("").map(function (c, i) { return c.charCodeAt(0) ^ K[i % K.length]; }).reverse()); };
+AA.scramble("+46700000000")
 ```
 
-Use the number with country code and no spaces. Set `C` to `[]` to remove the button and keep the number out of the contact file.
+Write the phone number with country code and no spaces. Set `emailBytes` or `C` to `[]` to hide that one.
 
 ### A talk
 

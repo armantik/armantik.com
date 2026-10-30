@@ -328,3 +328,10 @@ dl.rows { margin: 0; }
 .contact-lead b { color: var(--petrol); font-weight: 700; }
 .topics a { color: var(--ink); text-decoration: none; }
 .topics a:hover { color: var(--petrol); text-decoration: underline; }
+
+/* "Show email" placeholder: the address is put together after the first tap, scroll or key press */
+.email-reveal {
+  padding: 0; border: 0; background: none; cursor: pointer; text-align: left;
+  color: var(--petrol); text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 4px;
+}
+.email-reveal:hover { text-decoration-thickness: 2px; }

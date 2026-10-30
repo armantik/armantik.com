@@ -36,6 +36,7 @@
   .stack { display: grid; gap: 10px; }
   .stack .btn { width: 100%; min-height: 54px; justify-content: space-between; font-size: 16.5px; padding: 0 18px; }
   .stack .btn .num { font: 500 14.5px/1 var(--mono); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .stack .btn .num.reveal { color: var(--petrol); text-decoration: underline; text-underline-offset: 4px; }
   .help { display: grid; gap: 4px; padding-top: 18px; border-top: 1px solid var(--mist); }
   .help h2 { margin: 0 0 6px; font: 500 13px/1.4 var(--mono); color: var(--petrol); letter-spacing: 0.01em; }
   .help ul { list-style: none; margin: 0; padding: 0; display: grid; }
@@ -71,7 +72,7 @@
     <nav class="stack" aria-label="Connect">
       <a class="btn primary" data-link="linkedin" href="#" target="_blank" rel="noopener">Connect on LinkedIn <span class="arrow" aria-hidden="true">↗</span></a>
       <a class="btn" id="save-contact" href="#" download="arman-ajabkhani.vcf" hidden>Save contact <span class="arrow" aria-hidden="true">↓</span></a>
-      <a class="btn" id="c-btn" href="#" hidden>Call or text <span class="num" id="c-num"><span class="arrow" aria-hidden="true">→</span></span></a>
+      <a class="btn" id="c-btn" href="#" role="button" hidden>Call or text <span class="num reveal" id="c-num">Show number</span></a>
       <a class="btn" data-email-link href="#">Email me <span class="arrow" aria-hidden="true">→</span></a>
     </nav>
 
@@ -96,35 +97,27 @@
 <script src="../content.js"></script>
 <script src="../assets/site.js"></script>
 <script>
-  /* Contact details for the Call or text and Save contact buttons.
+  /* Call or text and Save contact.
 
-     The number is never in this file as text. It is stored as scrambled bytes (C, reversed and XOR'ed
-     with K), and it is only put together after a real person interacts with the page: a tap, a scroll,
-     a key press or a mouse move. Simple crawlers that read the source find no number, and headless
-     crawlers that run the script but never touch the page don't get it either.
-     To change the number, see "Your phone number" in README.md. Set C to [] to hide the button. */
+     The number is never in this file as text. C holds it as scrambled bytes, decoded with the same
+     key as the email (window.AA in assets/site.js). It is only put together when a person taps a
+     button: the first tap on Call or text shows the number, the second one calls. Save contact
+     builds its contact file at the moment it is tapped. Crawlers find no number, even ones that
+     run the page. To change the number, see "Your email address and phone number" in README.md. C = [] hides the button. */
   (function () {
-    var K = [133, 28, 142, 76, 200];
     var C = [45, 178, 248, 124, 185, 45, 181, 254, 123, 184, 40, 174];
 
-    var SITE = window.SITE || {}, links = SITE.links || {};
+    var SITE = window.SITE || {}, links = SITE.links || {}, AA = window.AA;
     var btn = document.getElementById('c-btn'), num = document.getElementById('c-num');
     var save = document.getElementById('save-contact');
-    var v = '';
+    if (!AA) return;
 
-    function unpack() {
-      if (!v && C.length) {
-        v = C.slice().reverse().map(function (c, i) { return String.fromCharCode(c ^ K[i % K.length]); }).join('');
-      }
-      return v;
-    }
     function pretty(n) { /* +46701234567 becomes +46 701 234 567 */
       return n.slice(0, 3) + ' ' + n.slice(3).replace(/(\d{3})(?=\d)/g, '$1 ');
     }
     function card() {
-      var email = '';
-      try { email = links.emailEncoded ? atob(links.emailEncoded) : ''; } catch (e) {}
-      var n = unpack();
+      var email = AA.email();
+      var n = AA.unscramble(C);
       return [
         'BEGIN:VCARD', 'VERSION:3.0',
         'N:Ajabkhani;Arman;;;', 'FN:Arman Ajabkhani',
@@ -138,23 +131,28 @@
       ].filter(Boolean).join('\r\n') + '\r\n';
     }
 
-    /* after the first real interaction: show the number and arm both buttons */
-    var armed = false;
-    var EVENTS = ['pointerdown', 'touchstart', 'keydown', 'scroll', 'wheel', 'mousemove', 'focusin'];
-    function arm() {
-      if (armed) return;
-      armed = true;
-      EVENTS.forEach(function (e) { window.removeEventListener(e, arm, true); });
-      var n = unpack();
-      if (btn && n) { btn.href = 'tel:' + n; num.textContent = pretty(n); }
-      if (save) save.href = 'data:text/vcard;charset=utf-8,' + encodeURIComponent(card());
+    /* first tap: show the number and turn the button into a phone link; second tap: call */
+    if (btn && C.length) {
+      btn.addEventListener('click', function (e) {
+        if (btn.getAttribute('data-shown')) return;
+        e.preventDefault();
+        var n = AA.unscramble(C);
+        btn.href = 'tel:' + n;
+        num.textContent = pretty(n);
+        num.classList.remove('reveal');
+        btn.removeAttribute('role');
+        btn.setAttribute('data-shown', '1');
+      });
+      btn.hidden = false;
     }
-    EVENTS.forEach(function (e) { window.addEventListener(e, arm, { capture: true, passive: true }); });
-    /* a tap straight on a button also arms it before the browser follows the link */
-    [btn, save].forEach(function (el) { if (el) el.addEventListener('click', arm); });
 
-    if (btn && C.length) btn.hidden = false;
-    if (save) save.hidden = false;
+    /* the contact file is built when Save contact is tapped, before the browser follows the link */
+    if (save) {
+      save.addEventListener('click', function () {
+        save.href = 'data:text/vcard;charset=utf-8,' + encodeURIComponent(card());
+      });
+      save.hidden = false;
+    }
   })();
 </script>
 </body>

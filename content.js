@@ -31,10 +31,11 @@ window.SITE = {
 
   /* ---------- LINKS: leave a value empty ("") to hide that button ---------- */
   links: {
-    // Your email is not written anywhere in plain text, so spam bots that scan pages can't collect it.
-    // It is stored here in Base64. To change it, encode the new address at base64encode.org and paste it in.
-    emailEncoded: "YXJtYW5AYXJtYW50aWsuY29t",
-    // Your phone number is not here on purpose: it lives only in card/index.html (PHONE_ENCODED).
+    // Your email is not written anywhere as text, so spam bots can't collect it. It is stored as scrambled
+    // bytes, and pages only put it together after a person taps, scrolls or types. To change it, see
+    // "Your email address and phone number" in README.md. Set it to [] to hide the email everywhere.
+    emailBytes: [227, 115, 230, 230, 39, 231, 104, 235, 169, 33, 252, 125, 197, 166, 45, 227, 110, 228],
+    // Your phone number is not here on purpose: it lives only on the card page (card/index.html).
     linkedin: "https://www.linkedin.com/in/arman-ajabkhani/",
     github: "",          // e.g. "https://github.com/your-username"
     medium: "https://armantik.medium.com/"
