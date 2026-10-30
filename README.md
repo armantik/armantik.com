@@ -15,7 +15,10 @@ armantik.com/
 ├── writing/
 │   ├── index.html             all articles, posts and talks, built from content.js
 │   └── _template.html         copy this to write an article on your own site
-├── mentoring/index.html       one to one mentoring: interview prep and developers in their first years (switch: show.mentoring)
+├── help/
+│   ├── index.html             How I help: the five ways, as tiles (switch: show.help)
+│   └── */index.html           one short page each: interview prep, mentoring, technical hiring, workshops, AI-assisted development
+├── mentoring/index.html       old address, forwards to help/
 ├── card/index.html            landing page for the NFC tag and the QR code on the business card (noindex; open armantik.com/card/)
 ├── brand/index.html           colors, type and the mark (not in the menu; open armantik.com/brand/)
 ├── assets/
@@ -76,6 +79,10 @@ AA.scramble("+46700000000")
 ```
 
 Write the phone number with country code and no spaces. Set `emailBytes` or `C` to `[]` to hide that one.
+
+### The How I help pages
+
+Each page in `help/` has the same four parts: a one line summary, a "How I can help" paragraph with a short list, "The plan" (a numbered step diagram) and "Interested?" with the contact buttons. To change a step in the plan, edit its `<li>` inside `<ol class="plan">`: `s` is the step name, `d` what happens, `w` how long or when. Three to five steps fit best. `show.help: false` in `content.js` hides the links to these pages in the menus, on the home page and on the card.
 
 ### A talk
 

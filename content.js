@@ -25,7 +25,7 @@ window.SITE = {
     talks: false,        // conference talks and meetups
     kairos: true,        // the "Now building" section
     services: false,     // the "How I can help" section (off until side work is approved)
-    mentoring: true,     // the /mentoring/ page and its links in the menus and on the card page
+    help: true,          // the "How I help" pages (/help/): their links in the menus, on the home page and on the card
     persianName: false   // your name in Persian in the footer (spelling is ready, just switch it on)
   },
 

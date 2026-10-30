@@ -335,3 +335,29 @@ dl.rows { margin: 0; }
   color: var(--petrol); text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 4px;
 }
 .email-reveal:hover { text-decoration-thickness: 2px; }
+
+/* ---------- plan diagram on the help pages: numbered steps joined by a line ----------
+   Across on wide screens, down on phones. <ol class="plan"><li><span class="s">Step</span>
+   <span class="d">What happens</span><span class="w">when</span></li>...</ol> */
+.plan { list-style: none; margin: 4px 0 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(0, 1fr)); counter-reset: step; }
+.plan li { position: relative; display: grid; gap: 4px; align-content: start; padding: 42px 20px 0 0; counter-increment: step; min-width: 0; }
+.plan li::before {
+  content: counter(step); position: absolute; top: 0; left: 0; z-index: 1;
+  width: 28px; height: 28px; border-radius: 999px; display: grid; place-items: center;
+  background: var(--petrol); color: var(--on-petrol); font: 500 13px/1 var(--mono);
+}
+.plan li::after { content: ""; position: absolute; top: 13px; left: 28px; right: 0; height: 2px; background: var(--mist-strong); }
+.plan li:last-child::after { display: none; }
+.plan .s { font-weight: 600; line-height: 1.35; }
+.plan .d { font-size: 15px; line-height: 1.5; color: var(--slate); }
+.plan .w { font: 500 12px/1.4 var(--mono); color: var(--petrol); margin-top: 2px; }
+@media (max-width: 760px) {
+  .plan { grid-template-columns: minmax(0, 1fr); }
+  .plan li { padding: 2px 0 24px 46px; }
+  .plan li:last-child { padding-bottom: 0; }
+  .plan li::after { top: 28px; bottom: 0; left: 13px; right: auto; width: 2px; height: auto; }
+}
+.more-help { display: flex; flex-wrap: wrap; gap: 6px 18px; font: 500 14px/1.5 var(--mono); }
+.more-help span { color: var(--ink-3); }
+/* links inside a help page list read as links (the contact list's .topics a style is plain text) */
+.topics span a { color: var(--petrol); text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px; }
