@@ -205,17 +205,26 @@
     btn.setAttribute('data-copy', '');
   });
 
-  /* ---- copy buttons: <button data-copy="text"> ---- */
+  /* ---- copy buttons: <button data-copy="text">. When the button has a caption (<span class="copy-cap">,
+     used under the copy icon) only the caption changes, so the icon stays. ---- */
   document.querySelectorAll('[data-copy]').forEach(function (btn) {
     btn.addEventListener('click', function () {
       var text = btn.getAttribute('data-copy');
-      var done = function () { var old = btn.textContent; btn.textContent = 'Copied'; setTimeout(function () { btn.textContent = old; }, 1600); };
+      var label = btn.querySelector('.copy-cap') || btn;
+      var original = label.textContent;
+      var show = function (msg) {
+        label.textContent = msg; btn.classList.add('is-done');
+        clearTimeout(btn._t);
+        btn._t = setTimeout(function () { label.textContent = original; btn.classList.remove('is-done'); }, 1600);
+      };
+      var caps = label === btn;   /* plain text buttons like "Copy hex" keep a capital letter */
+      var done = function () { show(caps ? 'Copied' : 'copied'); };
       var fallback = function () {
         var sel = document.querySelector(btn.getAttribute('data-copy-select') || '.email');
         if (!sel) return;
         var r = document.createRange(); r.selectNodeContents(sel);
         var s = window.getSelection(); s.removeAllRanges(); s.addRange(r);
-        btn.textContent = 'Press Ctrl+C';
+        show(caps ? 'Press Ctrl+C' : 'press Ctrl+C');
       };
       if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(done, fallback);
       else fallback();

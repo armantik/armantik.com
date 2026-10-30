@@ -122,6 +122,9 @@ const ICONS = {
     acc: [['path', 'M24 9 L38 9 L43 14 L38 19 L24 19 Z']],
     ink: [['path', 'M24 4 L24 44'], ['path', 'M15 44 L33 44'], ['path', 'M24 9 L38 9 L43 14 L38 19 L24 19 Z'],
           ['path', 'M24 24 L10 24 L5 29 L10 34 L24 34 Z']] },
+  copy: { seed: 151,
+    acc: [['rect', 15, 5, 26, 30]],
+    ink: [['rect', 15, 5, 26, 30], ['path', 'M15 13 L9 13 C8 13 7 14 7 15 L7 41 C7 42 8 43 9 43 L31 43 C32 43 33 42 33 41 L33 35']] },
 };
 
 const round = (d) => d.replace(/-?\d+\.\d+/g, (n) => (+n).toFixed(1));
