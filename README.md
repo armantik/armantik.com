@@ -87,7 +87,9 @@ Each page in `help/` has the same four parts: a one line summary, a "How I can h
 
 ### Hand-drawn icons
 
-The marker style icons on the card (connect, phone, email, save, and one per help page) are drawn with rough.js by `tools/icons.js`. They sit inline in `card/index.html`, so their ink follows the theme and the scribble fill is petrol (styles: `.ico` in `assets/style.css`). Copies with fixed colors are in `assets/icons/` for print or slides. To redraw or add one: `npm install roughjs`, edit the shapes in `tools/icons.js`, run `node tools/icons.js assets/style.css`, and paste the new SVG from `icons.json`.
+Every page uses the same marker style icons, drawn with rough.js: one per section in the left rail, a large one above the title of each inner page, and smaller ones on the Lab cards, the How I help tiles and rows, and the buttons. They are inline SVG, so their lines take the text color (dark on light, light on dark) and the scribble fill is petrol (styles: `.ico`, `.sec-ico`, `.page-ico` in `assets/style.css`). The Lab track icons on the home page and the Lab page come from `<template id="ico-...">` blocks near the bottom of those pages. All icons are shown on `/brand/`.
+
+To use an icon somewhere new, copy its SVG from `tools/icons.json` and wrap it, for example `<span class="sec-ico" aria-hidden="true">...</span>` before a `/path` label. Copies with fixed colors for print and slides are in `assets/icons/`. To redraw or add one: `npm install roughjs`, edit the shapes in `tools/icons.js`, and run `node tools/icons.js assets/style.css`.
 
 ### A talk
 

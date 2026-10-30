@@ -32,6 +32,11 @@
     var m = MONTHS[parseInt(p[1], 10) - 1] || '';
     return p.length === 3 ? parseInt(p[2], 10) + ' ' + m + ' ' + p[0] : m + ' ' + p[0];
   }
+  /* hand-drawn icon for a Lab track: pages that list the tracks carry <template id="ico-<group id>"> */
+  function trackIcon(id, cls) {
+    var t = document.getElementById('ico-' + id);
+    return t ? '<span class="' + cls + '" aria-hidden="true">' + t.innerHTML + '</span>' : '';
+  }
   function byDateDesc(a, b) { return String(b.date || '').localeCompare(String(a.date || '')); }
 
   /* ---- section switches: <section data-show="writing"> and nav links with data-show ---- */
@@ -84,7 +89,7 @@
         if (!list.length) return '';
         var shown = list.slice(0, 5).map(function (i) { return '<li>' + esc(i.title) + '</li>'; }).join('');
         var more = list.length > 5 ? '<li>and ' + (list.length - 5) + ' more</li>' : '';
-        return '<a class="cat-card" href="' + esc(root + 'lab/index.html#' + g.id) + '">' +
+        return '<a class="cat-card" href="' + esc(root + 'lab/index.html#' + g.id) + '">' + trackIcon(g.id, 'cat-ico') +
           '<span class="cat-count">' + list.length + (list.length === 1 ? ' guide' : ' guides') + '</span>' +
           '<span class="cat-title">' + esc(g.title) + '</span>' +
           '<span class="cat-sum">' + esc(g.summary) + '</span>' +
@@ -96,7 +101,7 @@
       el.innerHTML = GROUPS.map(function (g) {
         var list = itemsIn(g.id);
         if (!list.length) return '';
-        return '<section class="sec" id="' + esc(g.id) + '"><p class="sec-label">/lab/' + esc(g.id) + '</p><div class="sec-body">' +
+        return '<section class="sec" id="' + esc(g.id) + '"><p class="sec-label">' + trackIcon(g.id, 'sec-ico') + '/lab/' + esc(g.id) + '</p><div class="sec-body">' +
           '<h2>' + esc(g.title) + '</h2>' + (g.summary ? '<p class="intro">' + esc(g.summary) + '</p>' : '') +
           '<div class="tiles">' + list.map(tile).join('') + '</div></div></section>';
       }).join('');

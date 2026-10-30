@@ -393,3 +393,24 @@ dl.rows { margin: 0; }
 .ico path { stroke: currentColor; }
 .ico .a { stroke: var(--petrol); opacity: .55; }
 .btn.primary .ico .a { stroke: var(--on-petrol); opacity: .45; }
+
+/* ---------- where the hand-drawn icons sit ----------
+   Section rail: the icon stands above the /path label (beside it on phones). Inner pages: one large icon
+   above the title. Cards, tiles and rows: the icon leads. Buttons: a small icon before the text. */
+.sec-ico { display: block; width: 46px; height: 46px; margin-bottom: 10px; color: var(--ink); }
+.page-ico { display: block; width: 72px; height: 72px; color: var(--ink); }
+.cat-ico, .tile-ico { display: block; width: 44px; height: 44px; color: var(--ink); }
+.row-ico { display: block; width: 36px; height: 36px; color: var(--ink); margin-top: 2px; }
+.sec-ico .ico, .page-ico .ico, .cat-ico .ico, .tile-ico .ico, .row-ico .ico { width: 100%; height: 100%; }
+.btn .ico { width: 20px; height: 20px; }
+.row.ico-row { grid-template-columns: 36px minmax(0, 1fr); gap: 4px 16px; }
+@media (max-width: 760px) {
+  .sec-label { display: flex; align-items: center; gap: 10px; }
+  .sec-ico { width: 34px; height: 34px; margin: 0; }
+  .page-ico { width: 60px; height: 60px; }
+}
+@media (max-width: 560px) { .row.ico-row { grid-template-columns: 32px minmax(0, 1fr); } .row-ico { width: 32px; height: 32px; } }
+/* the icon sheet on the brand page */
+.icon-sheet { display: grid; grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 18px 12px; }
+.icon-sheet figure { margin: 0; display: grid; justify-items: center; gap: 6px; font: 500 12px/1.3 var(--mono); color: var(--slate); }
+.icon-sheet .ico { width: 52px; height: 52px; color: var(--ink); }
