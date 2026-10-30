@@ -223,7 +223,7 @@ window.SITE = {
     {
       title: "Modern Java and the JVM",
       summary: "Get more out of the platform you already run.",
-      points: ["Upgrades to Java 21 and later", "Virtual threads and concurrency", "Profiling, GC and dependency hygiene"]
+      points: ["Upgrades to modern Java", "Virtual threads and concurrency", "Profiling, GC and dependency hygiene"]
     },
     {
       title: "Technical hiring",
@@ -254,7 +254,7 @@ window.SITE = {
       date: "2026-10-06",
       href: "https://www.linkedin.com/feed/update/urn:li:activity:7513103698508632064/",
       source: "LinkedIn",
-      summary: "JEP 540 lands in JDK 28 as an incubator: parse and navigate JSON with no library. Jackson keeps its job."
+      summary: "A small JSON API is coming to the JDK as an incubator: parse and navigate JSON with no library. Jackson keeps its job."
     },
     {
       title: "When a coding agent leaks your screenshots",
