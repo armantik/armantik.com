@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Disallow: /tools/
+Disallow: /writing/_template.html
+
+Sitemap: https://armantik.com/sitemap.xml

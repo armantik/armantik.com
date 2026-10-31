@@ -29,6 +29,8 @@ armantik.com/
 │   ├── og-image.png           the 1200x630 image shown when a page is shared on LinkedIn, Slack and the like
 │   └── favicon.svg            the mark
 ├── 404.html                   shown for missing pages
+├── sitemap.xml                the pages search engines should list (see Search engines below)
+├── robots.txt                 points search engines to the sitemap
 ├── CNAME                      tells GitHub Pages to serve this repo at armantik.com
 └── .nojekyll                  tells GitHub Pages to serve files as they are (keep it)
 ```
@@ -114,6 +116,14 @@ Add a block to `talks: [` in `content.js` (title, date, event, href, summary). T
 - **One item:** add `hidden: true` to its block. Remove the line (or set `false`) to show it.
 - **A link button:** leave its value empty in `links:` (for example `github: ""`) and the button disappears.
 - **Check hidden things before going public:** open `https://armantik.com/?preview`. Hidden sections and items appear with a yellow "hidden" tag. Visitors without `?preview` never see them. (It is a convenience, not a secret: anyone who knows the trick can use it, so don't put anything private in the repo.)
+
+## Search engines
+
+- **`sitemap.xml`** lists every page that should show up in search: home, How I help and its five pages, the Lab and each guide, Writing. When you add a page (a Lab guide, a help page, an article on your own site), add a `<url>` line for it and set `<lastmod>` to the date you changed it.
+- **`robots.txt`** points search engines to the sitemap and keeps them out of `tools/` and the article template.
+- **Every indexable page** has a `<title>` and a description written for what people search for ("system design interview prep", "Two Sum LeetCode 1 in Java", "Claude Code setup"), and a `<link rel="canonical">` with its address on armantik.com. Copy both when you add a page.
+- **Structured data** (the `<script type="application/ld+json">` block in the head) tells Google who you are and what each page is: a Person on the home page (no email or phone in it), a Service on each How I help page, a LearningResource on each Lab guide, and breadcrumbs. Check a page at [search.google.com/test/rich-results](https://search.google.com/test/rich-results).
+- **Kept out of search** with `noindex`: the card, the brand page, the old mentoring address and the 404 page.
 
 ## Light and dark theme
 

@@ -3,11 +3,12 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>AI-assisted development · Arman Ajabkhani</title>
-<meta name="description" content="Get more from Claude Code and other AI tools, for less money and with fewer surprises.">
+<title>Claude Code setup and AI-assisted development · Arman Ajabkhani</title>
+<meta name="description" content="Claude Code setup and training for developers and teams: CLAUDE.md and context, model choice, skills, MCP servers and hooks. Lower cost and better results.">
 <meta property="og:title" content="AI-assisted development with Arman Ajabkhani">
 <meta property="og:description" content="Get more from Claude Code and other AI tools, for less money and with fewer surprises.">
 <meta property="og:url" content="https://armantik.com/help/ai-assisted-development/">
+<link rel="canonical" href="https://armantik.com/help/ai-assisted-development/">
 <meta property="og:type" content="website">
 <meta property="og:image" content="https://armantik.com/assets/og-image.png">
 <meta property="og:image:width" content="1200">
@@ -15,6 +16,7 @@
 <meta property="og:image:alt" content="Arman Ajabkhani, Senior Backend Engineer: Java and Go, AI engineering">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="https://armantik.com/assets/og-image.png">
+<script type="application/ld+json">{"@context": "https://schema.org", "@graph": [{"@type": "Service", "@id": "https://armantik.com/help/ai-assisted-development/#service", "name": "Claude Code setup and AI-assisted development", "serviceType": "AI-assisted development training", "description": "Claude Code setup and training for developers and teams: CLAUDE.md and context, model choice, skills, MCP servers and hooks. Lower cost and better results.", "url": "https://armantik.com/help/ai-assisted-development/", "provider": {"@type": "Person", "@id": "https://armantik.com/#person", "name": "Arman Ajabkhani", "url": "https://armantik.com/"}, "areaServed": [{"@type": "City", "name": "Malmö"}, {"@type": "Country", "name": "Sweden"}], "availableLanguage": ["en", "fa"], "audience": {"@type": "Audience", "audienceType": "Developers and engineering teams using AI tools"}}, {"@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "armantik.com", "item": "https://armantik.com/"}, {"@type": "ListItem", "position": 2, "name": "How I help", "item": "https://armantik.com/help/"}, {"@type": "ListItem", "position": 3, "name": "AI-assisted development", "item": "https://armantik.com/help/ai-assisted-development/"}]}]}</script>
 <link rel="icon" href="../../assets/favicon.svg" type="image/svg+xml">
 <script src="../../assets/theme.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -46,7 +48,7 @@
     <span class="page-ico" aria-hidden="true"><svg class="ico" viewBox="-4 -4 56 56" aria-hidden="true" fill="none" stroke-linecap="round" stroke-linejoin="round"><path class="a" d="M29.0 12.0 C29.0 12.0, 29.0 12.0, 29.0 12.0 M29.0 12.0 C29.0 12.0, 29.0 12.0, 29.0 12.0 M32.0 13.6 C33.6 12.4, 34.9 10.5, 35.8 10.0 M32.0 13.0 C32.8 11.9, 33.4 11.0, 35.2 9.2 M39.8 4.1 C39.8 4.1, 39.8 4.1, 39.8 4.1 M39.8 4.1 C39.8 4.1, 39.8 4.1, 39.8 4.1 M35.7 13.7 C35.2 13.1, 39.3 9.5, 40.3 7.3 M35.5 14.1 C36.2 12.8, 38.7 10.3, 40.3 7.7 M38.2 16.9 C39.5 13.4, 40.4 13.2, 42.8 10.3 M37.1 16.3 C37.8 14.5, 39.4 13.1, 42.8 10.9 M38.7 19.8 C40.4 17.2, 40.8 15.6, 42.8 15.5 M38.7 19.4 C39.5 17.5, 40.9 16.5, 42.4 15.4 M42.2 15.8 C43.5 13.7, 44.2 12.8, 44.6 11.9 M41.7 15.4 C43.0 14.2, 43.6 13.9, 45.5 11.5" stroke-width="1.7"/><path d="M3.0 13.3 C8.9 16.9, 13.9 13.6, 32.2 14.0 M4.9 14.6 C11.1 14.6, 19.0 13.1, 33.0 13.0 M32.9 14.4 C33.9 21.5, 36.1 29.6, 34.9 38.7 M33.4 13.6 C32.9 21.4, 33.6 28.0, 34.3 39.9 M35.3 39.2 C24.1 37.8, 8.1 38.8, 5.2 37.8 M33.6 40.0 C25.3 40.2, 14.8 40.8, 3.6 40.5 M6.2 41.2 C5.5 30.4, 4.2 24.8, 2.2 13.3 M3.2 40.9 C3.1 33.3, 4.9 27.0, 3.3 13.0" stroke-width="2.9"/><path d="M1.5 18.0 C11.0 21.3, 15.7 19.3, 33.7 18.0 M2.9 19.7 C13.5 20.6, 21.7 21.0, 33.5 21.2" stroke-width="2.9"/><path d="M10.3 26.5 C10.2 26.8, 12.0 27.4, 14.3 29.8 M9.8 25.7 C11.3 27.1, 12.3 28.0, 14.0 29.7 M13.4 29.8 C12.2 30.1, 12.0 32.2, 9.8 33.4 M14.0 29.5 C13.1 30.5, 12.5 31.0, 9.7 33.2" stroke-width="2.9"/><path d="M16.9 34.2 C18.7 33.6, 19.5 34.0, 24.1 33.6 M16.9 34.1 C19.4 33.9, 22.5 33.5, 25.2 34.2" stroke-width="2.9"/><path d="M38 3 C38.5 7.2, 40.2 13.2, 44.5 11.3 M36.3 3.1 C41.3 10.5, 41.5 10.4, 47.5 11.1 M47 12 C43.5 12.4, 37.9 15.8, 38.4 19.9 M49.2 12.5 C40.5 14.8, 40.9 15.8, 39.4 19.6 M38 21 C35.0 12.9, 34.4 14.0, 30.4 13.4 M36.6 19.1 C37.0 17.8, 37.0 13.8, 31.1 13.5 M29 12 C34.0 13.5, 35.3 10.6, 37.7 1.3 M27.1 14.2 C35.5 11.5, 37.9 6.7, 40.4 2.5 M38 3 C38 3, 38 3, 38 3 M38 3 C38 3, 38 3, 38 3" stroke-width="2.9"/></svg></span>
     <h1>AI-assisted development</h1>
     <p>Get more from Claude Code and other AI tools, for less money and with fewer surprises.</p>
-    <p class="coords"><span>For developers and teams using AI tools, or about to</span><span>Remote or in person</span></p>
+    <p class="coords"><span>For developers and teams using AI tools, or about to</span><span>In person in Malmö, or remote</span></p>
   </header>
 
   <section class="sec" id="how" aria-labelledby="how-h">
