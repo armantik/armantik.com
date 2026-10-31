@@ -3,10 +3,10 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Senior Java Backend Interview Questions: 150 with Answers · Arman Ajabkhani</title>
-<meta name="description" content="150 senior Java backend interview questions with short answers, full explanations, code, follow-ups and the signs of a weak answer.">
-<meta property="og:title" content="Senior Java Backend Interview Questions: 150 with Answers">
-<meta property="og:description" content="150 senior Java backend interview questions with short answers, full explanations, code, follow-ups and the signs of a weak answer.">
+<title>Senior Java Backend Interview Questions: 243 with Answers · Arman Ajabkhani</title>
+<meta name="description" content="243 senior Java backend interview questions, Basic and Advanced, with short answers, full explanations, code, follow-ups and the signs of a weak answer.">
+<meta property="og:title" content="Senior Java Backend Interview Questions: 243 with Answers">
+<meta property="og:description" content="243 senior Java backend interview questions, Basic and Advanced, with short answers, full explanations, code, follow-ups and the signs of a weak answer.">
 <meta property="og:url" content="https://armantik.com/lab/java-backend-guide.html">
 <link rel="canonical" href="https://armantik.com/lab/java-backend-guide.html">
 <meta property="og:type" content="article">
@@ -16,7 +16,7 @@
 <meta property="og:image:alt" content="Arman Ajabkhani, Senior Backend Engineer: Java and Go, AI engineering">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="https://armantik.com/assets/og-image.png">
-<script type="application/ld+json">{"@context": "https://schema.org", "@graph": [{"@type": "LearningResource", "@id": "https://armantik.com/lab/java-backend-guide.html#guide", "name": "Senior Java Backend Interview Questions: 150 with Answers", "description": "150 senior Java backend interview questions with short answers, full explanations, code, follow-ups and the signs of a weak answer.", "url": "https://armantik.com/lab/java-backend-guide.html", "author": {"@type": "Person", "@id": "https://armantik.com/#person", "name": "Arman Ajabkhani", "url": "https://armantik.com/"}, "inLanguage": "en", "isAccessibleForFree": true, "learningResourceType": "Interactive guide", "about": ["Java interview questions", "Backend interview", "Java"]}, {"@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "armantik.com", "item": "https://armantik.com/"}, {"@type": "ListItem", "position": 2, "name": "Learning Lab", "item": "https://armantik.com/lab/"}, {"@type": "ListItem", "position": 3, "name": "Senior Java Backend Interview Questions: 150 with Answers", "item": "https://armantik.com/lab/java-backend-guide.html"}]}]}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@graph": [{"@type": "LearningResource", "@id": "https://armantik.com/lab/java-backend-guide.html#guide", "name": "Senior Java Backend Interview Questions: 243 with Answers", "description": "243 senior Java backend interview questions, Basic and Advanced, with short answers, full explanations, code, follow-ups and the signs of a weak answer.", "url": "https://armantik.com/lab/java-backend-guide.html", "author": {"@type": "Person", "@id": "https://armantik.com/#person", "name": "Arman Ajabkhani", "url": "https://armantik.com/"}, "inLanguage": "en", "isAccessibleForFree": true, "learningResourceType": "Interactive guide", "about": ["Java interview questions", "Backend interview", "Java"]}, {"@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "armantik.com", "item": "https://armantik.com/"}, {"@type": "ListItem", "position": 2, "name": "Learning Lab", "item": "https://armantik.com/lab/"}, {"@type": "ListItem", "position": 3, "name": "Senior Java Backend Interview Questions: 243 with Answers", "item": "https://armantik.com/lab/java-backend-guide.html"}]}]}</script>
 <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
 <script src="../assets/theme.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -39,8 +39,6 @@
   .seg button { appearance: none; border: 0; background: var(--sheet); color: var(--slate); font: 500 14px var(--body); padding: 0 12px; min-height: 40px; cursor: pointer; }
   .seg button + button { border-left: 1px solid var(--mist-strong); }
   .seg button[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
-  .jg-check { display: inline-flex; align-items: center; gap: 8px; font: 500 14px var(--body); color: var(--slate); cursor: pointer; min-height: 40px; }
-  .jg-check input { width: 18px; height: 18px; accent-color: var(--petrol); }
   .jg-count { font: 400 13px var(--mono); color: var(--ink-3); margin-left: auto; font-variant-numeric: tabular-nums; }
   .jg-small { min-height: 40px; padding: 0 12px; font-size: 14px; }
 
@@ -53,10 +51,8 @@
   .q-main { display: grid; gap: 6px; min-width: 0; }
   .q-text { font: 600 17.5px/1.4 var(--display); }
   .q-meta { display: flex; flex-wrap: wrap; gap: 6px 12px; font: 400 12.5px/1.4 var(--mono); color: var(--ink-3); align-items: center; }
-  .dots { display: inline-flex; gap: 3px; margin-right: 5px; vertical-align: 1px; }
-  .dots i { width: 6px; height: 6px; border-radius: 50%; background: var(--mist-strong); }
-  .dots i.on { background: var(--petrol); }
-  .must { font: 500 11.5px/1 var(--mono); padding: 4px 7px; border-radius: 4px; background: var(--wash); color: var(--petrol); }
+  .lvl { font: 500 11.5px/1 var(--mono); padding: 4px 7px; border-radius: 4px; background: var(--wash); color: var(--petrol); border: 1px solid transparent; }
+  .lvl.adv { background: transparent; color: var(--ink); border-color: var(--mist-strong); }
   .chev { font: 400 16px/1.6 var(--mono); color: var(--ink-3); transition: transform .15s; }
   .q[open] .chev { transform: rotate(90deg); }
   .q-body { padding: 0 0 26px 70px; display: grid; gap: 16px; min-width: 0; }
@@ -102,8 +98,8 @@
   <header class="page-head">
     <p class="crumb"><a href="../index.html">armantik.com</a> / <a href="index.html">lab</a> / java</p>
     <h1>Senior Java Backend Guide</h1>
-    <p>150 questions a senior Java backend engineer should be able to answer, from collections and concurrency to Spring, databases, Kubernetes and production troubleshooting. Each one has a short answer, the full explanation, code, follow-up questions and the signs of a weak answer.</p>
-    <p class="coords"><span>150 questions</span><span>21 topics</span><span>118 marked must know</span></p>
+    <p>243 questions a Java backend engineer gets asked, from language fundamentals and concurrency to Spring, databases, Kafka, Kubernetes and production troubleshooting. Topics run in learning order, and inside each topic the Basic questions come first, then the Advanced ones. Each question has a short answer, the full explanation, code, follow-up questions and the signs of a weak answer.</p>
+    <p class="coords"><span id="jg-total">243 questions</span><span id="jg-topics">22 topics</span><span id="jg-split">139 basic, 104 advanced</span></p>
   </header>
 
   <div class="jg-bar">
@@ -113,37 +109,14 @@
       <label class="sr" for="jg-cat" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)">Topic</label>
       <select class="jg-select" id="jg-cat">
           <option value="All">All topics</option>
-          <option value="Java Collections">Java Collections</option>
-          <option value="Java Core">Java Core</option>
-          <option value="Streams & Functional">Streams & Functional</option>
-          <option value="Concurrency">Concurrency</option>
-          <option value="OOP & SOLID">OOP & SOLID</option>
-          <option value="Design Patterns">Design Patterns</option>
-          <option value="JVM & Performance">JVM & Performance</option>
-          <option value="Spring & Spring Boot">Spring & Spring Boot</option>
-          <option value="JPA & Hibernate">JPA & Hibernate</option>
-          <option value="SQL & Database">SQL & Database</option>
-          <option value="NoSQL / MongoDB">NoSQL / MongoDB</option>
-          <option value="Redis & Caching">Redis & Caching</option>
-          <option value="REST API Design">REST API Design</option>
-          <option value="Microservice Architecture">Microservice Architecture</option>
-          <option value="Distributed Systems">Distributed Systems</option>
-          <option value="RabbitMQ">RabbitMQ</option>
-          <option value="Security">Security</option>
-          <option value="Observability">Observability</option>
-          <option value="Production Troubleshooting">Production Troubleshooting</option>
-          <option value="Docker, Kubernetes & CI/CD">Docker, Kubernetes & CI/CD</option>
-          <option value="Testing">Testing</option>
       </select>
     </div>
     <div class="jg-row">
-      <div class="seg" id="jg-diff" role="group" aria-label="Difficulty">
+      <div class="seg" id="jg-level" role="group" aria-label="Level">
         <button type="button" data-v="All" aria-pressed="true">All</button>
-        <button type="button" data-v="Easy" aria-pressed="false">Easy</button>
-        <button type="button" data-v="Medium" aria-pressed="false">Medium</button>
-        <button type="button" data-v="Hard" aria-pressed="false">Hard</button>
+        <button type="button" data-v="Basic" aria-pressed="false">Basic</button>
+        <button type="button" data-v="Advanced" aria-pressed="false">Advanced</button>
       </div>
-      <label class="jg-check"><input type="checkbox" id="jg-must"> Must know only</label>
       <button class="btn jg-small" type="button" id="jg-random">Random question</button>
       <button class="copy-btn" type="button" id="jg-close">Collapse all</button>
       <span class="jg-count" id="jg-count" aria-live="polite"></span>
@@ -163,8 +136,7 @@
 (function () {
   var DATA = window.JAVA_GUIDE || [];
   var LANG = { java: 'Java', sql: 'SQL', yaml: 'YAML', bash: 'Shell', http: 'HTTP', json: 'JSON', text: 'Notes', properties: 'Properties', dockerfile: 'Dockerfile' };
-  var DOTS = { Easy: 1, Medium: 2, Hard: 3 };
-  var state = { q: '', cat: 'All', diff: 'All', must: false };
+  var state = { q: '', cat: 'All', level: 'All' };
   var $ = function (id) { return document.getElementById(id); };
 
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
@@ -252,8 +224,19 @@ function buildRules() {
     return out + esc(src.slice(last));
   }
 
+  /* topics in the order they appear in the data, and the counts in the header */
+  var TOPICS = [], basic = 0;
   DATA.forEach(function (x) {
-    var parts = [x.question, x.category, x.tldr].concat(x.keyPoints, x.answer, x.extra, x.redFlags);
+    if (TOPICS.indexOf(x.category) < 0) TOPICS.push(x.category);
+    if (x.level === 'Basic') basic++;
+  });
+  $('jg-cat').insertAdjacentHTML('beforeend', TOPICS.map(function (t) { return '<option value="' + esc(t) + '">' + esc(t) + '</option>'; }).join(''));
+  $('jg-total').textContent = DATA.length + ' questions';
+  $('jg-topics').textContent = TOPICS.length + ' topics';
+  $('jg-split').textContent = basic + ' basic, ' + (DATA.length - basic) + ' advanced';
+
+  DATA.forEach(function (x) {
+    var parts = [x.question, x.category, x.level, x.tldr].concat(x.keyPoints, x.answer, x.extra, x.redFlags);
     x.examples.forEach(function (e) { parts.push(e.title, e.note || ''); });
     x.followUps.forEach(function (f) { parts.push(f.q, f.a); });
     x.hay = parts.join(' ').toLowerCase().replace(/[`*]/g, '');
@@ -261,8 +244,7 @@ function buildRules() {
 
   function matches(x) {
     if (state.cat !== 'All' && x.category !== state.cat) return false;
-    if (state.diff !== 'All' && x.difficulty !== state.diff) return false;
-    if (state.must && !x.mustKnow) return false;
+    if (state.level !== 'All' && x.level !== state.level) return false;
     var q = state.q.trim().toLowerCase();
     if (!q) return true;
     return q.split(/\s+/).every(function (t) {
@@ -293,13 +275,11 @@ function buildRules() {
   }
 
   function item(x) {
-    var d = DOTS[x.difficulty] || 0, dots = '';
-    for (var i = 1; i <= 3; i++) dots += '<i class="' + (i <= d ? 'on' : '') + '"></i>';
     return '<li><details class="q" id="q-' + x.id + '" data-id="' + x.id + '"><summary>' +
       '<span class="q-num">#' + x.id + '</span>' +
       '<span class="q-main"><span class="q-text">' + inline(x.question) + '</span>' +
-      '<span class="q-meta"><span>' + esc(x.category) + '</span><span><span class="dots" aria-hidden="true">' + dots + '</span>' + esc(x.difficulty) + '</span>' +
-      (x.mustKnow ? '<span class="must">must know</span>' : '') + '</span></span>' +
+      '<span class="q-meta"><span>' + esc(x.category) + '</span>' +
+      '<span class="lvl' + (x.level === 'Advanced' ? ' adv' : '') + '">' + esc(x.level) + '</span></span></span>' +
       '<span class="chev" aria-hidden="true">›</span></summary><div class="q-body"></div></details></li>';
   }
 
@@ -315,12 +295,12 @@ function buildRules() {
     if (r) r.addEventListener('click', reset);
   }
   function reset() {
-    state = { q: '', cat: 'All', diff: 'All', must: false };
-    $('jg-q').value = ''; $('jg-cat').value = 'All'; $('jg-must').checked = false; setDiff('All'); render();
+    state = { q: '', cat: 'All', level: 'All' };
+    $('jg-q').value = ''; $('jg-cat').value = 'All'; setLevel('All'); render();
   }
-  function setDiff(v) {
-    state.diff = v;
-    Array.prototype.forEach.call($('jg-diff').querySelectorAll('button'), function (b) { b.setAttribute('aria-pressed', String(b.getAttribute('data-v') === v)); });
+  function setLevel(v) {
+    state.level = v;
+    Array.prototype.forEach.call($('jg-level').querySelectorAll('button'), function (b) { b.setAttribute('aria-pressed', String(b.getAttribute('data-v') === v)); });
   }
 
   $('jg-list').addEventListener('toggle', function (e) {
@@ -332,8 +312,7 @@ function buildRules() {
 
   $('jg-q').addEventListener('input', function (e) { state.q = e.target.value; render(); });
   $('jg-cat').addEventListener('change', function (e) { state.cat = e.target.value; render(); });
-  $('jg-must').addEventListener('change', function (e) { state.must = e.target.checked; render(); });
-  $('jg-diff').addEventListener('click', function (e) { var b = e.target.closest('button'); if (b) { setDiff(b.getAttribute('data-v')); render(); } });
+  $('jg-level').addEventListener('click', function (e) { var b = e.target.closest('button'); if (b) { setLevel(b.getAttribute('data-v')); render(); } });
   $('jg-close').addEventListener('click', function () { Array.prototype.forEach.call(document.querySelectorAll('.q[open]'), function (d) { d.open = false; }); });
   $('jg-random').addEventListener('click', function () {
     var pool = DATA.filter(matches);
