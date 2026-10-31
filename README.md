@@ -15,13 +15,22 @@ armantik.com/
 ├── writing/
 │   ├── index.html             all articles, posts and talks, built from content.js
 │   └── _template.html         copy this to write an article on your own site
+├── help/
+│   ├── index.html             How I help: the five ways, as tiles (switch: show.help)
+│   └── */index.html           one short page each: interview prep, mentoring, technical hiring, workshops, AI-assisted development
+├── mentoring/index.html       old address, forwards to help/
+├── card/index.html            landing page for the NFC tag and the QR code on the business card (noindex; open armantik.com/card/)
 ├── brand/index.html           colors, type and the mark (not in the menu; open armantik.com/brand/)
 ├── assets/
 │   ├── style.css              shared look; change a color once and every page follows
 │   ├── site.js                builds the lists from content.js (no need to edit)
 │   ├── theme.js               the light and dark switch (no need to edit)
+│   ├── icons/                 hand-drawn icons as separate SVG files (for print, slides and posts)
+│   ├── og-image.png           the 1200x630 image shown when a page is shared on LinkedIn, Slack and the like
 │   └── favicon.svg            the mark
 ├── 404.html                   shown for missing pages
+├── sitemap.xml                the pages search engines should list (see Search engines below)
+├── robots.txt                 points search engines to the sitemap
 ├── CNAME                      tells GitHub Pages to serve this repo at armantik.com
 └── .nojekyll                  tells GitHub Pages to serve files as they are (keep it)
 ```
@@ -58,9 +67,31 @@ Tip: inside `<pre><code>`, write `&lt;` instead of `<` and `&gt;` instead of `>`
 
 The "How I can help" cards come from `services: [` in `content.js`. Each card has a title, one sentence and up to four points. The card titles are also listed in the Contact section, under the consulting line. `show.services: false` hides the section, that list and the consulting line together.
 
-### Your email address
+### Your email address and phone number
 
-The address never appears in the page source, so bots that scan pages for addresses can't collect it. It's stored Base64 encoded in `links.emailEncoded` in `content.js` and put together in the browser. To change it, encode the new address (for example at base64encode.org) and paste the result there.
+Neither is written anywhere as text, so spam bots and crawlers can't collect them. Both are stored as scrambled bytes (reversed, then XOR'ed with a key in `assets/site.js`) and put together in the browser only when a person is there:
+
+- **Email** (`links.emailBytes` in `content.js`): pages show the address as an image, `assets/email.svg`, drawn from the letter shapes so there is no text to scrape. Email me and Copy email decode the address only when they are used. If the address changes, redraw the image too (ask Claude, or render the new address in JetBrains Mono Medium and convert the text to outlines).
+- **Phone** (`C` in the script at the bottom of `card/index.html`, the only page that has it): the Call or text button says "Show number". The first tap shows the number, the second one calls. Save contact builds its contact file when it is tapped.
+
+To change either one, open the browser console on any page of the site, run this with the new value, and paste the result into `emailBytes` or `C`:
+
+```js
+AA.scramble = function (s) { var K = [133, 28, 142, 76, 200]; return JSON.stringify(s.split("").map(function (c, i) { return c.charCodeAt(0) ^ K[i % K.length]; }).reverse()); };
+AA.scramble("+46700000000")
+```
+
+Write the phone number with country code and no spaces. Set `emailBytes` or `C` to `[]` to hide that one.
+
+### The How I help pages
+
+Each page in `help/` has the same four parts: a one line summary, a "How I can help" paragraph with a short list, "The plan" (a numbered step diagram) and "Interested?" with the contact buttons. To change a step in the plan, edit its `<li>` inside `<ol class="plan">`: `s` is the step name, `d` what happens, `w` how long or when. Three to five steps fit best. `show.help: false` in `content.js` hides the links to these pages in the menus, on the home page and on the card.
+
+### Hand-drawn icons
+
+Every page uses the same marker style icons, drawn with rough.js: one per section in the left rail, a large one above the title of each inner page, and smaller ones on the Lab cards, the How I help tiles and rows, and the buttons. They are inline SVG, so their lines take the text color (dark on light, light on dark) and the scribble fill is petrol (styles: `.ico`, `.sec-ico`, `.page-ico` in `assets/style.css`). The Lab track icons on the home page and the Lab page come from `<template id="ico-...">` blocks near the bottom of those pages. All icons are shown on `/brand/`.
+
+To use an icon somewhere new, copy its SVG from `tools/icons.json` and wrap it, for example `<span class="sec-ico" aria-hidden="true">...</span>` before a `/path` label. Copies with fixed colors for print and slides are in `assets/icons/`. To redraw or add one: `npm install roughjs`, edit the shapes in `tools/icons.js`, and run `node tools/icons.js assets/style.css`.
 
 ### A talk
 
@@ -85,6 +116,14 @@ Add a block to `talks: [` in `content.js` (title, date, event, href, summary). T
 - **One item:** add `hidden: true` to its block. Remove the line (or set `false`) to show it.
 - **A link button:** leave its value empty in `links:` (for example `github: ""`) and the button disappears.
 - **Check hidden things before going public:** open `https://armantik.com/?preview`. Hidden sections and items appear with a yellow "hidden" tag. Visitors without `?preview` never see them. (It is a convenience, not a secret: anyone who knows the trick can use it, so don't put anything private in the repo.)
+
+## Search engines
+
+- **`sitemap.xml`** lists every page that should show up in search: home, How I help and its five pages, the Lab and each guide, Writing. When you add a page (a Lab guide, a help page, an article on your own site), add a `<url>` line for it and set `<lastmod>` to the date you changed it.
+- **`robots.txt`** points search engines to the sitemap and keeps them out of `tools/` and the article template.
+- **Every indexable page** has a `<title>` and a description written for what people search for ("system design interview prep", "Two Sum LeetCode 1 in Java", "Claude Code setup"), and a `<link rel="canonical">` with its address on armantik.com. Copy both when you add a page.
+- **Structured data** (the `<script type="application/ld+json">` block in the head) tells Google who you are and what each page is: a Person on the home page (no email or phone in it), a Service on each How I help page, a LearningResource on each Lab guide, and breadcrumbs. Check a page at [search.google.com/test/rich-results](https://search.google.com/test/rich-results).
+- **Kept out of search** with `noindex`: the card, the brand page, the old mentoring address and the 404 page.
 
 ## Light and dark theme
 

@@ -4,10 +4,20 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style>
-<title>Logger Rate Limiter Visualizer · Arman Ajabkhani</title>
-<meta name="description" content="Three ways to suppress repeated log messages within 10 seconds, and how much memory each keeps.">
-<meta property="og:title" content="Logger Rate Limiter Visualizer">
-<meta property="og:description" content="Three ways to suppress repeated log messages within 10 seconds, and how much memory each keeps.">
+<title>Logger Rate Limiter (LeetCode 359) in Java, Visualized · Arman Ajabkhani</title>
+<meta name="description" content="Logger Rate Limiter (LeetCode 359) three ways in Java: suppress repeated log messages within 10 seconds, and see how much memory each one keeps.">
+<meta property="og:title" content="Logger Rate Limiter (LeetCode 359) in Java, Visualized">
+<meta property="og:description" content="Logger Rate Limiter (LeetCode 359) three ways in Java: suppress repeated log messages within 10 seconds, and see how much memory each one keeps.">
+<meta property="og:url" content="https://armantik.com/lab/logger-rate-limiter.html">
+<link rel="canonical" href="https://armantik.com/lab/logger-rate-limiter.html">
+<meta property="og:type" content="article">
+<meta property="og:image" content="https://armantik.com/assets/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Arman Ajabkhani, Senior Backend Engineer: Java and Go, AI engineering">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://armantik.com/assets/og-image.png">
+<script type="application/ld+json">{"@context": "https://schema.org", "@graph": [{"@type": "LearningResource", "@id": "https://armantik.com/lab/logger-rate-limiter.html#guide", "name": "Logger Rate Limiter (LeetCode 359) in Java, Visualized", "description": "Logger Rate Limiter (LeetCode 359) three ways in Java: suppress repeated log messages within 10 seconds, and see how much memory each one keeps.", "url": "https://armantik.com/lab/logger-rate-limiter.html", "author": {"@type": "Person", "@id": "https://armantik.com/#person", "name": "Arman Ajabkhani", "url": "https://armantik.com/"}, "inLanguage": "en", "isAccessibleForFree": true, "learningResourceType": "Interactive guide", "about": ["Logger Rate Limiter", "LeetCode", "Hash map", "Java"]}, {"@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "armantik.com", "item": "https://armantik.com/"}, {"@type": "ListItem", "position": 2, "name": "Learning Lab", "item": "https://armantik.com/lab/"}, {"@type": "ListItem", "position": 3, "name": "Logger Rate Limiter (LeetCode 359) in Java, Visualized", "item": "https://armantik.com/lab/logger-rate-limiter.html"}]}]}</script>
 <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
 <script src="../assets/theme.js"></script>
 <style>
@@ -55,11 +65,11 @@
     --accent: #2f6fd0;
     --accent-soft: #e2ebfa;
     --cool: rgba(47, 111, 208, 0.13);
-    --ok: #1d8455;
+    --ok: #1a774d;
     --ok-soft: #ddf2e6;
     --bad: #c23d2b;
     --bad-soft: #fbe6e2;
-    --old: #a8651f;
+    --old: #975b1c;
     --old-soft: #f7ead9;
     --term: #eef1ef;
     --display: "Bricolage Grotesque", "Avenir Next", system-ui, sans-serif;

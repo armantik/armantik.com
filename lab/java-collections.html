@@ -4,10 +4,20 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style>
-<title>Java Collections Field Guide · Arman Ajabkhani</title>
-<meta name="description" content="Every Java collection worth knowing: operation costs, the problems each solves, and common pitfalls.">
-<meta property="og:title" content="Java Collections Field Guide">
-<meta property="og:description" content="Every Java collection worth knowing: operation costs, the problems each solves, and common pitfalls.">
+<title>Java Collections Field Guide: Big O Cheat Sheet and Pitfalls · Arman Ajabkhani</title>
+<meta name="description" content="Every Java collection worth knowing: the Big O cost of each operation, the problems each one solves, and the common pitfalls.">
+<meta property="og:title" content="Java Collections Field Guide: Big O Cheat Sheet and Pitfalls">
+<meta property="og:description" content="Every Java collection worth knowing: the Big O cost of each operation, the problems each one solves, and the common pitfalls.">
+<meta property="og:url" content="https://armantik.com/lab/java-collections.html">
+<link rel="canonical" href="https://armantik.com/lab/java-collections.html">
+<meta property="og:type" content="article">
+<meta property="og:image" content="https://armantik.com/assets/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Arman Ajabkhani, Senior Backend Engineer: Java and Go, AI engineering">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://armantik.com/assets/og-image.png">
+<script type="application/ld+json">{"@context": "https://schema.org", "@graph": [{"@type": "LearningResource", "@id": "https://armantik.com/lab/java-collections.html#guide", "name": "Java Collections Field Guide: Big O Cheat Sheet and Pitfalls", "description": "Every Java collection worth knowing: the Big O cost of each operation, the problems each one solves, and the common pitfalls.", "url": "https://armantik.com/lab/java-collections.html", "author": {"@type": "Person", "@id": "https://armantik.com/#person", "name": "Arman Ajabkhani", "url": "https://armantik.com/"}, "inLanguage": "en", "isAccessibleForFree": true, "learningResourceType": "Interactive guide", "about": ["Java collections", "Big O", "Data structures", "Java"]}, {"@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "armantik.com", "item": "https://armantik.com/"}, {"@type": "ListItem", "position": 2, "name": "Learning Lab", "item": "https://armantik.com/lab/"}, {"@type": "ListItem", "position": 3, "name": "Java Collections Field Guide: Big O Cheat Sheet and Pitfalls", "item": "https://armantik.com/lab/java-collections.html"}]}]}</script>
 <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
 <script src="../assets/theme.js"></script>
 <style>
@@ -54,10 +64,10 @@
     --accent: #2457d6;
     --accent-soft: #e3eafc;
     --code-bg: #eff2f6;
-    --fast: #1d8455; --fast-soft: #ddf2e6;
-    --mid: #a86a12;  --mid-soft: #fbf0dc;
-    --slow: #c23d2b; --slow-soft: #fbe6e2;
-    --f-list: #2f6fd0; --f-queue: #0f8a7e; --f-set: #8a4fd0; --f-map: #c0602a; --f-conc: #b8366e; --f-special: #5f6b2a;
+    --fast: #1a774d; --fast-soft: #ddf2e6;
+    --mid: #986010;  --mid-soft: #fbf0dc;
+    --slow: #bc3b2a; --slow-soft: #fbe6e2;
+    --f-list: #2f6fd0; --f-queue: #0e7e73; --f-set: #8a4fd0; --f-map: #af5826; --f-conc: #b8366e; --f-special: #5f6b2a;
     --display: "Bricolage Grotesque", "Avenir Next", system-ui, sans-serif;
     --body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
     --mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;

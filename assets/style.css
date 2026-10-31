@@ -328,3 +328,132 @@ dl.rows { margin: 0; }
 .contact-lead b { color: var(--petrol); font-weight: 700; }
 .topics a { color: var(--ink); text-decoration: none; }
 .topics a:hover { color: var(--petrol); text-decoration: underline; }
+
+/* "Show email" placeholder: the address is put together after the first tap, scroll or key press */
+.email-reveal {
+  padding: 0; border: 0; background: none; cursor: pointer; text-align: left;
+  color: var(--petrol); text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 4px;
+}
+.email-reveal:hover { text-decoration-thickness: 2px; }
+
+/* ---------- plan diagram on the help pages: numbered steps joined by a line ----------
+   Across on wide screens, down on phones. <ol class="plan"><li><span class="s">Step</span>
+   <span class="d">What happens</span><span class="w">when</span></li>...</ol> */
+.plan { list-style: none; margin: 4px 0 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(0, 1fr)); counter-reset: step; }
+.plan li { position: relative; display: grid; gap: 4px; align-content: start; padding: 42px 20px 0 0; counter-increment: step; min-width: 0; }
+.plan li::before {
+  content: counter(step); position: absolute; top: 0; left: 0; z-index: 1;
+  width: 28px; height: 28px; border-radius: 999px; display: grid; place-items: center;
+  background: var(--petrol); color: var(--on-petrol); font: 500 13px/1 var(--mono);
+}
+.plan li::after { content: ""; position: absolute; top: 13px; left: 28px; right: 0; height: 2px; background: var(--mist-strong); }
+.plan li:last-child::after { display: none; }
+.plan .s { font-weight: 600; line-height: 1.35; }
+.plan .d { font-size: 15px; line-height: 1.5; color: var(--slate); }
+.plan .w { font: 500 12px/1.4 var(--mono); color: var(--petrol); margin-top: 2px; }
+@media (max-width: 760px) {
+  .plan { grid-template-columns: minmax(0, 1fr); }
+  .plan li { padding: 2px 0 24px 46px; }
+  .plan li:last-child { padding-bottom: 0; }
+  .plan li::after { top: 28px; bottom: 0; left: 13px; right: auto; width: 2px; height: auto; }
+}
+.more-help { display: flex; flex-wrap: wrap; gap: 6px 18px; font: 500 14px/1.5 var(--mono); }
+.more-help span { color: var(--ink-3); }
+/* links inside a help page list read as links (the contact list's .topics a style is plain text) */
+.topics span a { color: var(--petrol); text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px; }
+
+/* ---------- levels diagram (AI-assisted development): a staircase, each level a taller step ----------
+   On narrow screens the steps turn into bars that grow wider. Level 1 carries the "most people stop here" flag. */
+.levels { list-style: none; margin: 6px 0 4px; padding: 0; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 0 10px; }
+.levels li { display: grid; grid-template-rows: auto auto 1fr; gap: 4px; align-content: start; min-width: 0; }
+.levels .rise { height: 172px; display: flex; flex-direction: column; justify-content: flex-end; gap: 8px; border-bottom: 2px solid var(--mist-strong); }
+.levels .step {
+  height: calc(var(--i) * 28px + 4px); display: flex; align-items: flex-start; padding: 8px 10px;
+  background: var(--wash); border-top: 3px solid var(--petrol); border-radius: 4px 4px 0 0;
+  font: 500 12px/1 var(--mono); color: var(--petrol); white-space: nowrap;
+}
+.levels .stop .step { background: var(--flag-wash); border-top-color: var(--flag); color: var(--flag); }
+.levels .flag { font: 500 12px/1.3 var(--mono); color: var(--flag); }
+.levels .lv-t { font-weight: 600; line-height: 1.35; margin-top: 8px; }
+.levels .lv-d { font-size: 14.5px; line-height: 1.5; color: var(--slate); }
+@media (max-width: 1024px) {
+  .levels { grid-template-columns: minmax(0, 1fr); gap: 20px; }
+  .levels li { grid-template-rows: none; }
+  .levels .rise { height: auto; flex-direction: row-reverse; justify-content: flex-end; align-items: center; gap: 10px; border-bottom: 0; }
+  .levels .step {
+    height: 30px; width: calc(var(--i) * 18% + 10%); flex: none; align-items: center;
+    border-top: 0; border-left: 3px solid var(--petrol); border-radius: 0 4px 4px 0;
+  }
+  .levels .stop .step { border-left-color: var(--flag); }
+  .levels .lv-t { margin-top: 4px; }
+}
+
+/* ---------- hand-drawn icons (made with rough.js): ink follows the text color, the scribble fill is petrol ---------- */
+.ico { display: block; flex: none; overflow: visible; }
+.ico path { stroke: currentColor; }
+.ico .a { stroke: var(--petrol); opacity: .55; }
+.btn.primary .ico .a { stroke: var(--on-petrol); opacity: .45; }
+
+/* ---------- where the hand-drawn icons sit ----------
+   Section rail: a small icon on the same line as the /path label, and that line is centred on the first
+   line of the section heading, so icon, label and heading read as one row. Inner pages: one icon above
+   the title. Cards, tiles and rows: the icon leads, centred on the first line of the title. */
+.sec-label {
+  display: flex; align-items: center; gap: 10px; align-self: start; padding-top: 0;
+  min-height: calc(clamp(26px, 3.2vw, 34px) * 1.15);
+}
+.sec-ico { display: block; flex: none; width: 30px; height: 30px; color: var(--ink); }
+.page-ico { display: block; width: 56px; height: 56px; color: var(--ink); }
+.cat-ico, .tile-ico { display: block; width: 36px; height: 36px; color: var(--ink); }
+.row-ico { display: block; width: 28px; height: 28px; color: var(--ink); }
+.sec-ico .ico, .page-ico .ico, .cat-ico .ico, .tile-ico .ico, .row-ico .ico { width: 100%; height: 100%; }
+.btn .ico { width: 20px; height: 20px; }
+.row.ico-row { grid-template-columns: 28px minmax(0, 1fr); gap: 4px 16px; }
+@media (max-width: 760px) {
+  .sec-label { min-height: 0; }
+  .sec-ico { width: 28px; height: 28px; }
+  .page-ico { width: 48px; height: 48px; }
+}
+@media (max-width: 560px) { .row.ico-row { grid-template-columns: 28px minmax(0, 1fr); } }
+/* the icon sheet on the brand page */
+.icon-sheet { display: grid; grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 18px 12px; }
+.icon-sheet figure { margin: 0; display: grid; justify-items: center; gap: 6px; font: 500 12px/1.3 var(--mono); color: var(--slate); }
+.icon-sheet .ico { width: 52px; height: 52px; color: var(--ink); }
+
+/* Copy email as an icon, with a faint caption under it ("copied" for a moment after a click) */
+.copy-ico {
+  display: inline-grid; justify-items: center; gap: 3px; padding: 4px 6px; margin: 0;
+  border: 0; border-radius: var(--radius); background: none; color: var(--ink); cursor: pointer;
+}
+.copy-ico .ico { width: 26px; height: 26px; }
+.copy-cap { font: 500 10px/1.2 var(--mono); letter-spacing: 0.02em; color: var(--ink-3); opacity: .6; transition: opacity .15s; }
+.copy-ico:hover { color: var(--petrol); }
+.copy-ico:hover .copy-cap, .copy-ico:focus-visible .copy-cap, .copy-ico.is-done .copy-cap { opacity: 1; color: var(--petrol); }
+
+/* Links as icons with a faint caption under them, the same style as Copy email: no border, no box.
+   <a class="ico-link" aria-label="LinkedIn"><svg class="ico">...</svg><span class="ico-cap">linkedin</span></a> */
+.ico-link {
+  display: inline-grid; justify-items: center; gap: 3px; padding: 4px 6px; border-radius: var(--radius);
+  color: var(--ink); text-decoration: none;
+}
+.ico-link .ico { width: 26px; height: 26px; }
+.ico-cap { font: 500 10px/1.2 var(--mono); letter-spacing: 0.02em; color: var(--ink-3); opacity: .6; transition: opacity .15s; }
+.ico-link:hover { color: var(--petrol); }
+.ico-link:hover .ico-cap, .ico-link:focus-visible .ico-cap { opacity: 1; color: var(--petrol); }
+.contact-line { gap: 10px 12px; }
+.links .ico-link { margin-left: 4px; }
+
+/* LinkedIn as a text mark in the site's mono font: [in], brackets in petrol, same box as the icons */
+.txt-mark { display: flex; align-items: center; justify-content: center; white-space: nowrap; height: 26px; min-width: 26px; font: 600 15px/1 var(--mono); letter-spacing: -0.03em; color: currentColor; }
+.txt-mark b { color: var(--petrol); font-weight: 600; }
+.ico-link:hover .txt-mark b { color: inherit; }
+.btn.primary .txt-mark b { color: inherit; opacity: .7; }
+
+/* The email address as an image (assets/email.svg): letter shapes in JetBrains Mono, not text, so
+   scrapers can't read it. It is used as a mask, so it takes the text color in light and dark. */
+.email-img {
+  display: inline-block; flex: none; vertical-align: middle;
+  font-size: clamp(17px, 2.4vw, 22px); width: 10.8em; height: 1.32em; max-width: 100%;
+  background: var(--ink);
+  -webkit-mask: url(email.svg) no-repeat left center / contain; mask: url(email.svg) no-repeat left center / contain;
+}

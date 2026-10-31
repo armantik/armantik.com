@@ -24,15 +24,18 @@ window.SITE = {
     writing: true,       // articles and posts
     talks: false,        // conference talks and meetups
     kairos: true,        // the "Now building" section
-    services: true,      // the "How I can help" section
+    services: false,     // the "How I can help" section (off until side work is approved)
+    help: true,          // the "How I help" pages (/help/): their links in the menus, on the home page and on the card
     persianName: false   // your name in Persian in the footer (spelling is ready, just switch it on)
   },
 
   /* ---------- LINKS: leave a value empty ("") to hide that button ---------- */
   links: {
-    // Your email is not written anywhere in plain text, so spam bots that scan pages can't collect it.
-    // It is stored here in Base64. To change it, encode the new address at base64encode.org and paste it in.
-    emailEncoded: "YXJtYW5AYXJtYW50aWsuY29t",
+    // Your email is not written anywhere as text, so spam bots can't collect it. It is stored as scrambled
+    // bytes, and pages only put it together after a person taps, scrolls or types. To change it, see
+    // "Your email address and phone number" in README.md. Set it to [] to hide the email everywhere.
+    emailBytes: [227, 115, 230, 230, 39, 231, 104, 235, 169, 33, 252, 125, 197, 166, 45, 227, 110, 228],
+    // Your phone number is not here on purpose: it lives only on the card page (card/index.html).
     linkedin: "https://www.linkedin.com/in/arman-ajabkhani/",
     github: "",          // e.g. "https://github.com/your-username"
     medium: "https://armantik.medium.com/"
@@ -194,8 +197,8 @@ window.SITE = {
       title: "Senior Java Backend Guide",
       href: "lab/java-backend-guide.html",
       group: "java",
-      summary: "150 questions from collections and concurrency to Spring, databases, Kubernetes and production troubleshooting, each with a short answer, code and follow-ups.",
-      tags: ["150 questions", "21 topics"]
+      summary: "243 questions from Java fundamentals and concurrency to Spring, databases, Kafka, Kubernetes and production troubleshooting, each marked Basic or Advanced, with a short answer, code and follow-ups.",
+      tags: ["243 questions", "22 topics", "basic and advanced"]
     }
   ],
 
@@ -220,7 +223,7 @@ window.SITE = {
     {
       title: "Modern Java and the JVM",
       summary: "Get more out of the platform you already run.",
-      points: ["Upgrades to Java 21 and later", "Virtual threads and concurrency", "Profiling, GC and dependency hygiene"]
+      points: ["Upgrades to modern Java", "Virtual threads and concurrency", "Profiling, GC and dependency hygiene"]
     },
     {
       title: "Technical hiring",
@@ -251,7 +254,7 @@ window.SITE = {
       date: "2026-10-06",
       href: "https://www.linkedin.com/feed/update/urn:li:activity:7513103698508632064/",
       source: "LinkedIn",
-      summary: "JEP 540 lands in JDK 28 as an incubator: parse and navigate JSON with no library. Jackson keeps its job."
+      summary: "A small JSON API is coming to the JDK as an incubator: parse and navigate JSON with no library. Jackson keeps its job."
     },
     {
       title: "When a coding agent leaks your screenshots",

@@ -32,6 +32,11 @@
     var m = MONTHS[parseInt(p[1], 10) - 1] || '';
     return p.length === 3 ? parseInt(p[2], 10) + ' ' + m + ' ' + p[0] : m + ' ' + p[0];
   }
+  /* hand-drawn icon for a Lab track: pages that list the tracks carry <template id="ico-<group id>"> */
+  function trackIcon(id, cls) {
+    var t = document.getElementById('ico-' + id);
+    return t ? '<span class="' + cls + '" aria-hidden="true">' + t.innerHTML + '</span>' : '';
+  }
   function byDateDesc(a, b) { return String(b.date || '').localeCompare(String(a.date || '')); }
 
   /* ---- section switches: <section data-show="writing"> and nav links with data-show ---- */
@@ -84,19 +89,19 @@
         if (!list.length) return '';
         var shown = list.slice(0, 5).map(function (i) { return '<li>' + esc(i.title) + '</li>'; }).join('');
         var more = list.length > 5 ? '<li>and ' + (list.length - 5) + ' more</li>' : '';
-        return '<a class="cat-card" href="' + esc(root + 'lab/index.html#' + g.id) + '">' +
+        return '<a class="cat-card" href="' + esc(root + 'lab/index.html#' + g.id) + '">' + trackIcon(g.id, 'cat-ico') +
           '<span class="cat-count">' + list.length + (list.length === 1 ? ' guide' : ' guides') + '</span>' +
           '<span class="cat-title">' + esc(g.title) + '</span>' +
           '<span class="cat-sum">' + esc(g.summary) + '</span>' +
           '<ul class="cat-list">' + shown + more + '</ul>' +
-          '<span class="cat-more">Open ' + esc(g.title.toLowerCase()) + ' →</span></a>';
+          '<span class="cat-more">Open ' + esc(/^(Java|Go|AI)\b/.test(g.title) ? g.title : g.title.toLowerCase()) + ' →</span></a>';
       }).join('');
     } else {
       /* lab page: every guide, grouped */
       el.innerHTML = GROUPS.map(function (g) {
         var list = itemsIn(g.id);
         if (!list.length) return '';
-        return '<section class="sec" id="' + esc(g.id) + '"><p class="sec-label">/lab/' + esc(g.id) + '</p><div class="sec-body">' +
+        return '<section class="sec" id="' + esc(g.id) + '"><p class="sec-label">' + trackIcon(g.id, 'sec-ico') + '/lab/' + esc(g.id) + '</p><div class="sec-body">' +
           '<h2>' + esc(g.title) + '</h2>' + (g.summary ? '<p class="intro">' + esc(g.summary) + '</p>' : '') +
           '<div class="tiles">' + list.map(tile).join('') + '</div></div></section>';
       }).join('');
@@ -154,31 +159,72 @@
     }).join('');
   });
 
-  /* ---- email: never in the page source. Built here from content.js, so scraping bots that
-     read the HTML don't find it. <span data-email></span> shows it, <a data-email-link> becomes a mail link,
-     <button data-copy-email> copies it. ---- */
+  /* ---- contact details are never in the page as text ----
+     The email (links.emailBytes in content.js) and the phone number (on the card page) are stored as
+     scrambled bytes: reversed, then XOR'ed with KEY. Pages only put them together after a person
+     interacts, so bots that read the source, or run the page without touching it, find nothing.
+     window.AA.unscramble(bytes) decodes; window.AA.email() returns the address once revealed. */
+  var KEY = [133, 28, 142, 76, 200];
+  function unscramble(bytes) {
+    return (bytes || []).slice().reverse().map(function (c, i) { return String.fromCharCode(c ^ KEY[i % KEY.length]); }).join('');
+  }
+  var EMAIL_BYTES = (SITE.links && SITE.links.emailBytes) || [];
   var EMAIL = '';
-  try { EMAIL = SITE.links && SITE.links.emailEncoded ? atob(SITE.links.emailEncoded) : ''; } catch (e) {}
-  /* shown as arman[at]armantik.com; Copy email and Email me still use the real address */
-  document.querySelectorAll('[data-email]').forEach(function (el) { if (EMAIL) el.textContent = EMAIL.replace('@', '[at]'); });
-  document.querySelectorAll('[data-email-link]').forEach(function (el) {
-    if (!EMAIL) { el.hidden = true; return; }
-    el.addEventListener('click', function () { el.href = 'mailto:' + EMAIL; });
-    el.href = '#contact';
-  });
-  document.querySelectorAll('[data-copy-email]').forEach(function (btn) { btn.setAttribute('data-copy', EMAIL); });
+  function email() { if (!EMAIL && EMAIL_BYTES.length) EMAIL = unscramble(EMAIL_BYTES); return EMAIL; }
+  window.AA = { unscramble: unscramble, email: email };
 
-  /* ---- copy buttons: <button data-copy="text"> ---- */
+  /* <span data-email>Show email</span> becomes name[at]domain after the first interaction (or a tap on it).
+     <a data-email-link> becomes a mail link when tapped. <button data-copy-email> copies the address. */
+  var emailShown = false;
+  var WAKE = ['pointerdown', 'touchstart', 'keydown', 'scroll', 'wheel', 'mousemove', 'focusin'];
+  function showEmail() {
+    if (emailShown) return;
+    emailShown = true;
+    WAKE.forEach(function (e) { window.removeEventListener(e, showEmail, true); });
+    var addr = email();
+    document.querySelectorAll('[data-email]').forEach(function (el) {
+      var span = document.createElement('span');
+      span.className = 'email';
+      span.textContent = addr.replace('@', '[at]');
+      el.replaceWith(span);
+    });
+    document.querySelectorAll('[data-copy-email]').forEach(function (btn) { btn.setAttribute('data-copy', addr); });
+  }
+  if (EMAIL_BYTES.length) {
+    WAKE.forEach(function (e) { window.addEventListener(e, showEmail, { capture: true, passive: true }); });
+    document.querySelectorAll('[data-email]').forEach(function (el) { el.addEventListener('click', showEmail); });
+  } else {
+    document.querySelectorAll('[data-email], [data-copy-email]').forEach(function (el) { el.hidden = true; });
+  }
+  document.querySelectorAll('[data-email-link]').forEach(function (el) {
+    if (!EMAIL_BYTES.length) { el.hidden = true; return; }
+    el.addEventListener('click', function () { el.href = 'mailto:' + email(); });
+  });
+  document.querySelectorAll('[data-copy-email]').forEach(function (btn) {
+    btn.addEventListener('click', showEmail, true);
+    btn.setAttribute('data-copy', '');
+  });
+
+  /* ---- copy buttons: <button data-copy="text">. When the button has a caption (<span class="copy-cap">,
+     used under the copy icon) only the caption changes, so the icon stays. ---- */
   document.querySelectorAll('[data-copy]').forEach(function (btn) {
     btn.addEventListener('click', function () {
       var text = btn.getAttribute('data-copy');
-      var done = function () { var old = btn.textContent; btn.textContent = 'Copied'; setTimeout(function () { btn.textContent = old; }, 1600); };
+      var label = btn.querySelector('.copy-cap') || btn;
+      var original = label.textContent;
+      var show = function (msg) {
+        label.textContent = msg; btn.classList.add('is-done');
+        clearTimeout(btn._t);
+        btn._t = setTimeout(function () { label.textContent = original; btn.classList.remove('is-done'); }, 1600);
+      };
+      var caps = label === btn;   /* plain text buttons like "Copy hex" keep a capital letter */
+      var done = function () { show(caps ? 'Copied' : 'copied'); };
       var fallback = function () {
         var sel = document.querySelector(btn.getAttribute('data-copy-select') || '.email');
         if (!sel) return;
         var r = document.createRange(); r.selectNodeContents(sel);
         var s = window.getSelection(); s.removeAllRanges(); s.addRange(r);
-        btn.textContent = 'Press Ctrl+C';
+        show(caps ? 'Press Ctrl+C' : 'press Ctrl+C');
       };
       if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(done, fallback);
       else fallback();
