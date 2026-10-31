@@ -31,6 +31,9 @@ armantik.com/
 ├── 404.html                   shown for missing pages
 ├── sitemap.xml                the pages search engines should list (see Search engines below)
 ├── robots.txt                 points search engines to the sitemap
+├── tools/
+│   ├── prerender.js           writes the lists from content.js into the HTML (see "After you edit content.js")
+│   └── icons.js, icons.json   the hand-drawn icons
 ├── CNAME                      tells GitHub Pages to serve this repo at armantik.com
 └── .nojekyll                  tells GitHub Pages to serve files as they are (keep it)
 ```
@@ -51,7 +54,7 @@ Open `content.js`, find `writing: [`, and add a block:
 },
 ```
 
-Save, commit, push. It appears on the home page (the five newest) and on `/writing/`, sorted newest first. The date only sets the order; it isn't shown.
+Save, run `node tools/prerender.js`, commit, push. It appears on the home page (the five newest) and on `/writing/`, sorted newest first. The date only sets the order; it isn't shown.
 
 ### An article on your own site
 
@@ -59,7 +62,7 @@ Save, commit, push. It appears on the home page (the five newest) and on `/writi
 2. Replace every `[LIKE THIS]` placeholder. The template shows each building block: heading, paragraph, list, code, quote, table, image, note.
 3. Images go in `assets/` and are referenced as `../assets/name.png`.
 4. Add a block to `writing: [` in `content.js` with `href: "writing/2026-11-short-title.html"` and `source: "armantik.com"`.
-5. Commit and push.
+5. Run `node tools/prerender.js`, then commit and push.
 
 Tip: inside `<pre><code>`, write `&lt;` instead of `<` and `&gt;` instead of `>`, so Java generics like `List<String>` show correctly.
 
@@ -95,7 +98,7 @@ To use an icon somewhere new, copy its SVG from `tools/icons.json` and wrap it, 
 
 ### A talk
 
-Add a block to `talks: [` in `content.js` (title, date, event, href, summary). Turn on `show.talks`.
+Add a block to `talks: [` in `content.js` (title, date, event, href, summary). Turn on `show.talks`, then run `node tools/prerender.js`.
 
 ### A new Lab guide
 
@@ -115,7 +118,18 @@ Add a block to `talks: [` in `content.js` (title, date, event, href, summary). T
 - **A whole section:** in `content.js`, set its switch under `show:` to `false` or `true`. Talks and the Persian name in the footer start switched off. (If you switch the Persian name on, add `&family=Vazirmatn:wght@500` to the Google Fonts link in each page for the nicest Persian type.)
 - **One item:** add `hidden: true` to its block. Remove the line (or set `false`) to show it.
 - **A link button:** leave its value empty in `links:` (for example `github: ""`) and the button disappears.
+- After any of these, run `node tools/prerender.js` (see below).
 - **Check hidden things before going public:** open `https://armantik.com/?preview`. Hidden sections and items appear with a yellow "hidden" tag. Visitors without `?preview` never see them. (It is a convenience, not a secret: anyone who knows the trick can use it, so don't put anything private in the repo.)
+
+## After you edit content.js
+
+Run this from the repo folder, then commit:
+
+```bash
+node tools/prerender.js
+```
+
+It writes the Lab page list, the Lab cards on the home page, the Writing lists and the guide count into the HTML files, takes `hidden: true` items out, and sets the `hidden` attribute on everything a `show:` switch turns off (and the `href` on every `links:` button). Search engines and AI crawlers that read a page without running JavaScript (ChatGPT, Claude and Perplexity among them) then see the same lists a visitor does. In the browser, `assets/site.js` still draws the lists from `content.js` with the same code, so if you forget to run it the site still looks right; only the plain HTML is out of date until you do. It needs Node and nothing else. `node tools/prerender.js --check` only reports which pages are out of date.
 
 ## Search engines
 
