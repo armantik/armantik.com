@@ -442,3 +442,9 @@ dl.rows { margin: 0; }
 .ico-link:hover .ico-cap, .ico-link:focus-visible .ico-cap { opacity: 1; color: var(--petrol); }
 .contact-line { gap: 10px 12px; }
 .links .ico-link { margin-left: 4px; }
+
+/* LinkedIn as a text mark in the site's mono font: [in], brackets in petrol, same box as the icons */
+.txt-mark { display: flex; align-items: center; justify-content: center; white-space: nowrap; height: 26px; min-width: 26px; font: 600 15px/1 var(--mono); letter-spacing: -0.03em; color: currentColor; }
+.txt-mark b { color: var(--petrol); font-weight: 600; }
+.ico-link:hover .txt-mark b { color: inherit; }
+.btn.primary .txt-mark b { color: inherit; opacity: .7; }
