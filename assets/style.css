@@ -448,3 +448,12 @@ dl.rows { margin: 0; }
 .txt-mark b { color: var(--petrol); font-weight: 600; }
 .ico-link:hover .txt-mark b { color: inherit; }
 .btn.primary .txt-mark b { color: inherit; opacity: .7; }
+
+/* The email address as an image (assets/email.svg): letter shapes in JetBrains Mono, not text, so
+   scrapers can't read it. It is used as a mask, so it takes the text color in light and dark. */
+.email-img {
+  display: inline-block; flex: none; vertical-align: middle;
+  font-size: clamp(17px, 2.4vw, 22px); width: 10.8em; height: 1.32em; max-width: 100%;
+  background: var(--ink);
+  -webkit-mask: url(email.svg) no-repeat left center / contain; mask: url(email.svg) no-repeat left center / contain;
+}

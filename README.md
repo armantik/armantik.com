@@ -69,7 +69,7 @@ The "How I can help" cards come from `services: [` in `content.js`. Each card ha
 
 Neither is written anywhere as text, so spam bots and crawlers can't collect them. Both are stored as scrambled bytes (reversed, then XOR'ed with a key in `assets/site.js`) and put together in the browser only when a person is there:
 
-- **Email** (`links.emailBytes` in `content.js`): every page shows a "Show email" link in its place, which turns into the address after the first tap, scroll or key press. Email me and Copy email work as usual.
+- **Email** (`links.emailBytes` in `content.js`): pages show the address as an image, `assets/email.svg`, drawn from the letter shapes so there is no text to scrape. Email me and Copy email decode the address only when they are used. If the address changes, redraw the image too (ask Claude, or render the new address in JetBrains Mono Medium and convert the text to outlines).
 - **Phone** (`C` in the script at the bottom of `card/index.html`, the only page that has it): the Call or text button says "Show number". The first tap shows the number, the second one calls. Save contact builds its contact file when it is tapped.
 
 To change either one, open the browser console on any page of the site, run this with the new value, and paste the result into `emailBytes` or `C`:
