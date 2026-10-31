@@ -11,6 +11,11 @@ armantik.com/
 ├── lab/
 │   ├── index.html             the Learning Lab (system design, algorithms, Java), built from content.js
 │   ├── *.html                 one file per guide; each one works on its own
+│   ├── system-design-casebook.html   the System Design Casebook: the hub for its case studies
+│   ├── system-design/
+│   │   ├── <name>/index.html  one page per case study (url-shortener, news-feed, chat-system, ride-sharing, file-sync)
+│   │   ├── casebook.css       the casebook's styles, shared by the hub and the case study pages
+│   │   └── casebook.js        the casebook's simulators, videos and progress ticks, shared the same way
 │   └── data/                  question bank for the Senior Java Backend Guide
 ├── writing/
 │   ├── index.html             all articles, posts and talks, built from content.js
@@ -110,6 +115,15 @@ Add a block to `talks: [` in `content.js` (title, date, event, href, summary). T
    ```
 3. Optional: copy three things from the top of any existing guide so the new one matches: the `<script src="../assets/theme.js">` line, the `<style>` block that starts with `/* armantik.com bar`, and the `<nav class="aa-labbar">` line (plus the `<p class="aa-prob">` line for an algorithm). System design guides should not link to other sites.
 
+### The System Design Casebook and its case study pages
+
+`lab/system-design-casebook.html` is the hub: foundations, method, scaling, building blocks, review, and a link to every case study. Five case studies have a page of their own in `lab/system-design/<name>/index.html` (URL shortener, news feed, chat system, ride sharing, file sync); the other nine still sit in the hub. Each page has the question as its title, a short answer at the top (requirements, the key numbers, the design in three sentences), the case study with its video and simulators, links to the building blocks it uses, the next case study, and a line pointing to interview prep.
+
+- The hub and the pages share `lab/system-design/casebook.css` and `casebook.js`. Each part of the script runs only when its topic is on the page (the `NEED` list at the top of the script), so one file serves every page.
+- Old links such as `system-design-casebook.html#c-url` forward to the new page (the small script in the hub's `<head>`). Add a case study there when you move one out.
+- "Mark done" ticks are kept per topic in the browser and shared by the hub and the pages: links in the contents carry `data-sheet="c-url"` so a tick shows wherever that case study is listed.
+- To move another case study out, copy one of the five pages, move the section's content into it (don't leave a copy in the hub), put a short link block in its place in the hub, point its links in the hub's contents and use case map at the new page, add it to the forwarding script, the case study list in each page's side rail, and `sitemap.xml`.
+
 ## Hide and show
 
 - **A whole section:** in `content.js`, set its switch under `show:` to `false` or `true`. Talks and the Persian name in the footer start switched off. (If you switch the Persian name on, add `&family=Vazirmatn:wght@500` to the Google Fonts link in each page for the nicest Persian type.)
@@ -119,7 +133,7 @@ Add a block to `talks: [` in `content.js` (title, date, event, href, summary). T
 
 ## Search engines
 
-- **`sitemap.xml`** lists every page that should show up in search: home, How I help and its five pages, the Lab and each guide, Writing. When you add a page (a Lab guide, a help page, an article on your own site), add a `<url>` line for it and set `<lastmod>` to the date you changed it.
+- **`sitemap.xml`** lists every page that should show up in search: home, How I help and its five pages, the Lab and each guide, each System Design case study page, Writing. When you add a page (a Lab guide, a help page, an article on your own site), add a `<url>` line for it and set `<lastmod>` to the date you changed it.
 - **`robots.txt`** points search engines to the sitemap and keeps them out of `tools/` and the article template.
 - **Every indexable page** has a `<title>` and a description written for what people search for ("system design interview prep", "Two Sum LeetCode 1 in Java", "Claude Code setup"), and a `<link rel="canonical">` with its address on armantik.com. Copy both when you add a page.
 - **Structured data** (the `<script type="application/ld+json">` block in the head) tells Google who you are and what each page is: a Person on the home page (no email or phone in it), a Service on each How I help page, a LearningResource on each Lab guide, and breadcrumbs. Check a page at [search.google.com/test/rich-results](https://search.google.com/test/rich-results).

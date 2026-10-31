@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Design a News Feed Like Twitter: Push or Pull</title>
+<meta name="description" content="How to design a Twitter style news feed: fan-out on write or on read, the hybrid for celebrity accounts, feed caches of post IDs and cursor pagination.">
+<meta name="author" content="Arman Ajabkhani">
+<meta property="og:title" content="Design a News Feed Like Twitter: Push or Pull">
+<meta property="og:description" content="How to design a Twitter style news feed: fan-out on write or on read, the hybrid for celebrity accounts, feed caches of post IDs and cursor pagination.">
+<meta property="og:url" content="https://armantik.com/lab/system-design/news-feed/">
+<link rel="canonical" href="https://armantik.com/lab/system-design/news-feed/">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="armantik.com">
+<meta property="article:modified_time" content="2026-10-31">
+<meta property="og:image" content="https://armantik.com/assets/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Arman Ajabkhani, Senior Backend Engineer: Java and Go, AI engineering">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://armantik.com/assets/og-image.png">
+<script type="application/ld+json">{"@context": "https://schema.org", "@graph": [{"@type": "LearningResource", "@id": "https://armantik.com/lab/system-design/news-feed/#guide", "name": "Design a News Feed Like Twitter: Push or Pull", "headline": "Design a News Feed Like Twitter", "description": "How to design a Twitter style news feed: fan-out on write or on read, the hybrid for celebrity accounts, feed caches of post IDs and cursor pagination.", "url": "https://armantik.com/lab/system-design/news-feed/", "author": {"@type": "Person", "@id": "https://armantik.com/#person", "name": "Arman Ajabkhani", "url": "https://armantik.com/"}, "dateModified": "2026-10-31", "inLanguage": "en", "isAccessibleForFree": true, "learningResourceType": "Case study", "educationalLevel": "Intermediate", "about": ["System design", "System design interview", "News feed", "Fan-out"], "teaches": ["Fan-out on write and fan-out on read", "The hybrid feed for celebrity accounts", "Feed caches of post IDs", "Cursor pagination"], "isPartOf": {"@id": "https://armantik.com/lab/system-design-casebook.html#guide"}}, {"@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "armantik.com", "item": "https://armantik.com/"}, {"@type": "ListItem", "position": 2, "name": "Learning Lab", "item": "https://armantik.com/lab/"}, {"@type": "ListItem", "position": 3, "name": "System Design Casebook", "item": "https://armantik.com/lab/system-design-casebook.html"}, {"@type": "ListItem", "position": 4, "name": "News feed", "item": "https://armantik.com/lab/system-design/news-feed/"}]}]}</script>
+<link rel="icon" href="../../../assets/favicon.svg" type="image/svg+xml">
+<script src="../../../assets/theme.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&family=Martian+Mono:wght@400;500;600&family=Public+Sans:ital,wght@0,400..700;1,400..700&display=swap">
+<link rel="stylesheet" href="../casebook.css">
+</head>
+<body>
+<nav class="aa-labbar aa-pad" aria-label="armantik.com"><a class="aa-home" href="../../../index.html"><svg viewBox="0 0 64 64" width="20" height="20" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#0F5C55"/><path d="M18 49 L32 15 L46 49 M23.5 37 H40.5" fill="none" stroke="#FAFBF9" stroke-width="6.5" stroke-linecap="square"/></svg>Arman Ajabkhani</a><span class="aa-right"><a class="aa-crumb" href="../../system-design-casebook.html">Lab / System design / Casebook</a><a href="../../index.html">← All Lab guides</a><button type="button" data-theme-toggle aria-label="Switch theme">Theme</button></span></nav>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <defs>
+    <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 Z" class="m-ink"/></marker>
+    <marker id="ah-hot" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 Z" class="m-hot"/></marker>
+    <marker id="ah-blue" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 Z" class="m-blue"/></marker>
+  </defs>
+</svg>
+
+<div class="shell case">
+<main>
+<section class="sheet case-sheet" id="c-feed">
+  <header class="case-head">
+    <div class="sheet-meta"><span class="code-tag">Case study V.2</span><span class="level"><span class="pips"><i class="on"></i><i class="on"></i><i></i></span>Intermediate</span><button class="done-btn" type="button" aria-pressed="false">Mark done</button></div>
+    <h1>Design a News Feed Like Twitter</h1>
+    <p class="sub">The central question is when to do the work: when a post is written, or when a feed is read. The answer changes with follower count, which is why every real feed is a hybrid.</p>
+    <p class="byline">By <a href="../../../index.html">Arman Ajabkhani</a>, Senior Backend Engineer · Updated <time datetime="2026-10-31">31 Oct 2026</time></p>
+  </header>
+
+  <section class="answer" aria-labelledby="answer-h">
+    <h2 id="answer-h">The short answer</h2>
+    <p><b>Requirements.</b> Publish posts with text and media, follow and unfollow, and read a paginated feed of followed accounts, newest first; the feed loads in under 200 ms, a new post may take a few seconds to show up, and reads far outnumber writes.</p>
+    <dl class="facts">
+      <div><dt>Feed reads</dt><dd>35,000 per second<small>300M daily users, 10 opens each</small></dd></div>
+      <div><dt>New posts</dt><dd>7,000 per second<small>2 per user a day</small></dd></div>
+      <div><dt>Push cost</dt><dd>1.4M inserts per second<small>at 200 followers a post</small></dd></div>
+      <div><dt>Feed cache</dt><dd>about 1.2 TB<small>500 post IDs per user</small></dd></div>
+    </dl>
+    <p><b>The design.</b> Publishing stores the post once, then fan-out workers push its ID into the feed cache of every follower, a Redis list capped at about 500 IDs. Accounts above about 100K followers skip the fan-out, and the feed service merges their recent posts in at read time: the hybrid of push and pull that large feeds use. A read takes the IDs from the cache, fills in the posts from the post and user caches, and pages with a cursor, never an offset.</p>
+  </section>
+
+  <div class="vplayer" data-v="feed"></div>
+  <div class="prompt"><span class="eyebrow">Interview prompt</span><p>Design the home timeline for a social network: users follow others and see their posts, newest first.</p></div>
+  <h2>Requirements and estimates</h2>
+  <div class="cols">
+    <div><h3 class="lbl">Functional requirements</h3><ul class="plain"><li>Publish a post with text and media.</li><li>Follow and unfollow users.</li><li>View a paginated feed of posts from followed users.</li></ul></div>
+    <div><h3 class="lbl">Non-functional requirements</h3><ul class="plain"><li>Feed loads in under 200 ms.</li><li>A new post may take a few seconds to appear (eventual consistency).</li><li>Read heavy and highly available.</li></ul></div>
+  </div>
+  <h3 class="lbl">Estimates</h3>
+<pre class="calc"><span class="k">Feed reads </span> 300M DAU × 10 opens ÷ 86,400 s     ≈ <b>35,000 reads/s</b>
+<span class="k">New posts  </span> 300M DAU × 2 posts ÷ 86,400 s      ≈ <b>7,000 posts/s</b>
+<span class="k">Fan-out    </span> 7,000 posts/s × 200 followers      ≈ <b>1.4M feed inserts/s</b> if we push
+<span class="k">Feed cache </span> 300M users × 500 post IDs × 8 B    ≈ <b>1.2 TB</b> of IDs in memory</pre>
+  <h2>API and data model</h2>
+  <div class="cols">
+    <div><h3 class="lbl">API</h3>
+<pre class="code">POST /v1/posts
+{ "text": "...", "mediaIds": ["m_81"] }
+
+GET /v1/feed?limit=20&amp;cursor=1783229482342
+<span class="c">→ 200 { "posts": [...],
+        "nextCursor": "1783228190031" }</span></pre></div>
+    <div><h3 class="lbl">Data model</h3>
+<pre class="code">posts    post_id PK, author_id, text,
+         media_ids, created_at
+follows  follower_id, followee_id
+feeds    user_id → [post_id, ...]
+         <span class="c">Redis list, capped at ~500</span></pre></div>
+  </div>
+
+  <h2>Architecture: the publish path and the read path</h2>
+  <figure class="plate">
+    <div class="plate-scroll"><svg class="dg" id="feed-svg" role="img" aria-label="News feed architecture with a publish path through a fan-out queue into feed caches, and a read path from the feed service"></svg></div>
+    <figcaption><b>Two paths.</b> Publishing writes the post, then fan-out workers look up followers and push the post ID into each follower’s feed cache. Reading takes the list of IDs from the feed cache and hydrates them from the post and user caches. Feeds hold only IDs, so edits and deletions show up without rewriting feeds.</figcaption>
+  </figure>
+
+  <h2>Fan-out on write or on read: push or pull</h2>
+  <figure class="plate">
+    <div class="plate-scroll"><svg class="dg" id="pp-svg" role="img" aria-label="Side by side: fan-out on write copies each post into every follower's feed; fan-out on read queries every followee at read time"></svg></div>
+    <figcaption><b>Where the arrows multiply.</b> Push does one write per follower when a post is created, so reading is a single lookup. Pull writes once, but every feed open queries every account the reader follows and merges the results.</figcaption>
+  </figure>
+
+  <div class="plate">
+    <h3 class="lbl">Calculator: what one post and one feed open cost</h3>
+    <div class="est-inputs" style="margin-bottom:14px">
+      <label class="field" for="fo-f"><span class="row">Author’s followers <output id="fo-f-o">1,000</output></span><input type="range" id="fo-f" min="1" max="8" step="0.1" value="3"></label>
+      <label class="field" for="fo-n"><span class="row">Accounts a reader follows <output id="fo-n-o">300</output></span><input type="range" id="fo-n" min="10" max="2000" step="10" value="300"></label>
+      <label class="field" for="fo-c"><span class="row">Of which celebrities <output id="fo-c-o">5</output></span><input type="range" id="fo-c" min="0" max="50" step="1" value="5"></label>
+    </div>
+    <div class="tbl-wrap"><table>
+      <thead><tr><th></th><th class="num">Push (on write)</th><th class="num">Pull (on read)</th><th class="num">Hybrid</th></tr></thead>
+      <tbody>
+        <tr><td>Writes when this author posts</td><td class="num" id="fo-pw"></td><td class="num" id="fo-lw"></td><td class="num" id="fo-hw"></td></tr>
+        <tr><td>Lookups when a reader opens the feed</td><td class="num" id="fo-pr"></td><td class="num" id="fo-lr"></td><td class="num" id="fo-hr"></td></tr>
+        <tr><td>Time until every follower can see it <span class="mono">(1M inserts/s)</span></td><td class="num" id="fo-pt"></td><td class="num" id="fo-lt"></td><td class="num" id="fo-ht"></td></tr>
+      </tbody>
+    </table></div>
+    <p class="sim-note" id="fo-note"></p>
+  </div>
+  <p><b>Hybrid</b> is the standard answer: push for ordinary accounts, and for accounts above a threshold (say 100K followers) skip fan-out. At read time the feed service merges the precomputed feed with fresh posts from the few celebrities the reader follows. Skip fan-out to users inactive for 30 days too, and build their feed by pull when they come back.</p>
+  <h2>Feed pagination with a cursor, and ranking</h2>
+  <p>Paginate with a cursor (the last post ID seen), never with <code>OFFSET</code>. New posts arriving at the top shift every offset, so page two by offset repeats items; a cursor stays stable. Ranked feeds fetch a few hundred candidates, score them by affinity, recency and engagement, and cache the ranked page for a few minutes.</p>
+
+  <div class="probe">
+    <h2>What the interviewer probes next</h2>
+    <details class="qa"><summary>A user follows someone new. When do old posts appear?</summary><p>Backfill asynchronously: fetch the new followee’s recent posts and merge them into the follower’s cached feed. Unfollow is handled by filtering at read time and cleaning the cache lazily.</p></details>
+    <details class="qa"><summary>The feed cache node dies. Now what?</summary><p>The feed cache is derived data. Rebuild a user’s feed on demand by pulling recent posts from their followees, then resume pushing. Replicate the cache so a single node loss rarely forces this.</p></details>
+    <details class="qa"><summary>How are deleted or edited posts handled?</summary><p>Feeds store IDs only. Hydration reads the current post, and deleted posts are filtered out at read time, so nothing needs to be rewritten across millions of feeds.</p></details>
+    <details class="qa"><summary>How do media uploads fit in?</summary><p>Clients upload directly to object storage with a pre-signed URL, a worker creates thumbnails, and the CDN serves them. Posts keep only media IDs.</p></details>
+  </div>
+
+  <h2>Building blocks used here</h2>
+  <ul class="blocks-list">
+      <li><a href="../../system-design-casebook.html#cache"><span class="code">IV.2</span><b>Caching</b><span class="why">feed caches of post IDs</span></a></li>
+      <li><a href="../../system-design-casebook.html#queues"><span class="code">IV.5</span><b>Queues and streams</b><span class="why">the fan-out queue and its workers</span></a></li>
+      <li><a href="../../system-design-casebook.html#cap"><span class="code">IV.4</span><b>CAP and consistency</b><span class="why">why a post may show up seconds later</span></a></li>
+      <li><a href="../../system-design-casebook.html#lb"><span class="code">IV.1</span><b>Load balancing</b><span class="why">the stateless feed and post services</span></a></li>
+  </ul>
+  <nav class="case-nav" aria-label="More case studies">
+      <a class="prev" href="../url-shortener/index.html"><span class="dir">← Previous case study</span><span class="t">V.1 · Design a URL Shortener Like TinyURL</span></a>
+      <a class="next" href="../chat-system/index.html"><span class="dir">Next case study →</span><span class="t">V.3 · Design a Chat System Like WhatsApp</span></a>
+  </nav>
+  <p class="case-last">Want to run this as a mock interview? See <a href="../../../help/interview-prep/index.html">interview prep</a>.</p>
+</section>
+</main>
+
+<nav class="rail" aria-label="Case studies">
+  <div class="rail-inner">
+    <a class="rail-hub" href="../../system-design-casebook.html"><b>System Design Casebook</b><span>Foundations, method and building blocks, with all 14 case studies</span></a>
+    <div class="rail-top"><span class="eyebrow">Case studies</span><span class="prog"><span id="prog-n">0</span> of <span id="prog-total">14</span> done</span></div>
+    <div class="prog-track" aria-hidden="true"><span id="prog-bar"></span></div>
+    <ol class="toc">
+      <li><a href="../url-shortener/index.html" data-sheet="c-url"><span class="code">V.1</span>URL shortener<span class="tick">✓</span></a></li>
+      <li><a href="../news-feed/index.html" data-sheet="c-feed" aria-current="page"><span class="code">V.2</span>News feed<span class="tick">✓</span></a></li>
+      <li><a href="../chat-system/index.html" data-sheet="c-chat"><span class="code">V.3</span>Chat system<span class="tick">✓</span></a></li>
+      <li><a href="../../system-design-casebook.html#c-notify" data-sheet="c-notify"><span class="code">V.4</span>Notifications<span class="tick">✓</span></a></li>
+      <li><a href="../../system-design-casebook.html#c-auto" data-sheet="c-auto"><span class="code">V.5</span>Autocomplete<span class="tick">✓</span></a></li>
+      <li><a href="../../system-design-casebook.html#c-crawl" data-sheet="c-crawl"><span class="code">V.6</span>Web crawler<span class="tick">✓</span></a></li>
+      <li><a href="../../system-design-casebook.html#c-geo" data-sheet="c-geo"><span class="code">V.7</span>Nearby places<span class="tick">✓</span></a></li>
+      <li><a href="../../system-design-casebook.html#c-ticket" data-sheet="c-ticket"><span class="code">V.8</span>Ticket booking<span class="tick">✓</span></a></li>
+      <li><a href="../ride-sharing/index.html" data-sheet="c-ride"><span class="code">V.9</span>Ride sharing<span class="tick">✓</span></a></li>
+      <li><a href="../../system-design-casebook.html#c-video" data-sheet="c-video"><span class="code">V.10</span>Video streaming<span class="tick">✓</span></a></li>
+      <li><a href="../file-sync/index.html" data-sheet="c-sync"><span class="code">V.11</span>File sync<span class="tick">✓</span></a></li>
+      <li><a href="../../system-design-casebook.html#c-docs" data-sheet="c-docs"><span class="code">V.12</span>Collaborative editor<span class="tick">✓</span></a></li>
+      <li><a href="../../system-design-casebook.html#c-kv" data-sheet="c-kv"><span class="code">V.13</span>Key value store<span class="tick">✓</span></a></li>
+      <li><a href="../../system-design-casebook.html#c-pay" data-sheet="c-pay"><span class="code">V.14</span>Payment system<span class="tick">✓</span></a></li>
+    </ol>
+  </div>
+</nav>
+</div>
+
+<script src="../casebook.js"></script>
+</body></html>

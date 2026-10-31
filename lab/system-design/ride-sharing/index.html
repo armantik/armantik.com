@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Design a Ride Sharing App Like Uber: Locations and Matching</title>
+<meta name="description" content="How to design a ride sharing app like Uber: 250,000 driver location updates a second, a geohash or H3 cell index, matching by ETA, and no driver offered two rides.">
+<meta name="author" content="Arman Ajabkhani">
+<meta property="og:title" content="Design a Ride Sharing App Like Uber: Locations and Matching">
+<meta property="og:description" content="How to design a ride sharing app like Uber: 250,000 driver location updates a second, a geohash or H3 cell index, matching by ETA, and no driver offered two rides.">
+<meta property="og:url" content="https://armantik.com/lab/system-design/ride-sharing/">
+<link rel="canonical" href="https://armantik.com/lab/system-design/ride-sharing/">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="armantik.com">
+<meta property="article:modified_time" content="2026-10-31">
+<meta property="og:image" content="https://armantik.com/assets/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Arman Ajabkhani, Senior Backend Engineer: Java and Go, AI engineering">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://armantik.com/assets/og-image.png">
+<script type="application/ld+json">{"@context": "https://schema.org", "@graph": [{"@type": "LearningResource", "@id": "https://armantik.com/lab/system-design/ride-sharing/#guide", "name": "Design a Ride Sharing App Like Uber: Locations and Matching", "headline": "Design a Ride Sharing App Like Uber", "description": "How to design a ride sharing app like Uber: 250,000 driver location updates a second, a geohash or H3 cell index, matching by ETA, and no driver offered two rides.", "url": "https://armantik.com/lab/system-design/ride-sharing/", "author": {"@type": "Person", "@id": "https://armantik.com/#person", "name": "Arman Ajabkhani", "url": "https://armantik.com/"}, "dateModified": "2026-10-31", "inLanguage": "en", "isAccessibleForFree": true, "learningResourceType": "Case study", "educationalLevel": "Advanced", "about": ["System design", "System design interview", "Ride sharing", "Geospatial index"], "teaches": ["Storing driver locations in a cell index", "Matching riders to drivers by ETA", "Compare and set to prevent double assignment", "Live trip tracking"], "isPartOf": {"@id": "https://armantik.com/lab/system-design-casebook.html#guide"}}, {"@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "armantik.com", "item": "https://armantik.com/"}, {"@type": "ListItem", "position": 2, "name": "Learning Lab", "item": "https://armantik.com/lab/"}, {"@type": "ListItem", "position": 3, "name": "System Design Casebook", "item": "https://armantik.com/lab/system-design-casebook.html"}, {"@type": "ListItem", "position": 4, "name": "Ride sharing", "item": "https://armantik.com/lab/system-design/ride-sharing/"}]}]}</script>
+<link rel="icon" href="../../../assets/favicon.svg" type="image/svg+xml">
+<script src="../../../assets/theme.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&family=Martian+Mono:wght@400;500;600&family=Public+Sans:ital,wght@0,400..700;1,400..700&display=swap">
+<link rel="stylesheet" href="../casebook.css">
+</head>
+<body>
+<nav class="aa-labbar aa-pad" aria-label="armantik.com"><a class="aa-home" href="../../../index.html"><svg viewBox="0 0 64 64" width="20" height="20" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#0F5C55"/><path d="M18 49 L32 15 L46 49 M23.5 37 H40.5" fill="none" stroke="#FAFBF9" stroke-width="6.5" stroke-linecap="square"/></svg>Arman Ajabkhani</a><span class="aa-right"><a class="aa-crumb" href="../../system-design-casebook.html">Lab / System design / Casebook</a><a href="../../index.html">← All Lab guides</a><button type="button" data-theme-toggle aria-label="Switch theme">Theme</button></span></nav>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <defs>
+    <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 Z" class="m-ink"/></marker>
+    <marker id="ah-hot" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 Z" class="m-hot"/></marker>
+    <marker id="ah-blue" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 Z" class="m-blue"/></marker>
+  </defs>
+</svg>
+
+<div class="shell case">
+<main>
+<section class="sheet case-sheet" id="c-ride">
+  <header class="case-head">
+    <div class="sheet-meta"><span class="code-tag">Case study V.9</span><span class="level"><span class="pips"><i class="on"></i><i class="on"></i><i class="on"></i></span>Advanced</span><button class="done-btn" type="button" aria-pressed="false">Mark done</button></div>
+    <h1>Design a Ride Sharing App Like Uber</h1>
+    <p class="sub">Two hard problems in one: absorbing a firehose of GPS updates, and matching each rider to exactly one nearby driver within seconds.</p>
+    <p class="byline">By <a href="../../../index.html">Arman Ajabkhani</a>, Senior Backend Engineer · Updated <time datetime="2026-10-31">31 Oct 2026</time></p>
+  </header>
+
+  <section class="answer" aria-labelledby="answer-h">
+    <h2 id="answer-h">The short answer</h2>
+    <p><b>Requirements.</b> Drivers share their location while online, riders see nearby cars and an arrival estimate, and a ride goes from request to match, live tracking and fare; a match takes a few seconds, no driver is ever assigned to two riders, and a failure in one region leaves the others running.</p>
+    <dl class="facts">
+      <div><dt>Location updates</dt><dd>250,000 per second<small>1M drivers, one every 4 s</small></dd></div>
+      <div><dt>Ingest</dt><dd>about 25 MB/s<small>100 B per update</small></dd></div>
+      <div><dt>Ride requests</dt><dd>about 115 per second<small>peak about 600</small></dd></div>
+    </dl>
+    <p><b>The design.</b> Driver locations go to an in memory index of geohash or H3 cells sharded by city, and to a stream such as Kafka for history, never to one database row per driver. Matching takes the available drivers in the rider’s cell and its neighbors, ranks them by arrival time on the road graph, and offers the ride to one driver at a time with a 10 to 15 second timeout. A compare and set on the driver’s status makes a double assignment impossible, and during the trip the driver’s position reaches the rider over a WebSocket.</p>
+  </section>
+
+  <div class="vplayer" data-v="ride"></div>
+  <div class="prompt"><span class="eyebrow">Interview prompt</span><p>Design Uber: a rider requests a ride, the system finds a nearby driver, and both follow the trip live on a map.</p></div>
+  <h2>Requirements and estimates</h2>
+  <div class="cols">
+    <div><h3 class="lbl">Functional requirements</h3><ul class="plain"><li>Drivers share their location while online.</li><li>Riders see nearby cars and an arrival estimate.</li><li>Request, match, accept; live tracking; fare at the end.</li></ul></div>
+    <div><h3 class="lbl">Non-functional requirements</h3><ul class="plain"><li>Match within a few seconds.</li><li>Never assign one driver to two riders.</li><li>Absorb hundreds of thousands of location updates per second.</li><li>A failure in one region does not affect others.</li></ul></div>
+  </div>
+  <h3 class="lbl">Estimates</h3>
+<pre class="calc"><span class="k">Location   </span> 1M drivers online × 1 update per 4 s = <b>250,000 writes/s</b>
+<span class="k">Ingest     </span> 250,000 × 100 B                       ≈ <b>25 MB/s</b>
+<span class="k">Ride asks  </span> 10M rides per day                     ≈ <b>115/s</b>, peak ≈ 600/s</pre>
+  <h2>API and the driver state machine</h2>
+  <div class="cols">
+    <div><h3 class="lbl">API</h3>
+<pre class="code">PUT  /v1/drivers/me/location
+     { lat, lng, heading, ts }
+POST /v1/rides { pickup, dropoff }
+<span class="c">→ 202 { rideId }</span>
+WS   /v1/rides/{id}/stream
+<span class="c">→ driver position, ETA</span></pre></div>
+    <div><h3 class="lbl">Driver state machine</h3>
+<pre class="code">AVAILABLE → OFFERED → ON_TRIP → AVAILABLE
+               │
+               └ timeout or decline → AVAILABLE
+
+<span class="c">/* every transition is a compare and set */</span>
+UPDATE drivers SET status = 'OFFERED'
+WHERE id = :d AND status = 'AVAILABLE';</pre></div>
+  </div>
+
+  <h2>Storing driver locations: Redis geo sets or a cell index</h2>
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>Option</th><th>Verdict</th></tr></thead>
+    <tbody>
+      <tr><td><b>A database row per driver, updated every 4 s</b></td><td class="bad">250,000 writes per second of data that is stale in seconds. The wrong tool.</td></tr>
+      <tr><td><b>Redis geo set per city</b> (<code>GEOADD</code>, <code>GEOSEARCH</code>)</td><td>In memory and simple; a solid answer for most cities.</td></tr>
+      <tr><td><b>In memory grid of cells</b> (geohash, or H3 hexagons) sharded by city</td><td class="good">What large platforms build. H3 was created at Uber for exactly this.</td></tr>
+    </tbody>
+  </table></div>
+  <p>Location history still matters for fares, safety and analytics, so updates are also written to a stream such as Kafka and stored in bulk, never row by row.</p>
+  <h2>Matching riders to drivers without double assignment</h2>
+  <p>Matching asks the index for available drivers in the rider’s cell and its neighbors, then ranks them by estimated time of arrival from a routing engine on the road graph, not by straight-line distance: the closest car by air may be across a river. The best candidate gets an offer with a timeout of 10 to 15 seconds; on timeout or decline, the next candidate gets it. The compare and set on driver status guarantees no driver is offered two rides at once.</p>
+  <h2>Live trip tracking over a WebSocket</h2>
+  <p>During a trip, the driver app keeps sending locations; the location service publishes them on a channel for that trip, and the rider’s WebSocket receives them. Updates every few seconds are enough, because the client animates smoothly between points.</p>
+
+  <div class="probe">
+    <h2>What the interviewer probes next</h2>
+    <details class="qa"><summary>The driver’s phone loses signal mid-trip.</summary><p>The app buffers GPS points and uploads them on reconnect; the fare is computed from the full path afterwards. The rider sees the last known position with a reconnecting notice.</p></details>
+    <details class="qa"><summary>How does surge pricing work?</summary><p>A stream job counts ride requests and available drivers per cell per minute. When demand far exceeds supply, a multiplier applies, smoothed over time so prices do not flicker.</p></details>
+    <details class="qa"><summary>The matching service crashes in the middle of an offer.</summary><p>The ride request and its state are persisted, so another instance resumes it. Offers carry timeouts, and the driver compare and set prevents a double assignment during the handover.</p></details>
+    <details class="qa"><summary>How is the system partitioned?</summary><p>By city or region: location index, matching and trip services all run per region, so a busy Saturday in one city cannot slow another, and an outage stays local.</p></details>
+  </div>
+
+  <h2>Building blocks used here</h2>
+  <ul class="blocks-list">
+      <li><a href="../../system-design-casebook.html#f-comm"><span class="code">I.7</span><b>Communication patterns</b><span class="why">the live trip stream</span></a></li>
+      <li><a href="../../system-design-casebook.html#queues"><span class="code">IV.5</span><b>Queues and streams</b><span class="why">location history in bulk</span></a></li>
+      <li><a href="../../system-design-casebook.html#cap"><span class="code">IV.4</span><b>CAP and consistency</b><span class="why">one driver, one ride</span></a></li>
+      <li><a href="../../system-design-casebook.html#c-geo"><span class="code">V.7</span><b>Nearby places</b><span class="why">geohash cells, step by step</span></a></li>
+  </ul>
+  <nav class="case-nav" aria-label="More case studies">
+      <a class="prev" href="../../system-design-casebook.html#c-ticket"><span class="dir">← Previous case study</span><span class="t">V.8 · Ticket booking</span></a>
+      <a class="next" href="../../system-design-casebook.html#c-video"><span class="dir">Next case study →</span><span class="t">V.10 · Video streaming</span></a>
+  </nav>
+  <p class="case-last">Want to run this as a mock interview? See <a href="../../../help/interview-prep/index.html">interview prep</a>.</p>
+</section>
+</main>
+
+<nav class="rail" aria-label="Case studies">
+  <div class="rail-inner">
+    <a class="rail-hub" href="../../system-design-casebook.html"><b>System Design Casebook</b><span>Foundations, method and building blocks, with all 14 case studies</span></a>
+    <div class="rail-top"><span class="eyebrow">Case studies</span><span class="prog"><span id="prog-n">0</span> of <span id="prog-total">14</span> done</span></div>
+    <div class="prog-track" aria-hidden="true"><span id="prog-bar"></span></div>
+    <ol class="toc">
+      <li><a href="../url-shortener/index.html" data-sheet="c-url"><span class="code">V.1</span>URL shortener<span class="tick">✓</span></a></li>
+      <li><a href="../news-feed/index.html" data-sheet="c-feed"><span class="code">V.2</span>News feed<span class="tick">✓</span></a></li>
+      <li><a href="../chat-system/index.html" data-sheet="c-chat"><span class="code">V.3</span>Chat system<span class="tick">✓</span></a></li>
+      <li><a href="../../system-design-casebook.html#c-notify" data-sheet="c-notify"><span class="code">V.4</span>Notifications<span class="tick">✓</span></a></li>
+      <li><a href="../../system-design-casebook.html#c-auto" data-sheet="c-auto"><span class="code">V.5</span>Autocomplete<span class="tick">✓</span></a></li>
+      <li><a href="../../system-design-casebook.html#c-crawl" data-sheet="c-crawl"><span class="code">V.6</span>Web crawler<span class="tick">✓</span></a></li>
+      <li><a href="../../system-design-casebook.html#c-geo" data-sheet="c-geo"><span class="code">V.7</span>Nearby places<span class="tick">✓</span></a></li>
+      <li><a href="../../system-design-casebook.html#c-ticket" data-sheet="c-ticket"><span class="code">V.8</span>Ticket booking<span class="tick">✓</span></a></li>
+      <li><a href="../ride-sharing/index.html" data-sheet="c-ride" aria-current="page"><span class="code">V.9</span>Ride sharing<span class="tick">✓</span></a></li>
+      <li><a href="../../system-design-casebook.html#c-video" data-sheet="c-video"><span class="code">V.10</span>Video streaming<span class="tick">✓</span></a></li>
+      <li><a href="../file-sync/index.html" data-sheet="c-sync"><span class="code">V.11</span>File sync<span class="tick">✓</span></a></li>
+      <li><a href="../../system-design-casebook.html#c-docs" data-sheet="c-docs"><span class="code">V.12</span>Collaborative editor<span class="tick">✓</span></a></li>
+      <li><a href="../../system-design-casebook.html#c-kv" data-sheet="c-kv"><span class="code">V.13</span>Key value store<span class="tick">✓</span></a></li>
+      <li><a href="../../system-design-casebook.html#c-pay" data-sheet="c-pay"><span class="code">V.14</span>Payment system<span class="tick">✓</span></a></li>
+    </ol>
+  </div>
+</nav>
+</div>
+
+<script src="../casebook.js"></script>
+</body></html>
