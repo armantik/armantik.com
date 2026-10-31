@@ -429,3 +429,16 @@ dl.rows { margin: 0; }
 .copy-cap { font: 500 10px/1.2 var(--mono); letter-spacing: 0.02em; color: var(--ink-3); opacity: .6; transition: opacity .15s; }
 .copy-ico:hover { color: var(--petrol); }
 .copy-ico:hover .copy-cap, .copy-ico:focus-visible .copy-cap, .copy-ico.is-done .copy-cap { opacity: 1; color: var(--petrol); }
+
+/* Links as icons with a faint caption under them, the same style as Copy email: no border, no box.
+   <a class="ico-link" aria-label="LinkedIn"><svg class="ico">...</svg><span class="ico-cap">linkedin</span></a> */
+.ico-link {
+  display: inline-grid; justify-items: center; gap: 3px; padding: 4px 6px; border-radius: var(--radius);
+  color: var(--ink); text-decoration: none;
+}
+.ico-link .ico { width: 26px; height: 26px; }
+.ico-cap { font: 500 10px/1.2 var(--mono); letter-spacing: 0.02em; color: var(--ink-3); opacity: .6; transition: opacity .15s; }
+.ico-link:hover { color: var(--petrol); }
+.ico-link:hover .ico-cap, .ico-link:focus-visible .ico-cap { opacity: 1; color: var(--petrol); }
+.contact-line { gap: 10px 12px; }
+.links .ico-link { margin-left: 4px; }
