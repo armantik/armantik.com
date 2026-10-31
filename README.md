@@ -31,6 +31,8 @@ armantik.com/
 ├── 404.html                   shown for missing pages
 ├── sitemap.xml                the pages search engines should list (see Search engines below)
 ├── robots.txt                 points search engines to the sitemap
+├── tools/ci/                  the checks that run on every pull request (see Checks below)
+├── .github/workflows/         site-checks.yml runs those checks on GitHub
 ├── CNAME                      tells GitHub Pages to serve this repo at armantik.com
 └── .nojekyll                  tells GitHub Pages to serve files as they are (keep it)
 ```
@@ -160,6 +162,33 @@ One time setup:
 6. Optional, later: turn the Cloudflare proxy on (orange cloud) and set SSL/TLS mode to **Full (strict)**.
 
 After that, every `git push` to `main` updates the live site in about a minute.
+
+## Checks
+
+Every pull request, every push to `main` or a version branch (`v6`, `v7`, ...), and a manual run from the **Actions** tab (**Site checks → Run workflow**) checks the whole site. The result shows on the pull request; click **Details** for the list of problems, each with the file it is in.
+
+| Check | Fails when |
+|---|---|
+| Links, scripts, search tags, sitemap | a link or image points to a missing file; a script or JSON-LD block does not parse; an indexable page lacks a title, description, canonical link or structured data; `sitemap.xml` misses a page, lists a noindex page or a missing file |
+| Writing style | an em dash, en dash or spaced hyphen is used as punctuation in visible text, a title, a description or `content.js` (the house rule below). A lone dash for an empty value and a minus sign like `n - 1` are fine |
+| Contact details | the email address or phone number appears as plain text anywhere, or the phone number's scrambled bytes or a `tel:` link appear outside the card page |
+| Java guide | an entry is missing a field, ids are not 1, 2, 3 ..., a topic is split, a Basic question comes after an Advanced one in its topic, `code` or **bold** markup is broken, or any count shown to people (page title, search tags, header, Lab card, links) differs from the data |
+| Interview bank guard | a guide question repeats wording from the private interview bank (only runs when the `INTERVIEW_BANK` secret is set) |
+| HTML validation | the markup is broken: unclosed or misnested elements, duplicate ids, invalid attributes, images without alt text. Accessibility details are listed as warnings |
+| Browser smoke test | a page throws a JavaScript error, a local file fails to load, a page is wider than a 390px phone, a link points to a missing `#anchor`, the theme switch does nothing, or the Java guide does not render, filter and open all its questions |
+
+Run them on your computer before pushing:
+
+```bash
+cd tools/ci
+npm ci
+npx playwright install chromium   # once
+npm run all                       # or one at a time: static, guide, bank, html, smoke
+```
+
+**The interview bank guard** compares the guide with your private question bank without the bank ever being in this repository. Store the bank once as a repository secret: **Settings → Secrets and variables → Actions → New repository secret**, name `INTERVIEW_BANK`, value the gzip + base64 JSON described at the top of `tools/ci/check-bank.mjs`. Its findings name only the guide question number, never the bank's text. Pull requests from forks never receive secrets, so for them the guard is skipped.
+
+To block merging when a check fails: **Settings → Rules → Rulesets → New branch ruleset**, target `main` and `v*`, turn on **Require status checks to pass**, and add **Check the site**.
 
 ## Edit with Claude Code
 
