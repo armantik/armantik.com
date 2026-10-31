@@ -197,8 +197,8 @@ window.SITE = {
       title: "Senior Java Backend Guide",
       href: "lab/java-backend-guide.html",
       group: "java",
-      summary: "229 questions from Java fundamentals and concurrency to Spring, databases, Kafka, Kubernetes and production troubleshooting, each marked Basic or Advanced, with a short answer, code and follow-ups.",
-      tags: ["229 questions", "22 topics", "basic and advanced"]
+      summary: "243 questions from Java fundamentals and concurrency to Spring, databases, Kafka, Kubernetes and production troubleshooting, each marked Basic or Advanced, with a short answer, code and follow-ups.",
+      tags: ["243 questions", "22 topics", "basic and advanced"]
     }
   ],
 
