@@ -29,6 +29,8 @@ armantik.com/
 │   ├── og-image.png           the 1200x630 image shown when a page is shared on LinkedIn, Slack and the like
 │   └── favicon.svg            the mark
 ├── 404.html                   shown for missing pages
+├── sitemap.xml                the pages search engines should list (see Search engines below)
+├── robots.txt                 points search engines to the sitemap
 ├── CNAME                      tells GitHub Pages to serve this repo at armantik.com
 └── .nojekyll                  tells GitHub Pages to serve files as they are (keep it)
 ```
@@ -69,7 +71,7 @@ The "How I can help" cards come from `services: [` in `content.js`. Each card ha
 
 Neither is written anywhere as text, so spam bots and crawlers can't collect them. Both are stored as scrambled bytes (reversed, then XOR'ed with a key in `assets/site.js`) and put together in the browser only when a person is there:
 
-- **Email** (`links.emailBytes` in `content.js`): every page shows a "Show email" link in its place, which turns into the address after the first tap, scroll or key press. Email me and Copy email work as usual.
+- **Email** (`links.emailBytes` in `content.js`): pages show the address as an image, `assets/email.svg`, drawn from the letter shapes so there is no text to scrape. Email me and Copy email decode the address only when they are used. If the address changes, redraw the image too (ask Claude, or render the new address in JetBrains Mono Medium and convert the text to outlines).
 - **Phone** (`C` in the script at the bottom of `card/index.html`, the only page that has it): the Call or text button says "Show number". The first tap shows the number, the second one calls. Save contact builds its contact file when it is tapped.
 
 To change either one, open the browser console on any page of the site, run this with the new value, and paste the result into `emailBytes` or `C`:
@@ -114,6 +116,14 @@ Add a block to `talks: [` in `content.js` (title, date, event, href, summary). T
 - **One item:** add `hidden: true` to its block. Remove the line (or set `false`) to show it.
 - **A link button:** leave its value empty in `links:` (for example `github: ""`) and the button disappears.
 - **Check hidden things before going public:** open `https://armantik.com/?preview`. Hidden sections and items appear with a yellow "hidden" tag. Visitors without `?preview` never see them. (It is a convenience, not a secret: anyone who knows the trick can use it, so don't put anything private in the repo.)
+
+## Search engines
+
+- **`sitemap.xml`** lists every page that should show up in search: home, How I help and its five pages, the Lab and each guide, Writing. When you add a page (a Lab guide, a help page, an article on your own site), add a `<url>` line for it and set `<lastmod>` to the date you changed it.
+- **`robots.txt`** points search engines to the sitemap and keeps them out of `tools/` and the article template.
+- **Every indexable page** has a `<title>` and a description written for what people search for ("system design interview prep", "Two Sum LeetCode 1 in Java", "Claude Code setup"), and a `<link rel="canonical">` with its address on armantik.com. Copy both when you add a page.
+- **Structured data** (the `<script type="application/ld+json">` block in the head) tells Google who you are and what each page is: a Person on the home page (no email or phone in it), a Service on each How I help page, a LearningResource on each Lab guide, and breadcrumbs. Check a page at [search.google.com/test/rich-results](https://search.google.com/test/rich-results).
+- **Kept out of search** with `noindex`: the card, the brand page, the old mentoring address and the 404 page.
 
 ## Light and dark theme
 
