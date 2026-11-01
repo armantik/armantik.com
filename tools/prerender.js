@@ -123,7 +123,11 @@ for (const file of htmlFiles(ROOT, [])) {
     if (/\sdata-show="/.test(t)) t = setHidden(t, !R.on(attr(t, 'data-show')));
     if (/\sdata-show-off="/.test(t)) t = setHidden(t, R.on(attr(t, 'data-show-off')));
     if (/\sdata-link="/.test(t)) {
-      const href = R.link(attr(t, 'data-link'));
+      let href = R.link(attr(t, 'data-link'));
+      /* an Ask me button can open the form with its topic ticked, the same way assets/site.js does */
+      const topic = /\sdata-ask-topic="/.test(t) ? attr(t, 'data-ask-topic') : '';
+      const field = R.link('askTopicField');
+      if (href && topic && field) href += (href.indexOf('?') < 0 ? '?' : '&') + 'usp=pp_url&' + field + '=' + encodeURIComponent(topic);
       t = href ? setHref(setHidden(t, false), href) : setHidden(t, true);
     }
     edits.push({ from: start, to: start + open.length, text: t });

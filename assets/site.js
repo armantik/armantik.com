@@ -183,7 +183,10 @@
   document.querySelectorAll('[data-link]').forEach(function (el) {
     var v = R.link(el.getAttribute('data-link'));
     el.hidden = !v;
-    if (v && el.tagName === 'A') el.href = v;
+    if (v && el.tagName === 'A') {
+      var topic = el.getAttribute('data-ask-topic'), field = R.link('askTopicField');
+      el.href = topic && field ? v + (v.indexOf('?') < 0 ? '?' : '&') + 'usp=pp_url&' + field + '=' + encodeURIComponent(topic) : v;
+    }
   });
 
   /* ---- lab: the home page cards (data-lab="categories") and the Lab page (data-lab="all") ---- */

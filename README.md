@@ -93,6 +93,14 @@ AA.scramble("+46700000000")
 
 Write the phone number with country code and no spaces. Set `emailBytes` or `C` to `[]` to hide that one.
 
+### The Ask me form
+
+The **Ask me** buttons on the How I help pages, in Contact on the home page and on the card open a Google Form, **Ask Arman**, in your Google Drive. Answers land in the sheet **Ask Arman (Responses)**, and Google emails you for each new one. The form asks for a name, an email, the topic, a few lines, a timeline, the preferred language (English or Persian), a LinkedIn or CV link, and consent to keep the details only for replying.
+
+- The form's address is `links.ask` in `content.js`. Set it to `""` to hide every Ask me button.
+- A button can open the form with its topic already ticked: `data-ask-topic="Interview prep"` on the link, with the topic written exactly as in the form. That needs `links.askTopicField`, the id of the topic question, which **Get pre-filled link** in the form shows (`entry.` followed by digits).
+- To change the questions, edit the form in Google Forms; the site needs no change unless you rename a topic.
+
 ### The How I help pages
 
 Each page in `help/` has the same four parts: a one line summary, a "How I can help" paragraph with a short list, "The plan" (a numbered step diagram) and "Interested?" with the contact buttons. To change a step in the plan, edit its `<li>` inside `<ol class="plan">`: `s` is the step name, `d` what happens, `w` how long or when. Three to five steps fit best. `show.help: false` in `content.js` hides the links to these pages in the menus, on the home page and on the card.

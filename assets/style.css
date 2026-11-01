@@ -457,3 +457,7 @@ dl.rows { margin: 0; }
   background: var(--ink);
   -webkit-mask: url(email.svg) no-repeat left center / contain; mask: url(email.svg) no-repeat left center / contain;
 }
+
+/* Ask me: the button that opens the contact form, with a quiet line beside it */
+.ask-cta { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; margin: 20px 0 22px; }
+.ask-note { font-size: 14px; color: var(--slate); }

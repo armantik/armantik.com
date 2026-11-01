@@ -38,7 +38,13 @@ window.SITE = {
     // Your phone number is not here on purpose: it lives only on the card page (card/index.html).
     linkedin: "https://www.linkedin.com/in/arman-ajabkhani/",
     github: "",          // e.g. "https://github.com/your-username"
-    medium: "https://armantik.medium.com/"
+    medium: "https://armantik.medium.com/",
+    // The "Ask me" buttons open this Google Form (owned by your Google account, answers go to the
+    // "Ask Arman (Responses)" sheet). Set it to "" to hide every Ask me button.
+    ask: "https://docs.google.com/forms/d/e/1FAIpQLSc_x_prXVaSssiuNMqdATwNN5P5FHgB2FE7v49tN9TM30wnEQ/viewform",
+    // The id of the form's "What do you need help with?" question, so a button on the interview prep
+    // page opens the form with Interview prep already ticked. Find it with Get pre-filled link in the form.
+    askTopicField: "entry.755961089"
   },
 
   /* ---------- LAB GROUPS: the three categories, in the order they appear ---------- */
