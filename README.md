@@ -26,11 +26,13 @@ armantik.com/
 ├── mentoring/index.html       old address, forwards to help/
 ├── card/index.html            landing page for the NFC tag and the QR code on the business card (noindex; open armantik.com/card/)
 ├── brand/index.html           colors, type and the mark (not in the menu; open armantik.com/brand/)
+├── privacy/index.html         what the site and your email do with visitors' data (linked from the footer)
 ├── assets/
 │   ├── style.css              shared look; change a color once and every page follows
 │   ├── site.js                builds the lists from content.js (no need to edit)
 │   ├── theme.js               the light and dark switch (no need to edit)
 │   ├── icons/                 hand-drawn icons as separate SVG files (for print, slides and posts)
+│   ├── fonts/                 the fonts, served from this site instead of Google (see Fonts and the security tag below)
 │   ├── og-image.png           the 1200x630 image shown when a page is shared on LinkedIn, Slack and the like
 │   ├── logo.svg, logo-dark.svg  the Arman✓ logo with fixed colors, for slides and print
 │   └── favicon.svg            the A✓ mark, the browser tab icon
@@ -141,7 +143,7 @@ Add a block to `talks: [` in `content.js` (title, date, event, href, summary). T
 
 ## Hide and show
 
-- **A whole section:** in `content.js`, set its switch under `show:` to `false` or `true`. Talks and the Persian name in the footer start switched off. (If you switch the Persian name on, add `&family=Vazirmatn:wght@500` to the Google Fonts link in each page for the nicest Persian type.)
+- **A whole section:** in `content.js`, set its switch under `show:` to `false` or `true`. Talks and the Persian name in the footer start switched off. (If you switch the Persian name on, add `<link rel="stylesheet" href="../assets/fonts/vazirmatn.css">` after the `site.css` font link in each page for the nicest Persian type, as `brand/index.html` does.)
 - **One item:** add `hidden: true` to its block. Remove the line (or set `false`) to show it.
 - **A link button:** leave its value empty in `links:` (for example `github: ""`) and the button disappears.
 - After any of these, run `node tools/prerender.js` (see below).
@@ -159,7 +161,7 @@ It writes the Lab page list, the Lab cards on the home page, the Writing lists a
 
 ## Search engines
 
-- **`sitemap.xml`** lists every page that should show up in search: home, How I help and its five pages, the Lab and each guide, each System Design case study page, Writing. When you add a page (a Lab guide, a help page, an article on your own site), add a `<url>` line for it and set `<lastmod>` to the date you changed it.
+- **`sitemap.xml`** lists every page that should show up in search: home, How I help and its five pages, the Lab and each guide, each System Design case study page, Writing, Privacy. When you add a page (a Lab guide, a help page, an article on your own site), add a `<url>` line for it and set `<lastmod>` to the date you changed it.
 - **`robots.txt`** points search engines to the sitemap and keeps them out of `tools/` and the article template.
 - **Every indexable page** has a `<title>` and a description written for what people search for ("system design interview prep", "Two Sum LeetCode 1 in Java", "Claude Code setup"), and a `<link rel="canonical">` with its address on armantik.com. Copy both when you add a page.
 - **Structured data** (the `<script type="application/ld+json">` block in the head) tells Google who you are and what each page is: a Person on the home page (no email or phone in it), a Service on each How I help page, a LearningResource on each Lab guide, and breadcrumbs. Check a page at [search.google.com/test/rich-results](https://search.google.com/test/rich-results).
@@ -259,4 +261,10 @@ Claude Code can follow this README to do it.
 | Sea    | `#5BB8AA` | petrol on dark backgrounds           |
 | Night  | `#0F1614` | dark mode background                 |
 
-Fonts: Schibsted Grotesk (text, and headings at weight 600), JetBrains Mono (labels, dates, code), Vazirmatn (Persian). All on Google Fonts. Full details, with RGB and CMYK, at `/brand/`.
+Fonts: Schibsted Grotesk (text, and headings at weight 600), JetBrains Mono (labels, dates, code), Vazirmatn (Persian). All free Google Fonts, but served from this site. Full details, with RGB and CMYK, at `/brand/`.
+
+## Fonts and the security tag
+
+- **Fonts live in `assets/fonts/`**, not on Google's servers, so a visitor's browser never sends their IP address to Google (a German court found that loading Google Fonts from Google breaks the GDPR). Each page links one CSS file: `site.css` for the main pages, `lab.css` for the interactive Lab guides, `casebook.css` for the System Design Casebook, plus `vazirmatn.css` where Persian type is needed. The files come from [Fontsource](https://fontsource.org) under the SIL Open Font License; the licenses are in `assets/fonts/licenses/`.
+- **Every page has a Content Security Policy** as the first tag after `<meta charset>`. It lets the browser load scripts, styles, images and fonts only from armantik.com, so a stray third party script, tracker or font link simply won't load. When you add a page, copy that tag and the font link from a page of the same kind. If something you add later needs another site (an embedded video, say), add that site to the tag on that page.
+- **Never link `fonts.googleapis.com` again.** The security tag blocks it anyway, and the page would quietly fall back to system fonts.
