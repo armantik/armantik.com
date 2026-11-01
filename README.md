@@ -31,10 +31,10 @@ armantik.com/
 ├── 404.html                   shown for missing pages
 ├── sitemap.xml                the pages search engines should list (see Search engines below)
 ├── robots.txt                 points search engines to the sitemap
-├── tools/ci/                  the checks that run on every pull request (see Checks below)
-├── .github/workflows/         site-checks.yml runs those checks on GitHub
 ├── CNAME                      tells GitHub Pages to serve this repo at armantik.com
-└── .nojekyll                  tells GitHub Pages to serve files as they are (keep it)
+├── .nojekyll                  tells GitHub Pages to serve files as they are (keep it)
+├── tools/ci/                  the checks that run on every pull request (see Checks below)
+└── .github/workflows/         site-checks.yml runs those checks on GitHub
 ```
 
 ## Add things
@@ -172,6 +172,7 @@ Every pull request, every push to `main` or a version branch (`v6`, `v7`, ...), 
 | Links, scripts, search tags, sitemap | a link or image points to a missing file; a script or JSON-LD block does not parse; an indexable page lacks a title, description, canonical link or structured data; `sitemap.xml` misses a page, lists a noindex page or a missing file |
 | Writing style | an em dash, en dash or spaced hyphen is used as punctuation in visible text, a title, a description or `content.js` (the house rule below). A lone dash for an empty value and a minus sign like `n - 1` are fine |
 | Contact details | the email address or phone number appears as plain text anywhere, or the phone number's scrambled bytes or a `tel:` link appear outside the card page |
+| Lists in the HTML | `content.js` changed but `node tools/prerender.js` was not run, so the Lab, Writing and Talks lists in the HTML files are out of date (once that script is on the branch) |
 | Java guide | an entry is missing a field, ids are not 1, 2, 3 ..., a topic is split, a Basic question comes after an Advanced one in its topic, `code` or **bold** markup is broken, or any count shown to people (page title, search tags, header, Lab card, links) differs from the data |
 | Interview bank guard | a guide question repeats wording from the private interview bank (only runs when the `INTERVIEW_BANK` secret is set) |
 | HTML validation | the markup is broken: unclosed or misnested elements, duplicate ids, invalid attributes, images without alt text. Accessibility details are listed as warnings |

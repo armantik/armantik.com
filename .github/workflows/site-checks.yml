@@ -42,6 +42,15 @@ jobs:
         if: ${{ !cancelled() }}
         run: node check-site.mjs
 
+      # tools/prerender.js writes the lists from content.js into the HTML; this fails when someone edited
+      # content.js and forgot to run it. Skipped on branches that don't have the script yet.
+      - name: Lists in the HTML match content.js
+        if: ${{ !cancelled() }}
+        working-directory: .
+        run: |
+          if [ -f tools/prerender.js ]; then node tools/prerender.js --check
+          else echo "tools/prerender.js is not on this branch yet, nothing to check"; fi
+
       - name: Java guide data and counts
         if: ${{ !cancelled() }}
         run: node check-guide.mjs
