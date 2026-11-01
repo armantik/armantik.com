@@ -12,8 +12,11 @@
    In every page that loads assets/site.js it fills
      data-lab="categories" | "all"         the home page Lab cards, the Lab page
      data-lab-count                        the number of guides
-     data-writing, data-talks              the Writing and Talks rows (data-writing="5": the five newest)
+     data-writing, data-talks              the Writing and Talks rows (data-writing="5": the five newest),
+                                           only while show.writing or show.talks is on, empty otherwise
      data-services, data-service-topics    only while show.services is on, empty otherwise
+   A list whose switch is off stays empty, so a section you parked (a talk not yet announced, say)
+   is not in the page source for crawlers to read.
    and it sets the hidden attribute on data-show and data-show-off by the switches in content.js,
    and the href (or hidden) on data-link. Items with hidden: true stay out.
    Plain Node, no packages to install. */
@@ -105,8 +108,8 @@ for (const file of htmlFiles(ROOT, [])) {
   };
   fill('data-lab', (v) => (v === 'categories' ? R.labCategories() : R.labAll()));
   fill('data-lab-count', () => R.labCount());
-  fill('data-writing', (v) => R.writing(parseInt(v, 10) || 0));
-  fill('data-talks', (v) => R.talks(parseInt(v, 10) || 0));
+  fill('data-writing', (v) => (R.on('writing') ? R.writing(parseInt(v, 10) || 0) : ''));
+  fill('data-talks', (v) => (R.on('talks') ? R.talks(parseInt(v, 10) || 0) : ''));
   fill('data-services', () => (R.on('services') ? R.services() : ''));
   fill('data-service-topics', () => (R.on('services') ? R.serviceTopics() : ''));
 

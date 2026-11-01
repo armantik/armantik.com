@@ -7,7 +7,8 @@
   3. Write the body between  ARTICLE START  and  ARTICLE END.  The building blocks you can use are shown below
      (heading, paragraph, list, code, quote, table, note). Delete the ones you don't need.
   4. Add one entry to WRITING in /content.js with  href: "writing/your-file-name.html"  and  source: "armantik.com".
-  5. Push to GitHub. The article appears on the home page and on /writing/ automatically.
+  5. Run  node tools/prerender.js  so the home page and /writing/ list the article in their HTML too, then push
+     to GitHub. (Visitors see it either way; crawlers that don't run JavaScript only see it after this step.)
 
   Leave the header, footer and the two <script> lines at the bottom as they are.
 -->

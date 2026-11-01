@@ -197,13 +197,16 @@
   });
   document.querySelectorAll('[data-lab-count]').forEach(function (el) { el.textContent = R.labCount(); });
 
+  /* a list whose show: switch is off stays empty (tools/prerender.js does the same), except with ?preview */
+  function shown(key) { return R.on(key) || preview; }
+
   /* ---- writing and talks rows ---- */
-  document.querySelectorAll('[data-writing]').forEach(function (el) { el.innerHTML = R.writing(parseInt(el.getAttribute('data-writing'), 10) || 0); });
-  document.querySelectorAll('[data-talks]').forEach(function (el) { el.innerHTML = R.talks(parseInt(el.getAttribute('data-talks'), 10) || 0); });
+  document.querySelectorAll('[data-writing]').forEach(function (el) { el.innerHTML = shown('writing') ? R.writing(parseInt(el.getAttribute('data-writing'), 10) || 0) : ''; });
+  document.querySelectorAll('[data-talks]').forEach(function (el) { el.innerHTML = shown('talks') ? R.talks(parseInt(el.getAttribute('data-talks'), 10) || 0) : ''; });
 
   /* ---- services cards, and the service titles in the contact section ---- */
-  document.querySelectorAll('[data-services]').forEach(function (el) { el.innerHTML = R.services(); });
-  document.querySelectorAll('[data-service-topics]').forEach(function (el) { el.innerHTML = R.serviceTopics(); });
+  document.querySelectorAll('[data-services]').forEach(function (el) { el.innerHTML = shown('services') ? R.services() : ''; });
+  document.querySelectorAll('[data-service-topics]').forEach(function (el) { el.innerHTML = shown('services') ? R.serviceTopics() : ''; });
 
   /* ---- contact details are never in the page as text ----
      The email (links.emailBytes in content.js) and the phone number (on the card page) are stored as
