@@ -145,7 +145,7 @@ Run this from the repo folder, then commit:
 node tools/prerender.js
 ```
 
-It writes the Lab page list, the Lab cards on the home page, the Writing lists and the guide count into the HTML files, takes `hidden: true` items out, and sets the `hidden` attribute on everything a `show:` switch turns off (and the `href` on every `links:` button). Search engines and AI crawlers that read a page without running JavaScript (ChatGPT, Claude and Perplexity among them) then see the same lists a visitor does. In the browser, `assets/site.js` still draws the lists from `content.js` with the same code, so if you forget to run it the site still looks right; only the plain HTML is out of date until you do. It needs Node and nothing else. `node tools/prerender.js --check` only reports which pages are out of date.
+It writes the Lab page list, the Lab cards on the home page, the Writing lists and the guide count into the HTML files, takes `hidden: true` items out, and sets the `hidden` attribute on everything a `show:` switch turns off (and the `href` on every `links:` button). A list whose switch is off (Talks today) stays empty, in the HTML and in the browser, so a talk you add before announcing it is not in the page source; `?preview` still shows it. Search engines and AI crawlers that read a page without running JavaScript (ChatGPT, Claude and Perplexity among them) then see the same lists a visitor does. In the browser, `assets/site.js` still draws the lists from `content.js` with the same code, so if you forget to run it the site still looks right; only the plain HTML is out of date until you do. It needs Node and nothing else. `node tools/prerender.js --check` only reports which pages are out of date.
 
 ## Search engines
 
