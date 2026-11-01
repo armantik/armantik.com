@@ -8,7 +8,7 @@ Writes:
   assets/logo.svg, assets/logo-dark.svg   the logo with fixed colors (print, slides, posts)
   assets/favicon.svg                       the mark, used as the browser icon
   favicon.ico, apple-touch-icon.png        the mark for old browsers and the iPhone home screen
-  every <svg data-logo="logo"> and <svg data-logo="mark"> in the HTML pages (paths only;
+  every <svg data-logo="logo">, "mark" and "tick" in the HTML pages (paths only;
   the opening tag keeps its class, size and label)
 
 Run from the repo root:
@@ -156,6 +156,14 @@ def logo_paths(font):
     return round((x1 - x0) * s, 1), font.outline("Arman", s, -x0 * s, y1 * s), d_of(tick, fx, fy)
 
 
+def tick_paths(font):
+    """The tick on its own, 100 units tall, for lists that use it as a bullet."""
+    _, tick = font.logo()
+    x0, y0, x1, y1 = tick.bounds
+    s = 100 / (y1 - y0)
+    return round((x1 - x0) * s, 1), d_of(tick, lambda x: (x - x0) * s, lambda y: (y1 - y) * s)
+
+
 def mark_paths(font):
     a, tick = font.mark()
     x0, y0, x1, y1 = unary_union([a, tick]).bounds
@@ -186,11 +194,13 @@ def raster_mark(geom, tf, size, rounded):
 def main(font_path):
     font = Font(font_path)
     w, d_letters, d_tick = logo_paths(font)
+    tw, d_tick_only = tick_paths(font)
     d_mark, mark_geom, tf = mark_paths(font)
 
     # the inside of each inline copy; colors come from the page (see assets/style.css)
     logo_inner = (f'<path fill="currentColor" d="{d_letters}"/>'
                   f'<path style="fill:var(--logo-tick,{PETROL})" d="{d_tick}"/>')
+    tick_inner = f'<path style="fill:var(--logo-tick,{PETROL})" d="{d_tick_only}"/>'
     mark_inner = (f'<rect width="64" height="64" rx="14" style="fill:var(--mark-bg,{PETROL})"/>'
                   f'<path style="fill:var(--mark-ink,{PAPER})" d="{d_mark}"/>')
 
@@ -211,16 +221,17 @@ def main(font_path):
     raster_mark(mark_geom, tf, 180, False).convert("RGB").save(ROOT / "apple-touch-icon.png", optimize=True)
 
     # rewrite every inline copy in the pages
-    pat = re.compile(r'(<svg\b[^>]*\bdata-logo="(logo|mark)"[^>]*>)(.*?)(</svg>)', re.S)
+    pat = re.compile(r'(<svg\b[^>]*\bdata-logo="(logo|mark|tick)"[^>]*>)(.*?)(</svg>)', re.S)
 
     def fix(m):
         tag, kind = m.group(1), m.group(2)
-        if kind == "logo":
-            tag = re.sub(r'viewBox="[^"]*"', f'viewBox="0 0 {w} 100"', tag)
+        if kind in ("logo", "tick"):
+            width, inner = (w, logo_inner) if kind == "logo" else (tw, tick_inner)
+            tag = re.sub(r'viewBox="[^"]*"', f'viewBox="0 0 {width} 100"', tag)
             hm = re.search(r'\bheight="([\d.]+)"', tag)
             if hm:
-                tag = re.sub(r'\bwidth="[\d.]+"', f'width="{round(float(hm.group(1)) * w / 100)}"', tag)
-            return tag + logo_inner + m.group(4)
+                tag = re.sub(r'\bwidth="[\d.]+"', f'width="{round(float(hm.group(1)) * width / 100)}"', tag)
+            return tag + inner + m.group(4)
         return re.sub(r'viewBox="[^"]*"', 'viewBox="0 0 64 64"', tag) + mark_inner + m.group(4)
 
     changed = 0
