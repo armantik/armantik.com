@@ -50,6 +50,12 @@ try {
         await tab.waitForTimeout(250);
       } catch (e) { problems.add(`page did not load: ${e.message.split("\n")[0]}`); }
 
+      /* a forwarding page (meta refresh) ends up showing another page; that page's links are relative to
+         its own folder, and it is checked on its own, so its ids and #anchor links are not filed under this one */
+      let shown = page;
+      try { shown = decodeURIComponent(new URL(tab.url()).pathname).replace(/^\/+/, ""); if (!shown || shown.endsWith("/")) shown += "index.html"; } catch { /* keep page */ }
+      const forwarded = shown !== page;
+
       const info = await tab.evaluate(() => {
         const skip = "SCRIPT,STYLE,PRE,CODE,KBD,SAMP,SVG,TEXTAREA,TEMPLATE,NOSCRIPT";
         const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, {
@@ -69,8 +75,10 @@ try {
       if (info) {
         if (label === "phone" && info.overflow > 1) problems.add(`is ${info.overflow}px wider than a 390px phone screen (sideways scrolling)`);
         if (label === "desktop") {
-          idsByPage.set(page, new Set(info.ids));
-          for (const href of info.anchors) anchorLinks.push({ page, href });
+          if (!forwarded) {
+            idsByPage.set(page, new Set(info.ids));
+            for (const href of info.anchors) anchorLinks.push({ page, href });
+          }
           let dashes = 0;
           for (const t of info.texts) {
             const hit = dashInProse(t);
