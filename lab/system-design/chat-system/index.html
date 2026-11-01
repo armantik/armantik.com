@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Design a Chat System Like WhatsApp: WebSockets and Message Order</title>
+<meta name="description" content="How to design a chat app like WhatsApp or Messenger: WebSockets, Snowflake IDs for message order, inbox queues, presence and sync across devices, step by step.">
+<meta name="author" content="Arman Ajabkhani">
+<meta property="og:title" content="Design a Chat System Like WhatsApp: WebSockets and Message Order">
+<meta property="og:description" content="How to design a chat app like WhatsApp or Messenger: WebSockets, Snowflake IDs for message order, inbox queues, presence and sync across devices, step by step.">
+<meta property="og:url" content="https://armantik.com/lab/system-design/chat-system/">
+<link rel="canonical" href="https://armantik.com/lab/system-design/chat-system/">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="armantik.com">
+<meta property="article:modified_time" content="2026-10-31">
+<meta property="og:image" content="https://armantik.com/assets/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Arman Ajabkhani, Senior Backend Engineer: Java and Go, AI engineering">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://armantik.com/assets/og-image.png">
+<script type="application/ld+json">{"@context": "https://schema.org", "@graph": [{"@type": "LearningResource", "@id": "https://armantik.com/lab/system-design/chat-system/#guide", "name": "Design a Chat System Like WhatsApp: WebSockets and Message Order", "headline": "Design a Chat System Like WhatsApp", "description": "How to design a chat app like WhatsApp or Messenger: WebSockets, Snowflake IDs for message order, inbox queues, presence and sync across devices, step by step.", "url": "https://armantik.com/lab/system-design/chat-system/", "author": {"@type": "Person", "@id": "https://armantik.com/#person", "name": "Arman Ajabkhani", "url": "https://armantik.com/"}, "dateModified": "2026-10-31", "inLanguage": "en", "isAccessibleForFree": true, "learningResourceType": "Case study", "educationalLevel": "Intermediate", "about": ["System design", "System design interview", "Chat system", "WebSocket"], "teaches": ["WebSockets, long polling and short polling", "Message order with Snowflake IDs", "Delivery to online and offline users", "Presence and multi-device sync"], "isPartOf": {"@id": "https://armantik.com/lab/system-design-casebook.html#guide"}}, {"@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "armantik.com", "item": "https://armantik.com/"}, {"@type": "ListItem", "position": 2, "name": "Learning Lab", "item": "https://armantik.com/lab/"}, {"@type": "ListItem", "position": 3, "name": "System Design Casebook", "item": "https://armantik.com/lab/system-design-casebook.html"}, {"@type": "ListItem", "position": 4, "name": "Chat system", "item": "https://armantik.com/lab/system-design/chat-system/"}]}]}</script>
+<link rel="icon" href="../../../assets/favicon.svg" type="image/svg+xml">
+<script src="../../../assets/theme.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&family=Martian+Mono:wght@400;500;600&family=Public+Sans:ital,wght@0,400..700;1,400..700&display=swap">
+<link rel="stylesheet" href="../casebook.css">
+</head>
+<body>
+<nav class="aa-labbar aa-pad" aria-label="armantik.com"><a class="aa-home" href="../../../index.html"><svg viewBox="0 0 64 64" width="20" height="20" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#0F5C55"/><path d="M18 49 L32 15 L46 49 M23.5 37 H40.5" fill="none" stroke="#FAFBF9" stroke-width="6.5" stroke-linecap="square"/></svg>Arman Ajabkhani</a><span class="aa-right"><a class="aa-crumb" href="../../system-design-casebook.html">Lab / System design / Casebook</a><a href="../../index.html">← All Lab guides</a><button type="button" data-theme-toggle aria-label="Switch theme">Theme</button></span></nav>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <defs>
+    <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 Z" class="m-ink"/></marker>
+    <marker id="ah-hot" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 Z" class="m-hot"/></marker>
+    <marker id="ah-blue" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 Z" class="m-blue"/></marker>
+  </defs>
+</svg>
+
+<div class="shell case">
+<main>
+<section class="sheet case-sheet" id="c-chat">
+  <header class="case-head">
+    <div class="sheet-meta"><span class="code-tag">Case study V.3</span><span class="level"><span class="pips"><i class="on"></i><i class="on"></i><i></i></span>Intermediate</span><button class="done-btn" type="button" aria-pressed="false">Mark done</button></div>
+    <h1>Design a Chat System Like WhatsApp</h1>
+    <p class="sub">Chat introduces stateful servers: millions of open connections that must find each other. The design turns on how a message travels from one socket to another, and what happens when the other side is offline.</p>
+    <p class="byline">By <a href="../../../index.html">Arman Ajabkhani</a>, Senior Backend Engineer · Updated <time datetime="2026-10-31">31 Oct 2026</time></p>
+  </header>
+
+  <section class="answer" aria-labelledby="answer-h">
+    <h2 id="answer-h">The short answer</h2>
+    <p><b>Requirements.</b> One to one chats and groups of up to 100, delivery and read receipts, online status, push notifications for offline users and history on every device; delivery is fast, messages keep their order within a conversation, and an acknowledged message is never lost.</p>
+    <dl class="facts">
+      <div><dt>Messages</dt><dd>23,000 per second<small>50M daily users, 40 each</small></dd></div>
+      <div><dt>Storage</dt><dd>200 GB a day<small>about 73 TB a year</small></dd></div>
+      <div><dt>Connections</dt><dd>10M at once<small>about 100 chat servers</small></dd></div>
+    </dl>
+    <p><b>The design.</b> Each client keeps one WebSocket open to a stateful chat server, while login, profiles and media stay on ordinary HTTP services. A message gets a time sortable Snowflake ID, is written to a wide column store partitioned by conversation before anyone is told, and then goes to the recipient’s inbox queue, which their chat server consumes and pushes down the socket. Offline users get a push notification, and every device catches up by asking for all messages after the last ID it has seen.</p>
+  </section>
+
+  <div class="vplayer" data-v="chat"></div>
+  <div class="prompt"><span class="eyebrow">Interview prompt</span><p>Design a chat app like WhatsApp or Messenger: one to one and small group chats, online status, and sync across devices.</p></div>
+  <h2>Requirements and estimates</h2>
+  <div class="cols">
+    <div><h3 class="lbl">Functional requirements</h3><ul class="plain"><li>One to one and group chats of up to 100 members.</li><li>Delivery and read receipts, online presence.</li><li>Offline users get push notifications and catch up on reconnect.</li><li>History syncs across a user’s devices.</li></ul></div>
+    <div><h3 class="lbl">Non-functional requirements</h3><ul class="plain"><li>Low delivery latency.</li><li>Messages ordered within a conversation.</li><li>Durable: an acknowledged message is never lost.</li></ul></div>
+  </div>
+  <h3 class="lbl">Estimates</h3>
+<pre class="calc"><span class="k">Messages    </span> 50M DAU × 40 per day ÷ 86,400 s    ≈ <b>23,000 messages/s</b>
+<span class="k">Storage     </span> 2B messages/day × 100 B            ≈ <b>200 GB/day</b>, ≈ 73 TB/year
+<span class="k">Connections </span> 10M concurrent ÷ 100K per server   ≈ <b>100 chat servers</b></pre>
+
+  <h2>WebSockets, long polling or short polling</h2>
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>Technique</th><th>How it works</th><th>Tradeoff</th></tr></thead>
+    <tbody>
+      <tr><td><b>Short polling</b></td><td>Client asks “anything new?” every few seconds</td><td>Simple, but most responses are empty and waste capacity</td></tr>
+      <tr><td><b>Long polling</b></td><td>Server holds the request open until a message arrives or a timeout</td><td>Fewer empty replies; still one request per message and constant reconnects</td></tr>
+      <tr><td><b>WebSocket</b> <span class="tag g">Pick</span></td><td>One persistent, two way connection over TCP</td><td>Real time both ways; servers become stateful and need reconnect handling</td></tr>
+    </tbody>
+  </table></div>
+  <p>Use WebSockets for messages only. Login, profiles, group management and media uploads stay on ordinary stateless HTTP services behind a load balancer.</p>
+
+  <h2>How a message travels from Alice to Bob</h2>
+  <div class="plate">
+    <h3 class="lbl">Step through: Alice sends Bob a message</h3>
+    <div class="controls">
+      <div class="seg" id="ch-mode" role="group" aria-label="Bob's status">
+        <button type="button" data-v="on" aria-pressed="true">Bob is online</button>
+        <button type="button" data-v="off" aria-pressed="false">Bob is offline</button>
+      </div>
+      <button class="btn" type="button" id="ch-prev">← Back</button>
+      <button class="btn primary" type="button" id="ch-next">Next →</button>
+    </div>
+    <div class="plate-scroll"><svg class="dg" id="chat-svg" role="img" aria-label="Message path between two chat servers through an ID generator, message store, inbox queue, presence service and push notifications"></svg></div>
+    <div class="stepper-panel" aria-live="polite">
+      <span class="eyebrow" id="ch-count"></span>
+      <h3 id="ch-title"></h3>
+      <p id="ch-text"></p>
+    </div>
+  </div>
+
+  <h2>Message order with Snowflake IDs</h2>
+  <p>Client clocks drift, so ordering comes from IDs the server assigns. A Snowflake ID packs a timestamp into the high bits, so sorting by ID sorts by time, and each generator can mint thousands of IDs per millisecond with no coordination.</p>
+  <div class="plate">
+    <div class="plate-scroll"><div class="bits-wrap">
+      <div class="bits" role="img" aria-label="64 bit layout: 1 sign bit, 41 bits of timestamp, 10 bits of machine ID, 12 bits of sequence">
+        <div class="b0" style="flex:1">0</div>
+        <div class="b1" style="flex:41">41 bits · timestamp</div>
+        <div class="b2" style="flex:10">machine</div>
+        <div class="b3" style="flex:12">sequence</div>
+      </div>
+    </div></div>
+    <ul class="plain" style="margin-top:12px;font-size:14.5px">
+      <li><b>Timestamp</b>, 41 bits: milliseconds since a custom epoch, enough for about 69 years.</li>
+      <li><b>Machine</b>, 10 bits: up to 1,024 generators.</li>
+      <li><b>Sequence</b>, 12 bits: 4,096 IDs per millisecond per generator, reset every millisecond.</li>
+    </ul>
+    <div class="controls"><button class="btn primary" type="button" id="sf-gen">Generate an ID</button></div>
+    <dl class="readout">
+      <div><dt>ID</dt><dd id="sf-id">n/a</dd></div>
+      <div><dt>Time</dt><dd id="sf-ts">n/a</dd></div>
+      <div><dt>Machine</dt><dd id="sf-m">n/a</dd></div>
+      <div><dt>Sequence</dt><dd id="sf-s">n/a</dd></div>
+    </dl>
+  </div>
+
+  <h2>Message storage, presence and group chats</h2>
+  <div class="cols">
+    <div>
+      <h3 class="lbl">Message store</h3>
+      <p>Chat is write heavy and reads are mostly recent. A wide column store (Cassandra, HBase, ScyllaDB) partitioned by <code>conversation_id</code> and sorted by <code>message_id</code> serves “latest 50 messages” from one partition. Discord runs this model on ScyllaDB, and Facebook Messenger ran it on HBase for years.</p>
+      <h3 class="lbl">Multi-device sync</h3>
+      <p>Each device keeps a cursor: the largest message ID it has. On reconnect it asks for everything after that ID, which also covers offline delivery.</p>
+    </div>
+    <div>
+      <h3 class="lbl">Presence</h3>
+      <p>Clients send a heartbeat every 5 seconds. A user is marked offline only after 30 seconds of silence, so a train through a tunnel does not flicker their status. Changes are published to friends over pub/sub; in large groups, presence is fetched only when someone opens the member list.</p>
+      <h3 class="lbl">Groups</h3>
+      <p>Small groups copy each message into every member’s inbox queue. Large channels store once and let members pull, like celebrities in the news feed.</p>
+    </div>
+  </div>
+
+  <div class="probe">
+    <h2>What the interviewer probes next</h2>
+    <details class="qa"><summary>A chat server crashes. What happens to its users?</summary><p>Their sockets drop, and clients reconnect with backoff and jitter; service discovery (ZooKeeper, etcd) hands them another server. Messages were persisted before delivery, and clients resend anything unacknowledged with the same client message ID, which the server deduplicates.</p></details>
+    <details class="qa"><summary>Two people in a group send at the same moment. Who comes first?</summary><p>Whoever the server assigns the lower ID. Using one ID source per conversation gives every member the same order; device timestamps are only for display.</p></details>
+    <details class="qa"><summary>How does end to end encryption change the design?</summary><p>Keys live only on devices (the Signal protocol), so servers store and forward ciphertext. Server side search and message previews in push notifications no longer work unless the device decrypts them locally.</p></details>
+    <details class="qa"><summary>How do you deploy without dropping 10M connections?</summary><p>Drain servers one at a time: stop accepting new sockets, ask connected clients to reconnect gradually, then restart. The load balancer must support long lived connections and not cut them on a fixed timeout.</p></details>
+  </div>
+
+  <h2>Building blocks used here</h2>
+  <ul class="blocks-list">
+      <li><a href="../../system-design-casebook.html#f-comm"><span class="code">I.7</span><b>Communication patterns</b><span class="why">WebSockets next to polling</span></a></li>
+      <li><a href="../../system-design-casebook.html#queues"><span class="code">IV.5</span><b>Queues and streams</b><span class="why">one inbox queue per user</span></a></li>
+      <li><a href="../../system-design-casebook.html#lb"><span class="code">IV.1</span><b>Load balancing</b><span class="why">long lived connections</span></a></li>
+      <li><a href="../../system-design-casebook.html#f-data"><span class="code">I.6</span><b>Data models</b><span class="why">the wide column message store</span></a></li>
+  </ul>
+  <nav class="case-nav" aria-label="More case studies">
+      <a class="prev" href="../news-feed/index.html"><span class="dir">← Previous case study</span><span class="t">V.2 · Design a News Feed Like Twitter</span></a>
+      <a class="next" href="../../system-design-casebook.html#c-notify"><span class="dir">Next case study →</span><span class="t">V.4 · Notifications</span></a>
+  </nav>
+  <p class="case-last">Want to run this as a mock interview? See <a href="../../../help/interview-prep/index.html">interview prep</a>.</p>
+</section>
+</main>
+
+<nav class="rail" aria-label="Case studies">
+  <div class="rail-inner">
+    <a class="rail-hub" href="../../system-design-casebook.html"><b>System Design Casebook</b><span>Foundations, method and building blocks, with all 14 case studies</span></a>
+    <div class="rail-top"><span class="eyebrow">Case studies</span><span class="prog"><span id="prog-n">0</span> of <span id="prog-total">14</span> done</span></div>
+    <div class="prog-track" aria-hidden="true"><span id="prog-bar"></span></div>
+    <ol class="toc">
+      <li><a href="../url-shortener/index.html" data-sheet="c-url"><span class="code">V.1</span>URL shortener<span class="tick">✓</span></a></li>
+      <li><a href="../news-feed/index.html" data-sheet="c-feed"><span class="code">V.2</span>News feed<span class="tick">✓</span></a></li>
+      <li><a href="../chat-system/index.html" data-sheet="c-chat" aria-current="page"><span class="code">V.3</span>Chat system<span class="tick">✓</span></a></li>
+      <li><a href="../../system-design-casebook.html#c-notify" data-sheet="c-notify"><span class="code">V.4</span>Notifications<span class="tick">✓</span></a></li>
+      <li><a href="../../system-design-casebook.html#c-auto" data-sheet="c-auto"><span class="code">V.5</span>Autocomplete<span class="tick">✓</span></a></li>
+      <li><a href="../../system-design-casebook.html#c-crawl" data-sheet="c-crawl"><span class="code">V.6</span>Web crawler<span class="tick">✓</span></a></li>
+      <li><a href="../../system-design-casebook.html#c-geo" data-sheet="c-geo"><span class="code">V.7</span>Nearby places<span class="tick">✓</span></a></li>
+      <li><a href="../../system-design-casebook.html#c-ticket" data-sheet="c-ticket"><span class="code">V.8</span>Ticket booking<span class="tick">✓</span></a></li>
+      <li><a href="../ride-sharing/index.html" data-sheet="c-ride"><span class="code">V.9</span>Ride sharing<span class="tick">✓</span></a></li>
+      <li><a href="../../system-design-casebook.html#c-video" data-sheet="c-video"><span class="code">V.10</span>Video streaming<span class="tick">✓</span></a></li>
+      <li><a href="../file-sync/index.html" data-sheet="c-sync"><span class="code">V.11</span>File sync<span class="tick">✓</span></a></li>
+      <li><a href="../../system-design-casebook.html#c-docs" data-sheet="c-docs"><span class="code">V.12</span>Collaborative editor<span class="tick">✓</span></a></li>
+      <li><a href="../../system-design-casebook.html#c-kv" data-sheet="c-kv"><span class="code">V.13</span>Key value store<span class="tick">✓</span></a></li>
+      <li><a href="../../system-design-casebook.html#c-pay" data-sheet="c-pay"><span class="code">V.14</span>Payment system<span class="tick">✓</span></a></li>
+    </ol>
+  </div>
+</nav>
+</div>
+
+<script src="../casebook.js"></script>
+</body></html>
