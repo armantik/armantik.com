@@ -1,0 +1,4 @@
+{
+  "$comment": "Allow <style> in <body>: several Lab guides keep their styles next to their markup, and every browser applies them.",
+  "style": { "flow": true }
+}

@@ -1,0 +1,65 @@
+# Runs the checks in tools/ci on every pull request, on pushes to main and the version branches,
+# and on demand (Actions tab, "Run workflow"). What each step checks is described in README.md, "Checks".
+name: Site checks
+
+on:
+  pull_request:
+  push:
+    branches: [main, "v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: site-checks-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    name: Check the site
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: tools/ci
+    steps:
+      - name: Get the code
+        uses: actions/checkout@v5
+
+      - name: Set up Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: tools/ci/package-lock.json
+
+      - name: Install the checkers
+        run: npm ci --no-audit --no-fund
+
+      # every check below runs even if an earlier one failed, so one run shows everything to fix
+      - name: Links, scripts, search tags, sitemap, dashes and contact details
+        if: ${{ !cancelled() }}
+        run: node check-site.mjs
+
+      - name: Java guide data and counts
+        if: ${{ !cancelled() }}
+        run: node check-guide.mjs
+
+      - name: Interview bank guard (needs the INTERVIEW_BANK secret)
+        if: ${{ !cancelled() }}
+        env:
+          INTERVIEW_BANK: ${{ secrets.INTERVIEW_BANK }}
+        run: node check-bank.mjs
+
+      - name: HTML validation
+        if: ${{ !cancelled() }}
+        run: node html.mjs
+
+      - name: Install Chromium
+        if: ${{ !cancelled() }}
+        run: npx playwright install --with-deps chromium
+
+      - name: Browser smoke test
+        if: ${{ !cancelled() }}
+        run: node smoke.mjs

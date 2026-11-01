@@ -1,0 +1,19 @@
+{
+  "name": "armantik-site-checks",
+  "private": true,
+  "description": "The checks that run on every pull request and push: links, scripts, search tags, sitemap, writing style, contact details, the Java guide, HTML validity and a browser smoke test.",
+  "type": "module",
+  "scripts": {
+    "static": "node check-site.mjs",
+    "guide": "node check-guide.mjs",
+    "bank": "node check-bank.mjs",
+    "html": "node html.mjs",
+    "smoke": "node smoke.mjs",
+    "all": "node check-site.mjs && node check-guide.mjs && node check-bank.mjs && node html.mjs && node smoke.mjs"
+  },
+  "devDependencies": {
+    "cheerio": "1.2.0",
+    "html-validate": "11.16.2",
+    "playwright": "1.63.0"
+  }
+}
