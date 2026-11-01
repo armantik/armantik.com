@@ -32,13 +32,17 @@ armantik.com/
 │   ├── theme.js               the light and dark switch (no need to edit)
 │   ├── icons/                 hand-drawn icons as separate SVG files (for print, slides and posts)
 │   ├── og-image.png           the 1200x630 image shown when a page is shared on LinkedIn, Slack and the like
-│   └── favicon.svg            the mark
+│   ├── logo.svg, logo-dark.svg  the Arman✓ logo with fixed colors, for slides and print
+│   └── favicon.svg            the A✓ mark, the browser tab icon
 ├── 404.html                   shown for missing pages
 ├── sitemap.xml                the pages search engines should list (see Search engines below)
 ├── robots.txt                 points search engines to the sitemap
+├── favicon.ico                the mark for old browsers and search results
+├── apple-touch-icon.png       the mark on the iPhone home screen
 ├── tools/
 │   ├── prerender.js           writes the lists from content.js into the HTML (see "After you edit content.js")
-│   └── icons.js, icons.json   the hand-drawn icons
+│   ├── icons.js, icons.json   the hand-drawn icons
+│   └── logo.py                draws the logo and the mark (see Logo and mark below)
 ├── CNAME                      tells GitHub Pages to serve this repo at armantik.com
 ├── .nojekyll                  tells GitHub Pages to serve files as they are (keep it)
 ├── tools/ci/                  the checks that run on every pull request (see Checks below)
@@ -102,6 +106,12 @@ Each page in `help/` has the same four parts: a one line summary, a "How I can h
 Every page uses the same marker style icons, drawn with rough.js: one per section in the left rail, a large one above the title of each inner page, and smaller ones on the Lab cards, the How I help tiles and rows, and the buttons. They are inline SVG, so their lines take the text color (dark on light, light on dark) and the scribble fill is petrol (styles: `.ico`, `.sec-ico`, `.page-ico` in `assets/style.css`). The Lab track icons on the home page and the Lab page come from `<template id="ico-...">` blocks near the bottom of those pages. All icons are shown on `/brand/`.
 
 To use an icon somewhere new, copy its SVG from `tools/icons.json` and wrap it, for example `<span class="sec-ico" aria-hidden="true">...</span>` before a `/path` label. Copies with fixed colors for print and slides are in `assets/icons/`. To redraw or add one: `npm install roughjs`, edit the shapes in `tools/icons.js`, and run `node tools/icons.js assets/style.css`.
+
+### Logo and mark
+
+The logo is **Arman✓**: read aloud it says armantik, Arman plus tik (the tick). It sits top left on every page and in the bar on top of every Lab guide. The mark, **A✓**, is the short form for small places: the browser tab (`assets/favicon.svg`, `favicon.ico`), the iPhone home screen (`apple-touch-icon.png`), the card page and the share image.
+
+Both are drawn from JetBrains Mono Bold. The tick is drawn, not typed: its short arm runs parallel to the A's right leg, its long arm parallel to the left leg, in the font's stroke weight. Every copy in the pages is an inline `<svg data-logo="logo">` or `<svg data-logo="mark">`; the letters take the text color, and the tick takes `--logo-tick` (petrol on the site, set in `assets/style.css`). To change the drawing, edit `tools/logo.py` and run it as its first lines say. It rewrites the asset files and every inline copy. `assets/og-image.png` holds a copy of the mark too, so update it by hand.
 
 ### A talk
 
@@ -240,7 +250,7 @@ Claude Code can follow this README to do it.
 
 | Name   | Hex       | Use                                  |
 |--------|-----------|--------------------------------------|
-| Petrol | `#0F5C55` | accent, links, the mark, card stripe |
+| Petrol | `#0F5C55` | accent, links, the tick, the mark, card stripe |
 | Ink    | `#16211F` | main text                            |
 | Paper  | `#FAFBF9` | background                           |
 | Slate  | `#4A5855` | secondary text                       |

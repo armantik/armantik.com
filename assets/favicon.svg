@@ -1,4 +1,1 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Arman Ajabkhani">
-  <rect width="64" height="64" rx="14" fill="#0F5C55"/>
-  <path d="M18 49 L32 15 L46 49 M23.5 37 H40.5" fill="none" stroke="#FAFBF9" stroke-width="6.5" stroke-linecap="square" stroke-linejoin="miter"/>
-</svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Arman Ajabkhani"><rect width="64" height="64" rx="14" fill="#0F5C55"/><path fill="#FAFBF9" d="M9 47.9 17 16.1H24.1L32.1 47.9H26.5L24.8 40.2H16.3L14.6 47.9ZM17.3 35.8H23.8L21.9 27.2Q21.4 25.1 21 23.3Q20.7 21.6 20.6 20.8Q20.4 21.6 20.1 23.3Q19.8 25.1 19.3 27.2ZM38.9 32.0 42.2 45.1 49.5 16.1 55.0 16.1 47.0 47.9 42.9 47.9 41.5 47.9 37.4 47.9 33.4 32.0Z"/></svg>

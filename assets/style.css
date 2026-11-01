@@ -80,7 +80,10 @@ b, strong { font-weight: 600; }
   font: 600 17px/1.2 var(--display); letter-spacing: -0.01em; color: var(--ink); text-decoration: none;
   display: inline-flex; align-items: center; gap: 10px;
 }
-.wordmark svg { width: 26px; height: 26px; flex: none; }
+.wordmark .logo { height: 24px; width: auto; flex: none; --logo-tick: var(--petrol); }
+/* the A✓ mark (card page, brand page); the logo and mark paths are written by tools/logo.py */
+.mark { --mark-bg: var(--petrol); --mark-ink: var(--on-petrol); }
+.mark path { stroke: none; }
 .site-nav { display: flex; flex-wrap: wrap; gap: 4px 20px; font: 500 14px/1.4 var(--mono); }
 .site-nav a { color: var(--slate); text-decoration: none; padding-block: 6px; }
 .site-nav a:hover, .site-nav a[aria-current="page"] { color: var(--petrol); }
