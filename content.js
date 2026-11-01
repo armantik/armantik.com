@@ -8,7 +8,9 @@
   4. Hide or show a whole section: change the switch in SHOW below.
   5. Change the services: edit the SERVICES list (switch the whole section with show.services).
   6. Preview hidden things on the live site: open  https://armantik.com/?preview
-     Hidden sections and items then appear with a yellow "hidden" tag. Nobody else sees them.
+     Hidden sections and items then appear with a yellow "hidden" tag. This is a convenience, not a lock:
+     anyone who adds ?preview to the address sees them too, and everything in this file is public on GitHub.
+     Never park anything private here.
 
   RULES
   - Dates are "YYYY-MM-DD" (or "YYYY-MM" if you only know the month). Lists sort newest first.
