@@ -1,0 +1,19 @@
+{
+  "$comment": "Rules for tools/ci/html.mjs. Errors fail the build; warnings are listed but do not. Style-only rules are off.",
+  "extends": ["html-validate:recommended"],
+  "elements": ["html5", "./htmlvalidate-elements.json"],
+  "rules": {
+    "doctype-style": "off",
+    "long-title": "off",
+    "no-inline-style": "off",
+    "no-implicit-button-type": "off",
+    "no-implicit-input-type": "off",
+    "no-redundant-for": "off",
+    "prefer-native-element": "off",
+    "empty-heading": "warn",
+    "unique-landmark": "warn",
+    "multiple-labeled-controls": "warn",
+    "aria-label-misuse": "warn",
+    "wcag/h63": "warn"
+  }
+}
