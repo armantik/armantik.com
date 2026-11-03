@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self'; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>System Design Casebook: 14 Case Studies with Simulators · Arman Ajabkhani</title>
 <meta name="description" content="From one server to millions of users: foundations, building blocks, simulators and 14 case studies from a URL shortener to a payment system.">
@@ -23,9 +24,7 @@
 <script src="../assets/theme.js"></script>
 <script>/* case studies that moved to their own page: old links such as #c-url forward there */
 (function(){var M={"c-url":"url-shortener","c-feed":"news-feed","c-chat":"chat-system","c-ride":"ride-sharing","c-sync":"file-sync"};function go(){var p=M[location.hash.slice(1)];if(p)location.replace('system-design/'+p+(location.protocol==='file:'?'/index.html':'/'));}go();window.addEventListener('hashchange',go);})();</script>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&family=Martian+Mono:wght@400;500;600&family=Public+Sans:ital,wght@0,400..700;1,400..700&display=swap">
+<link rel="stylesheet" href="../assets/fonts/casebook.css">
 <link rel="stylesheet" href="system-design/casebook.css">
 </head>
 <body>
