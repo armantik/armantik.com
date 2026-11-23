@@ -22,6 +22,7 @@
 <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="../apple-touch-icon.png">
 <script src="../assets/theme.js"></script>
+<link rel="stylesheet" href="../assets/problem.css">
 <style>
 /* armantik.com bar: links this guide back to the site */
 .aa-labbar { --aa-ink: #16211F; --aa-muted: #4A5855; --aa-line: #DCE3E0; --aa-accent: #0F5C55;
@@ -192,6 +193,60 @@
     <h1>Hit Counter Visualizer</h1>
     <p class="lede"><code>HitCounterQueue</code> and <code>HitCounterBuckets</code> receive the same hits. To keep it watchable the window here is <span class="rule">WINDOW = 12 s</span>; the Java classes use 300 s, with exactly the same code.</p>
   </header>
+
+  <section class="pb" id="problem" aria-labelledby="pb-h">
+    <div class="pb-top">
+      <p class="pb-kicker">The problem, step by step</p>
+      <a class="pb-skip" href="#solve">Skip to the visualizer ↓</a>
+    </div>
+    <h2 id="pb-h">Count the hits of the last 5 minutes</h2>
+    <p class="pb-lede">A page records a hit every time someone visits it. At any moment you must be able to say how many hits came in during the last 300 seconds.</p>
+    <ol class="pb-flow">
+      <li>
+        <h3>What you get</h3>
+        <p>Two kinds of calls: <code>hit(timestamp)</code> records one hit, and <code>getHits(timestamp)</code> asks for the count. Timestamps are in seconds and never go backwards. Several hits can share a second.</p>
+      </li>
+      <li>
+        <h3>What you return</h3>
+        <p><code>getHits(t)</code> returns how many hits have a timestamp after t − 300 and at most t. <code>hit</code> returns nothing.</p>
+      </li>
+      <li>
+        <h3>The rules</h3>
+        <ul class="pb-list">
+          <li>A hit that is exactly 300 seconds old no longer counts. A hit 299 seconds old still does.</li>
+          <li>Every hit in the same second counts, not just one per second.</li>
+          <li><code>getHits</code> only reads. It records nothing.</li>
+        </ul>
+      </li>
+      <li>
+        <h3>Try it by hand</h3>
+        <dl class="pb-io"><dt>Calls</dt><dd>hit(10), hit(10), hit(150), getHits(200), hit(305), getHits(309), getHits(310)</dd><dt>Output</dt><dd>3, 4, 2 for the three getHits calls</dd></dl>
+        <ol class="pb-steps">
+          <li><code>hit(10)</code>, <code>hit(10)</code>, <code>hit(150)</code>: three hits recorded, two of them in the same second.</li>
+          <li><code>getHits(200)</code>: the window reaches back 300 seconds, past the first hit, so all three count. The answer is 3.</li>
+          <li><code>hit(305)</code>: a fourth hit.</li>
+          <li><code>getHits(309)</code>: the window covers timestamps after 9, up to 309. The hits at 10, 10, 150 and 305 are all inside: 4.</li>
+          <li><code>getHits(310)</code>: the window now covers timestamps after 10. The two hits at 10 are exactly 300 seconds old and drop out: 2.</li>
+        </ol>
+        <p class="pb-note">The visualizer below shrinks the window to 12 seconds so you can watch hits expire. The code is the same.</p>
+      </li>
+      <li>
+        <h3>Edge cases to check</h3>
+        <ul class="pb-list">
+          <li>The boundary: at t, a hit from t − 300 is out and a hit from t − 299 is in.</li>
+          <li>A burst of hits in one second: storing every hit costs memory for each one.</li>
+          <li>A long quiet period: old hits must still be cleared out, or they keep using memory.</li>
+          <li>The usual follow up: what if there are millions of hits per second?</li>
+        </ul>
+      </li>
+      <li>
+        <h3>The question behind the solutions</h3>
+        <p class="pb-key">Keeping every timestamp and dropping old ones from the front is simple and exact, but its memory grows with traffic. Can you answer with a fixed amount of memory, however busy the page gets?</p>
+      </li>
+    </ol>
+  </section>
+
+  <h2 class="pb-solve-h" id="solve">Two ways to solve it, step by step</h2>
 
   <div class="bar">
     <div class="grp">

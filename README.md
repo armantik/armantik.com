@@ -129,6 +129,7 @@ Add a block to `talks: [` in `content.js` (title, date, event, href, summary). T
    ]
    ```
 3. Optional: copy three things from the top of any existing guide so the new one matches: the `<script src="../assets/theme.js">` line, the `<style>` block that starts with `/* armantik.com bar`, and the `<nav class="aa-labbar">` line (plus the `<p class="aa-prob">` line for an algorithm). System design guides should not link to other sites.
+4. For an algorithm, start the page with the problem, step by step. Add `<link rel="stylesheet" href="../assets/problem.css">` under the `theme.js` line, then copy the `<section class="pb" id="problem">` block and the `<h2 class="pb-solve-h" id="solve">` line that follows it from any algorithm guide (for example `lab/two-sum.html`), right after the guide's `</header>`. Fill in the six steps in your own words, with your own example: what you get, what you return, the rules, try it by hand, edge cases to check, and the question behind the solutions. The section takes its colors from the guide, in light and dark. Small drawings are available: `pb-cells` for an array or a grid (classes `on`, `hl`, `w`), `pb-line` for ranges on a number line, `pb-table` for a short table of calls.
 
 ### The System Design Casebook and its case study pages
 

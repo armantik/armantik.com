@@ -22,6 +22,7 @@
 <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="../apple-touch-icon.png">
 <script src="../assets/theme.js"></script>
+<link rel="stylesheet" href="../assets/problem.css">
 <style>
 /* armantik.com bar: links this guide back to the site */
 .aa-labbar { --aa-ink: #16211F; --aa-muted: #4A5855; --aa-line: #DCE3E0; --aa-accent: #0F5C55;
@@ -231,6 +232,64 @@
     <h1>Two Sum Visualizer</h1>
     <p class="lede">The four Two Sum solutions from <code>org.example.twosum</code>, step by step: brute force, sort with two pointers, and the two hash map versions. Pick an input or type your own and every algorithm reruns on it.</p>
   </header>
+
+  <section class="pb" id="problem" aria-labelledby="pb-h">
+    <div class="pb-top">
+      <p class="pb-kicker">The problem, step by step</p>
+      <a class="pb-skip" href="#solve">Skip to the visualizer ↓</a>
+    </div>
+    <h2 id="pb-h">Find the two numbers that add up to a target</h2>
+    <p class="pb-lede">You get a list of whole numbers and one target number. Exactly two of the numbers add up to the target. Your job is to say where they are.</p>
+    <ol class="pb-flow">
+      <li>
+        <h3>What you get</h3>
+        <p>An array <code>nums</code> with at least two integers, and an integer <code>target</code>. The numbers can be negative, zero or repeated, and they are in no particular order.</p>
+      </li>
+      <li>
+        <h3>What you return</h3>
+        <p>The two positions <code>[i, j]</code> where <code>nums[i] + nums[j] == target</code>. Positions (indexes), not the values. Either order of the two is accepted.</p>
+      </li>
+      <li>
+        <h3>The rules</h3>
+        <ul class="pb-list">
+          <li>There is always exactly one answer, so you never have to report "not found".</li>
+          <li>You may not use the same position twice. Two equal values at two different positions are fine.</li>
+          <li>The answer refers to the original positions, so if you reorder the numbers you must remember where each one came from.</li>
+        </ul>
+      </li>
+      <li>
+        <h3>Try it by hand</h3>
+        <dl class="pb-io"><dt>Input</dt><dd>nums = [3, 8, 5, 1, 10], target = 9</dd><dt>Output</dt><dd>[1, 3]</dd></dl>
+        <figure class="pb-fig">
+          <div class="pb-cells idx" style="--cols:5" role="img" aria-label="nums: 3 at index 0, 8 at index 1, 5 at index 2, 1 at index 3, 10 at index 4. Indexes 1 and 3 are the answer.">
+            <span>3<small>0</small></span><span class="hl">8<small>1</small></span><span>5<small>2</small></span><span class="hl">1<small>3</small></span><span>10<small>4</small></span>
+          </div>
+          <figcaption>value on top, index below</figcaption>
+        </figure>
+        <ol class="pb-steps">
+          <li>Take position 0, which holds 3. Its partner would have to be 9 − 3 = 6. There is no 6 in the array, so 3 is not part of the answer.</li>
+          <li>Take position 1, which holds 8. Its partner would have to be 9 − 8 = 1.</li>
+          <li>Look for a 1. It is at position 3, which is a different position from 1, so it is allowed.</li>
+          <li>The answer is <code>[1, 3]</code>, because 8 + 1 = 9.</li>
+        </ol>
+      </li>
+      <li>
+        <h3>Edge cases to check</h3>
+        <ul class="pb-list">
+          <li><code>[3, 3]</code> with target 6 gives <code>[0, 1]</code>: the same value at two positions.</li>
+          <li><code>[3, 2, 4]</code> with target 6 gives <code>[1, 2]</code>. Using the 3 twice would also make 6, but that is one position used twice.</li>
+          <li><code>[-4, 7, 2]</code> with target <code>-2</code> gives <code>[0, 2]</code>. Negative numbers follow the same rule.</li>
+          <li>With only two numbers, the answer is always <code>[0, 1]</code>.</li>
+        </ul>
+      </li>
+      <li>
+        <h3>The question behind the solutions</h3>
+        <p class="pb-key">Checking every pair always works, but n numbers make about n² ÷ 2 pairs: 50 million checks for 10,000 numbers. For each number you already know the partner you need. How do you find out whether that partner exists without scanning the whole array again?</p>
+      </li>
+    </ol>
+  </section>
+
+  <h2 class="pb-solve-h" id="solve">Four ways to solve it, step by step</h2>
 
   <div class="pickers">
     <span class="pick-label">Algorithm</span>

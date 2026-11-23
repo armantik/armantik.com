@@ -22,6 +22,7 @@
 <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="../apple-touch-icon.png">
 <script src="../assets/theme.js"></script>
+<link rel="stylesheet" href="../assets/problem.css">
 <style>
 /* armantik.com bar: links this guide back to the site */
 .aa-labbar { --aa-ink: #16211F; --aa-muted: #4A5855; --aa-line: #DCE3E0; --aa-accent: #0F5C55;
@@ -270,6 +271,78 @@
     <h1>LRU &amp; LFU Cache Visualizer</h1>
     <p class="lede">How <code>SimpleLRUCache</code> and <code>SimpleLFUCache</code> decide which key to throw out. Every example uses a capacity of 3.</p>
   </header>
+
+  <section class="pb" id="problem" aria-labelledby="pb-h">
+    <div class="pb-top">
+      <p class="pb-kicker">The problem, step by step</p>
+      <a class="pb-skip" href="#solve">Skip to the visualizer ↓</a>
+    </div>
+    <h2 id="pb-h">Build a fixed size cache that knows what to throw out</h2>
+    <p class="pb-lede">You build a small key value store with room for a fixed number of keys. When it is full and a new key arrives, one old key has to go. LRU and LFU are two rules for choosing which one.</p>
+    <ol class="pb-flow">
+      <li>
+        <h3>What you get</h3>
+        <p>A <code>capacity</code>, the most keys the cache may hold, followed by a stream of calls to <code>get(key)</code> and <code>put(key, value)</code>.</p>
+      </li>
+      <li>
+        <h3>What each call must do</h3>
+        <ul class="pb-list">
+          <li><code>get(key)</code> returns the value stored for that key, or <code>-1</code> when the key is not in the cache.</li>
+          <li><code>put(key, value)</code> stores the value. When the key is new and the cache is already full, it first removes one key (evicts it).</li>
+          <li>Both calls should take O(1) time on average, however large the capacity is.</li>
+        </ul>
+      </li>
+      <li>
+        <h3>The rules</h3>
+        <ul class="pb-list">
+          <li>A use is a <code>get</code> that finds the key, or a <code>put</code> on a key that is already there. A <code>get</code> for a missing key changes nothing.</li>
+          <li>A <code>put</code> on an existing key only updates its value. It never evicts anything.</li>
+          <li><b>LRU</b>, least recently used: evict the key that has gone longest without a use.</li>
+          <li><b>LFU</b>, least frequently used: evict the key with the fewest uses. A new key starts with a count of 1. When counts tie, the least recently used of the tied keys goes.</li>
+        </ul>
+      </li>
+      <li>
+        <h3>Try it by hand, with capacity 3</h3>
+        <div class="pb-scroll">
+          <table class="pb-table">
+            <thead><tr><th scope="col">Call</th><th scope="col">LRU keys, oldest use first</th><th scope="col">LFU key: count</th></tr></thead>
+            <tbody>
+              <tr><td>put(1, A)</td><td>1</td><td>1:1</td></tr>
+              <tr><td>put(2, B)</td><td>1 2</td><td>1:1 2:1</td></tr>
+              <tr><td>put(3, C)</td><td>1 2 3</td><td>1:1 2:1 3:1</td></tr>
+              <tr><td>get(1)</td><td>2 3 1</td><td>1:2 2:1 3:1</td></tr>
+              <tr><td>get(1)</td><td>2 3 1</td><td>1:3 2:1 3:1</td></tr>
+              <tr><td>get(2)</td><td>3 1 2</td><td>1:3 2:2 3:1</td></tr>
+              <tr><td>get(3)</td><td>1 2 3</td><td>1:3 2:2 3:2</td></tr>
+              <tr class="hl"><td>put(4, D)</td><td>2 3 4</td><td>1:3 3:2 4:1</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <ol class="pb-steps">
+          <li>After the first seven calls the cache holds keys 1, 2 and 3, so it is full.</li>
+          <li><code>put(4, D)</code> brings a new key, so one key has to go.</li>
+          <li>LRU looks only at recency. Key 1 was last used in the fifth call, longer ago than 2 and 3, so key 1 goes.</li>
+          <li>LFU looks at counts first. Key 1 has 3 uses, keys 2 and 3 have 2 each. Between the tied 2 and 3, key 2 was used less recently, so key 2 goes.</li>
+          <li>One more call shows the difference: <code>get(1)</code> returns <code>-1</code> from the LRU cache, because 1 is gone, and <code>A</code> from the LFU cache.</li>
+        </ol>
+      </li>
+      <li>
+        <h3>Edge cases to check</h3>
+        <ul class="pb-list">
+          <li>Capacity 1: every <code>put</code> of a new key evicts the only key.</li>
+          <li>A <code>put</code> on a key that is already there, with the cache full: update it in place and evict nothing.</li>
+          <li>In LFU a brand new key has the lowest possible count, 1, so it is the first to go if it is not used again.</li>
+          <li>A <code>get</code> on a missing key returns <code>-1</code> and changes no order and no count.</li>
+        </ul>
+      </li>
+      <li>
+        <h3>The question behind the solutions</h3>
+        <p class="pb-key">A list kept in recency order, or in count order, makes eviction easy but every update slow. Which structures, used together, let <code>get</code>, <code>put</code> and the eviction all run in O(1)?</p>
+      </li>
+    </ol>
+  </section>
+
+  <h2 class="pb-solve-h" id="solve">Both caches, step by step</h2>
 
   <div class="tabs" role="tablist">
     <button class="tab" role="tab" id="tab-step" aria-controls="view-step" aria-selected="true">Step through</button>

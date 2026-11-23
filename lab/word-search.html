@@ -22,6 +22,7 @@
 <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="../apple-touch-icon.png">
 <script src="../assets/theme.js"></script>
+<link rel="stylesheet" href="../assets/problem.css">
 <style>
 /* armantik.com bar: links this guide back to the site */
 .aa-labbar { --aa-ink: #16211F; --aa-muted: #4A5855; --aa-line: #DCE3E0; --aa-accent: #0F5C55;
@@ -259,6 +260,73 @@
     <h1>Word Search Visualizer</h1>
     <p class="lede">LeetCode 79, step by step: the three backtracking versions from <code>org.example.wordsearch</code>. Watch a path grow letter by letter, hit a dead end, and get undone. Edit the board or the word and every version reruns.</p>
   </header>
+
+  <section class="pb" id="problem" aria-labelledby="pb-h">
+    <div class="pb-top">
+      <p class="pb-kicker">The problem, step by step</p>
+      <a class="pb-skip" href="#solve">Skip to the visualizer ↓</a>
+    </div>
+    <h2 id="pb-h">Can the word be traced on the letter board?</h2>
+    <p class="pb-lede">You get a grid of letters and a word. Start on any cell, then step to a neighboring cell for each next letter. If you can spell the whole word this way, the answer is true.</p>
+    <ol class="pb-flow">
+      <li>
+        <h3>What you get</h3>
+        <p>A <code>board</code> of letters with m rows and n columns, and a <code>word</code>.</p>
+      </li>
+      <li>
+        <h3>What you return</h3>
+        <p><code>true</code> if the word can be traced on the board, <code>false</code> if it cannot. You do not return the path itself.</p>
+      </li>
+      <li>
+        <h3>The rules</h3>
+        <ul class="pb-list">
+          <li>Each next letter must be in a cell that shares a side with the previous one: up, down, left or right. Diagonal steps do not count.</li>
+          <li>One path may not use the same cell twice.</li>
+          <li>The path can start on any cell and turn in any direction along the way.</li>
+          <li>Letters must match exactly: <code>C</code> and <code>c</code> are different letters.</li>
+        </ul>
+      </li>
+      <li>
+        <h3>Try it by hand</h3>
+        <dl class="pb-io"><dt>Input</dt><dd>the board below, word = "CORE"</dd><dt>Output</dt><dd>true</dd></dl>
+        <figure class="pb-fig">
+          <div class="pb-cells" style="--cols:4" role="img" aria-label="Board, row by row: C A T S, then O R E A, then D O G S. The path for CORE is C at row 0 column 0, O at row 1 column 0, R at row 1 column 1, E at row 1 column 2.">
+            <span class="hl">C<sup>1</sup></span><span>A</span><span>T</span><span>S</span>
+            <span class="hl">O<sup>2</sup></span><span class="hl">R<sup>3</sup></span><span class="hl">E<sup>4</sup></span><span>A</span>
+            <span>D</span><span>O</span><span>G</span><span>S</span>
+          </div>
+          <figcaption>the path for CORE, numbered</figcaption>
+        </figure>
+        <ol class="pb-steps">
+          <li>Find every cell that holds the first letter, C. There is one, at row 0, column 0.</li>
+          <li>Next letter O. From C you can step right to A or down to O. Go down to (1,0).</li>
+          <li>Next letter R. The neighbors of (1,0) are C (already on this path), D and R. Go right to R at (1,1).</li>
+          <li>Next letter E. The E at (1,2) is right of R.</li>
+          <li>All four letters are matched, so the answer is <code>true</code>.</li>
+        </ol>
+        <p>Two words that fail on the same board:</p>
+        <ul class="pb-list">
+          <li><code>"CRE"</code> is false: the R touches C only at a corner, and diagonal steps are not allowed.</li>
+          <li><code>"ROR"</code> is false: from R you can reach an O, but the only R on the board is the one you started on, and a path cannot use a cell twice.</li>
+        </ul>
+      </li>
+      <li>
+        <h3>Edge cases to check</h3>
+        <ul class="pb-list">
+          <li>A word longer than the number of cells is always false.</li>
+          <li>A one letter word is true when that letter is anywhere on the board.</li>
+          <li>Dead ends: a path can match several letters and then get stuck. That attempt fails, but another start or another turn can still succeed.</li>
+          <li>Words with a repeated letter, like <code>"ROR"</code>, are where reusing a cell sneaks in.</li>
+        </ul>
+      </li>
+      <li>
+        <h3>The question behind the solutions</h3>
+        <p class="pb-key">From each cell the path can branch up to four ways, and a branch may fail only after several letters. How do you try every branch, remember which cells the current path is using, and free them again when you back out?</p>
+      </li>
+    </ol>
+  </section>
+
+  <h2 class="pb-solve-h" id="solve">Three ways to solve it, step by step</h2>
 
   <div class="pickers">
     <span class="pick-label">Algorithm</span>
