@@ -22,6 +22,7 @@
 <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="../apple-touch-icon.png">
 <script src="../assets/theme.js"></script>
+<link rel="stylesheet" href="../assets/problem.css">
 <style>
 /* armantik.com bar: links this guide back to the site */
 .aa-labbar { --aa-ink: #16211F; --aa-muted: #4A5855; --aa-line: #DCE3E0; --aa-accent: #0F5C55;
@@ -163,6 +164,73 @@
     <h1>Rate Limiter Visualizer</h1>
     <p class="lede">The four limiters from <code>org.example.ratelimiter</code> receive the same requests at the same moments. Every limiter allows <span class="rule">5 requests per 1 s</span>; the token bucket holds 5 tokens and refills 5 per second.</p>
   </header>
+
+  <section class="pb" id="problem" aria-labelledby="pb-h">
+    <div class="pb-top">
+      <p class="pb-kicker">The problem, step by step</p>
+      <a class="pb-skip" href="#solve">Skip to the visualizer ↓</a>
+    </div>
+    <h2 id="pb-h">Let each client make at most 5 requests per second</h2>
+    <p class="pb-lede">An API has to protect itself from clients that send too much. Each request either goes through or is turned away, and the decision has to be made on the spot, for every request, with very little memory per client.</p>
+    <ol class="pb-flow">
+      <li>
+        <h3>What you get</h3>
+        <p>A stream of requests, each with the client it comes from (a user, an API key or an IP address) and the time it arrives. A limit: here 5 requests per 1 second. Real limits look like 100 per minute or 10,000 per day, and the idea is the same.</p>
+      </li>
+      <li>
+        <h3>What you return</h3>
+        <p>For every request, allow or reject. An allowed request goes on to the service. A rejected one gets HTTP <code>429 Too Many Requests</code>, ideally with a <code>Retry-After</code> header that tells the client when to try again.</p>
+      </li>
+      <li>
+        <h3>The rules</h3>
+        <ul class="pb-list">
+          <li>Every client has its own budget. One busy client never uses up another client's requests.</li>
+          <li>Only allowed requests count. A rejected request does not use up any budget.</li>
+          <li>The check runs on every request, so it must take O(1) time and a small, fixed amount of memory per client. There can be millions of clients.</li>
+          <li>"5 per second" needs a precise meaning: 5 per calendar second, or 5 in any span of 1 second? And is a burst of 5 at once fine? Deciding this is most of the problem.</li>
+        </ul>
+      </li>
+      <li>
+        <h3>Try it by hand: a burst at a window boundary</h3>
+        <dl class="pb-io"><dt>Requests</dt><dd>5 at 0.9 s, 5 at 1.0 s, 5 at 1.6 s, 5 at 2.6 s, all from one client</dd><dt>Strict rule</dt><dd>never more than 5 in any 1 second span</dd><dt>Answer</dt><dd>allow 5, reject 5, reject 5, allow 5: 10 of the 20</dd></dl>
+        <ol class="pb-steps">
+          <li>0.9 s: nothing came before, so all five are allowed. That uses the whole budget for the next second.</li>
+          <li>1.0 s: the last second, from just after 0.0 s up to 1.0 s, already holds the five from 0.9 s. All five are rejected.</li>
+          <li>1.6 s: the last second now starts just after 0.6 s, and the five from 0.9 s are still inside it. Rejected again.</li>
+          <li>2.6 s: the requests from 0.9 s are now 1.7 s old and outside the last second. All five are allowed.</li>
+          <li>Now give the same requests to the four limiters on this page. They disagree:</li>
+        </ol>
+        <div class="pb-scroll">
+          <table class="pb-table">
+            <thead><tr><th scope="col">Allowed at</th><th scope="col">0.9 s</th><th scope="col">1.0 s</th><th scope="col">1.6 s</th><th scope="col">2.6 s</th><th scope="col">Total</th></tr></thead>
+            <tbody>
+              <tr class="hl"><td class="pb-name">Fixed window</td><td>5</td><td>5</td><td>0</td><td>5</td><td>15</td></tr>
+              <tr><td class="pb-name">Sliding window log</td><td>5</td><td>0</td><td>0</td><td>5</td><td>10</td></tr>
+              <tr><td class="pb-name">Sliding window counter</td><td>5</td><td>0</td><td>3</td><td>4</td><td>12</td></tr>
+              <tr><td class="pb-name">Token bucket</td><td>5</td><td>0</td><td>3</td><td>5</td><td>13</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p>The fixed window lets 10 requests through in 0.1 s, because 0.9 s and 1.0 s fall in different calendar seconds. The sliding window log follows the strict rule exactly. The other two land in between. This is the "Boundary burst" traffic below, so you can play it and watch each decision.</p>
+      </li>
+      <li>
+        <h3>Things to decide</h3>
+        <ul class="pb-list">
+          <li>Window edges: a fixed window can let up to twice the limit through in a short span around a boundary. Is that acceptable for this API?</li>
+          <li>Bursts: should a client that was quiet for a while be allowed a quick burst, as long as its average stays under the limit?</li>
+          <li>Several servers: if every server keeps its own count, a client gets the limit once per server. The count has to live in a shared store, such as Redis, and be updated atomically.</li>
+          <li>Clocks: servers' clocks drift apart, so take the time from one place, for example the shared store.</li>
+          <li>Memory: remembering the time of every request is exact, but it costs one entry per allowed request, per client.</li>
+        </ul>
+      </li>
+      <li>
+        <h3>The question behind the solutions</h3>
+        <p class="pb-key">An exact answer needs the time of every recent request. How little can you remember per client (one counter, two counters, or a number of tokens and a time) and still keep the limit close enough to fair?</p>
+      </li>
+    </ol>
+  </section>
+
+  <h2 class="pb-solve-h" id="solve">Four limiters, side by side</h2>
 
   <div class="bar">
     <div class="grp">
