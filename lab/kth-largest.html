@@ -22,6 +22,7 @@
 <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="../apple-touch-icon.png">
 <script src="../assets/theme.js"></script>
+<link rel="stylesheet" href="../assets/problem.css">
 <style>
 /* armantik.com bar: links this guide back to the site */
 .aa-labbar { --aa-ink: #16211F; --aa-muted: #4A5855; --aa-line: #DCE3E0; --aa-accent: #0F5C55;
@@ -250,6 +251,72 @@
     <h1>Kth Largest Visualizer</h1>
     <p class="lede">LeetCode 215, four ways, from <code>org.example.kthlargest</code>. Pick a variant and an array, or type your own, then step through the run.</p>
   </header>
+
+  <section class="pb" id="problem" aria-labelledby="pb-h">
+    <div class="pb-top">
+      <p class="pb-kicker">The problem, step by step</p>
+      <a class="pb-skip" href="#solve">Skip to the visualizer ↓</a>
+    </div>
+    <h2 id="pb-h">Find the kth largest number in an array</h2>
+    <p class="pb-lede">You get an array of numbers and a number k. Picture the array ordered from largest to smallest: the answer is whatever sits at place k.</p>
+    <ol class="pb-flow">
+      <li>
+        <h3>What you get</h3>
+        <p>An integer array <code>nums</code> and an integer <code>k</code>, where k is at least 1 and at most the length of the array. Values can repeat.</p>
+      </li>
+      <li>
+        <h3>What you return</h3>
+        <p>One number: the value at place k when the array is ordered from largest to smallest. The value itself, not its position.</p>
+      </li>
+      <li>
+        <h3>The rules</h3>
+        <ul class="pb-list">
+          <li>Duplicates each take their own place. In <code>[9, 9, 7]</code> the 1st and 2nd largest are both 9, and the 3rd largest is 7. It is the kth largest element, not the kth largest distinct value.</li>
+          <li><code>k = 1</code> asks for the maximum, and k equal to the length asks for the minimum.</li>
+          <li>Nothing says the array has to stay as it is, so you may reorder it.</li>
+        </ul>
+      </li>
+      <li>
+        <h3>Try it by hand</h3>
+        <dl class="pb-io"><dt>Input</dt><dd>nums = [7, 2, 9, 4, 9, 1], k = 3</dd><dt>Output</dt><dd>7</dd></dl>
+        <div class="pb-figs">
+          <figure class="pb-fig">
+            <div class="pb-cells" style="--cols:6" role="img" aria-label="nums as given: 7, 2, 9, 4, 9, 1">
+              <span>7</span><span>2</span><span>9</span><span>4</span><span>9</span><span>1</span>
+            </div>
+            <figcaption>as given</figcaption>
+          </figure>
+          <figure class="pb-fig">
+            <div class="pb-cells idx" style="--cols:6" role="img" aria-label="largest first: 9 is 1st, 9 is 2nd, 7 is 3rd and the answer, then 4, 2, 1">
+              <span class="on">9<small>1st</small></span><span class="on">9<small>2nd</small></span><span class="hl">7<small>3rd</small></span><span>4<small>4th</small></span><span>2<small>5th</small></span><span>1<small>6th</small></span>
+            </div>
+            <figcaption>largest first, with its place</figcaption>
+          </figure>
+        </div>
+        <ol class="pb-steps">
+          <li>Order the numbers from largest to smallest: 9, 9, 7, 4, 2, 1.</li>
+          <li>Count places from the left: the first 9 is 1st, the second 9 is 2nd, and 7 is 3rd.</li>
+          <li>Place 3 holds 7, so the answer is 7.</li>
+          <li>The same answer the other way round: sorted smallest first, <code>[1, 2, 4, 7, 9, 9]</code>, the kth largest sits at index n − k = 6 − 3 = 3, which holds 7.</li>
+        </ol>
+      </li>
+      <li>
+        <h3>Edge cases to check</h3>
+        <ul class="pb-list">
+          <li>One element: <code>[5]</code> with <code>k = 1</code> gives 5.</li>
+          <li>All values equal: <code>[4, 4, 4]</code> gives 4 for any k.</li>
+          <li>Negative numbers: <code>[-1, -5, -3]</code> with <code>k = 2</code> gives <code>-3</code>.</li>
+          <li>Duplicates around the answer: <code>[2, 2, 3, 3, 3]</code> with <code>k = 4</code> gives 2, because the three 3s fill places 1 to 3.</li>
+        </ul>
+      </li>
+      <li>
+        <h3>The question behind the solutions</h3>
+        <p class="pb-key">Sorting everything answers it, but you only need one place. When k is small, do you have to order the whole array? And can you land on place k without ordering the numbers you will never look at?</p>
+      </li>
+    </ol>
+  </section>
+
+  <h2 class="pb-solve-h" id="solve">Four ways to solve it, step by step</h2>
 
   <div class="pickers">
     <span class="pick-label">Algorithm</span>

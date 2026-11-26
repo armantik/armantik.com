@@ -22,6 +22,7 @@
 <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="../apple-touch-icon.png">
 <script src="../assets/theme.js"></script>
+<link rel="stylesheet" href="../assets/problem.css">
 <style>
 /* armantik.com bar: links this guide back to the site */
 .aa-labbar { --aa-ink: #16211F; --aa-muted: #4A5855; --aa-line: #DCE3E0; --aa-accent: #0F5C55;
@@ -198,6 +199,72 @@
     <h1>BFS &amp; DFS Visualizer</h1>
     <p class="lede">The same graph and tree as <code>Graph.java</code> and <code>BinarySearchTree.java</code>, one step at a time. Watch the queue or stack: it is the only real difference between the two searches.</p>
   </header>
+
+  <section class="pb" id="problem" aria-labelledby="pb-h">
+    <div class="pb-top">
+      <p class="pb-kicker">The problem, step by step</p>
+      <a class="pb-skip" href="#solve">Skip to the visualizer ↓</a>
+    </div>
+    <h2 id="pb-h">Visit every vertex you can reach, once each</h2>
+    <p class="pb-lede">You get a graph and a vertex to start from. Visit every vertex you can reach exactly once, and write down the order. Breadth first search and depth first search are two rules for choosing which vertex comes next.</p>
+    <ol class="pb-flow">
+      <li>
+        <h3>What you get</h3>
+        <p>An undirected graph as an adjacency list, and a start vertex. The graph below has six vertices and the edges <code>[1,2]</code>, <code>[1,3]</code>, <code>[2,4]</code>, <code>[2,5]</code>, <code>[3,4]</code>, <code>[4,6]</code>, so the neighbor lists are:</p>
+        <p><code>1: 2, 3</code> <code>2: 1, 4, 5</code> <code>3: 1, 4</code> <code>4: 2, 3, 6</code> <code>5: 2</code> <code>6: 4</code></p>
+        <p>The tree view uses a binary search tree built by inserting 50, 30, 70, 20, 40, 60, 80.</p>
+      </li>
+      <li>
+        <h3>What you return</h3>
+        <p>The list of vertices in the order you visit them. On a tree, the same idea gives the four classic orders: level order, preorder, inorder and postorder.</p>
+      </li>
+      <li>
+        <h3>The rules</h3>
+        <ul class="pb-list">
+          <li>Visit each vertex once, even when several edges lead to it. A graph can have cycles (1, 2, 4, 3 and back to 1 is one), so you have to remember what you have already seen.</li>
+          <li>Take neighbors in the order the list gives them. That is what makes the answer one fixed list.</li>
+          <li>Breadth first: visit everything 1 step from the start, then everything 2 steps away, and so on.</li>
+          <li>Depth first: follow one path as far as it goes, then back up to the last vertex that still has an unvisited neighbor.</li>
+        </ul>
+      </li>
+      <li>
+        <h3>Try it by hand, starting at 1</h3>
+        <dl class="pb-io"><dt>Breadth first</dt><dd>1, 2, 3, 4, 5, 6</dd><dt>Depth first</dt><dd>1, 2, 4, 3, 6, 5</dd></dl>
+        <p><b>Breadth first</b></p>
+        <ol class="pb-steps">
+          <li>Start at 1. Its neighbors 2 and 3 are one step away.</li>
+          <li>Two steps away: from 2 you reach 4 and 5. From 3 you reach 4 again, which is already on the list.</li>
+          <li>Three steps away: from 4 you reach 6.</li>
+          <li>The order is 1, 2, 3, 4, 5, 6.</li>
+        </ol>
+        <p><b>Depth first</b></p>
+        <ol class="pb-steps">
+          <li>Start at 1 and go to its first neighbor, 2.</li>
+          <li>From 2 the first new neighbor is 4, and from 4 the first new one is 3.</li>
+          <li>Both neighbors of 3 are seen, so back up to 4 and take 6.</li>
+          <li>6 has nothing new, so back up through 4 to 2 and take 5.</li>
+          <li>The order is 1, 2, 4, 3, 6, 5.</li>
+        </ol>
+        <p><b>The tree, root 50</b></p>
+        <dl class="pb-io"><dt>Level order</dt><dd>50, 30, 70, 20, 40, 60, 80</dd><dt>Preorder</dt><dd>50, 30, 20, 40, 70, 60, 80 (node, left, right)</dd><dt>Inorder</dt><dd>20, 30, 40, 50, 60, 70, 80 (left, node, right: sorted, because it is a search tree)</dd><dt>Postorder</dt><dd>20, 40, 30, 60, 80, 70, 50 (left, right, node)</dd></dl>
+      </li>
+      <li>
+        <h3>Edge cases to check</h3>
+        <ul class="pb-list">
+          <li>A vertex with no path from the start is never visited. To cover a graph that comes in pieces, start again from every vertex not seen yet.</li>
+          <li>Mark a vertex as seen when you add it to the waiting list, not when you take it out, or it can be added twice.</li>
+          <li>A single vertex with no edges: the order is just that vertex.</li>
+          <li>A very deep graph: recursive depth first search uses one stack frame per level and can overflow. An explicit stack cannot.</li>
+        </ul>
+      </li>
+      <li>
+        <h3>The question behind the solutions</h3>
+        <p class="pb-key">Both searches keep a list of vertices waiting to be visited. The only real difference is which one comes out next: the oldest waiting vertex gives breadth first, the newest gives depth first. So which structure gives you the oldest, and which the newest?</p>
+      </li>
+    </ol>
+  </section>
+
+  <h2 class="pb-solve-h" id="solve">Both searches, step by step</h2>
 
   <div class="pickers">
     <div class="seg" role="group" aria-label="Structure">

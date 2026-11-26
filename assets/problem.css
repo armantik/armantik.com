@@ -1,0 +1,92 @@
+/* "The problem, step by step": the section at the top of every algorithm guide in /lab.
+   It uses the guide's own color and font tokens (--surface, --ink, --muted, --line, --accent,
+   --accent-soft, --code-bg, --display, --body, --mono), so it matches each guide in light and dark. */
+.pb { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 22px 24px 8px; display: grid; gap: 12px; min-width: 0; }
+.pb-top { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 4px 16px; }
+.pb-kicker { margin: 0; font: 600 12px/1.4 var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--accent); }
+.pb-skip { font: 500 13px/1.4 var(--mono); color: var(--muted); text-decoration: none; }
+.pb-skip:hover { color: var(--accent); text-decoration: underline; }
+.pb h2 { margin: 0; font: 700 clamp(22px, 3.4vw, 28px)/1.15 var(--display); letter-spacing: -0.015em; text-wrap: balance; }
+.pb-lede { margin: 0; max-width: 70ch; font-size: 16px; line-height: 1.55; }
+.pb p, .pb li { max-width: 72ch; }
+.pb .pb-flow > li { max-width: none; }
+.pb p { margin: 0; }
+.pb b { font-weight: 600; }
+.pb code { font: 500 0.88em var(--mono); color: var(--ink); background: var(--code-bg, var(--term, transparent)); padding: 1px 4px; border-radius: 4px; white-space: nowrap; }
+
+/* the numbered steps: read, return, rules, try it by hand, edge cases, the question */
+.pb-flow { list-style: none; margin: 4px 0 0; padding: 0; counter-reset: pb; }
+.pb-flow > li { counter-increment: pb; display: grid; grid-template-columns: 30px minmax(0, 1fr); column-gap: 14px; row-gap: 8px; padding: 16px 0; border-top: 1px solid var(--line); align-content: start; }
+.pb-flow > li::before { content: counter(pb); grid-column: 1; grid-row: 1; align-self: start; width: 28px; height: 28px; border-radius: 50%;
+  display: grid; place-items: center; font: 700 13px/1 var(--mono); color: var(--accent); background: var(--accent-soft); }
+.pb-flow > li > * { grid-column: 2; min-width: 0; }
+.pb-flow h3 { margin: 3px 0 0; font: 600 16px/1.3 var(--body); color: var(--ink); }
+.pb-list { margin: 0; padding-left: 18px; display: grid; gap: 5px; }
+.pb-steps { margin: 0; padding-left: 22px; display: grid; gap: 6px; }
+.pb-steps > li::marker { color: var(--muted); font: 600 12.5px var(--mono); }
+.pb-note { color: var(--muted); font-size: 14px; }
+.pb-key { border-left: 3px solid var(--accent); padding: 2px 0 2px 12px; }
+
+/* input and output, written out */
+.pb-io { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 4px 12px; margin: 0; font: 500 13.5px/1.55 var(--mono); }
+.pb-io dt { color: var(--muted); }
+.pb-io dd { margin: 0; overflow-wrap: anywhere; }
+
+/* small drawings: arrays, grids and boards */
+.pb-figs { display: flex; flex-wrap: wrap; gap: 14px 28px; align-items: start; }
+.pb-fig { margin: 0; padding: 0; border: 0; background: none; display: grid; gap: 6px; justify-items: start; min-width: 0; }
+.pb-fig.wide { flex: 1 1 260px; max-width: 420px; justify-items: stretch; }
+.pb-fig figcaption { margin: 0; font: 500 12px/1.4 var(--mono); color: var(--muted); max-width: none; }
+.pb-cells { display: grid; grid-template-columns: repeat(var(--cols, 5), 34px); gap: 4px; }
+.pb-cells > span { height: 34px; display: grid; place-items: center; border-radius: 6px; font: 600 13.5px/1 var(--mono);
+  background: var(--code-bg, var(--term, transparent)); color: var(--ink); border: 1px solid var(--line); }
+.pb-cells.idx > span { height: 46px; grid-template-rows: 1fr auto; padding: 6px 0 4px; }
+.pb-cells.idx small { font: 500 10.5px/1 var(--mono); color: var(--muted); }
+.pb-cells > span.w { color: var(--muted); }
+.pb-cells > span.on { background: var(--accent-soft); color: var(--accent); border-color: var(--accent); }
+.pb-cells > span.hl { background: var(--accent); color: var(--surface); border-color: var(--accent); }
+.pb-cells > span.hl small { color: inherit; }
+.pb-cells > span.b { background: var(--surface); }
+
+/* a number line for intervals */
+.pb-line { position: relative; width: 100%; display: grid; gap: 5px; padding-bottom: 18px; overflow: hidden; }
+.pb-line > div { position: relative; height: 18px; }
+.pb-line i { position: absolute; top: 3px; height: 12px; border-radius: 3px; background: var(--muted); opacity: .75;
+  left: calc(var(--s) * 100% / 16); width: calc((var(--e) - var(--s)) * 100% / 16); }
+.pb-line.out i { background: var(--accent); opacity: 1; }
+.pb-line em { position: absolute; top: 0; font: 500 11.5px/18px var(--mono); font-style: normal; color: var(--muted); left: calc(var(--e) * 100% / 16 + 6px); white-space: nowrap; }
+.pb-line .ax { position: absolute; left: 0; right: 0; bottom: 0; height: 14px; border-top: 1px solid var(--line); }
+.pb-line .ax span { position: absolute; top: 2px; transform: translateX(-50%); font: 500 10px/1 var(--mono); color: var(--muted); }
+.pb-line .ax span:first-child { transform: none; }
+
+/* a short table of operations */
+.pb-scroll { overflow-x: auto; }
+.pb-table { border-collapse: collapse; font: 500 13px/1.45 var(--mono); min-width: 0; width: auto; }
+.pb-table th { font: 600 11.5px/1.3 var(--body); color: var(--muted); text-align: left; padding: 5px 14px 5px 0; border-bottom: 1px solid var(--line); vertical-align: bottom; }
+.pb-table td { padding: 5px 14px 5px 0; border-bottom: 1px solid var(--line); vertical-align: top; white-space: nowrap; }
+.pb-table tr.hl td { color: var(--accent); font-weight: 700; }
+.pb-table th { white-space: nowrap; }
+.pb-table td.pb-name { white-space: normal; min-width: 8em; font-family: var(--body); }
+
+/* the heading that starts the solutions */
+.pb-solve-h { margin: 8px 0 -4px; font: 700 clamp(20px, 3vw, 24px)/1.2 var(--display); letter-spacing: -0.01em; scroll-margin-top: 12px; }
+.pb { scroll-margin-top: 12px; }
+
+/* wide screens: what you get, what you return and the rules side by side, then the rest full width */
+@media (min-width: 1000px) {
+  .pb-flow { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); column-gap: 28px; }
+  .pb-flow > li:nth-child(n+4) { grid-column: 1 / -1; }
+}
+
+@media (max-width: 560px) {
+  .pb { padding: 16px 14px 4px; }
+  .pb-flow > li { grid-template-columns: 24px minmax(0, 1fr); column-gap: 10px; padding: 14px 0; }
+  .pb-flow > li > :not(h3) { grid-column: 1 / -1; }
+  .pb-flow > li::before { width: 24px; height: 24px; font-size: 12px; }
+  .pb-cells { grid-template-columns: repeat(var(--cols, 5), 30px); gap: 3px; }
+  .pb-cells > span { height: 30px; font-size: 12.5px; }
+  .pb-cells.idx > span { height: 42px; }
+  .pb-table th, .pb-table td { padding-right: 10px; }
+}
+.pb-cells > span { position: relative; }
+.pb-cells sup { position: absolute; top: 3px; right: 4px; font: 700 9.5px/1 var(--mono); color: inherit; opacity: .85; }

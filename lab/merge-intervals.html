@@ -22,6 +22,7 @@
 <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="../apple-touch-icon.png">
 <script src="../assets/theme.js"></script>
+<link rel="stylesheet" href="../assets/problem.css">
 <style>
 /* armantik.com bar: links this guide back to the site */
 .aa-labbar { --aa-ink: #16211F; --aa-muted: #4A5855; --aa-line: #DCE3E0; --aa-accent: #0F5C55;
@@ -224,6 +225,82 @@
     <h1>Merge Intervals Visualizer</h1>
     <p class="lede">LeetCode 56 three ways, from <code>org.example.intervals</code>: sort and sweep once, build an overlap graph, or sweep a line over start and end events. Touching intervals such as <code>[1,4]</code> and <code>[4,5]</code> count as overlapping.</p>
   </header>
+
+  <section class="pb" id="problem" aria-labelledby="pb-h">
+    <div class="pb-top">
+      <p class="pb-kicker">The problem, step by step</p>
+      <a class="pb-skip" href="#solve">Skip to the visualizer ↓</a>
+    </div>
+    <h2 id="pb-h">Merge every group of overlapping ranges into one</h2>
+    <p class="pb-lede">You get a list of ranges, each with a start and an end. Some of them overlap. Combine the ones that overlap, so that no two ranges in the answer share a point.</p>
+    <ol class="pb-flow">
+      <li>
+        <h3>What you get</h3>
+        <p>An array <code>intervals</code> where each item is a pair <code>[start, end]</code> with start ≤ end. The list is in no particular order.</p>
+      </li>
+      <li>
+        <h3>What you return</h3>
+        <p>A list of ranges that covers exactly the same points as the input, with every overlapping group merged into one range. No two ranges in the result overlap. Sorted by start is the natural order to return them in.</p>
+      </li>
+      <li>
+        <h3>The rules</h3>
+        <ul class="pb-list">
+          <li>Two ranges overlap when one starts before or exactly when the other ends. <code>[1,4]</code> and <code>[4,5]</code> touch at 4, so they merge into <code>[1,5]</code>.</li>
+          <li>Merging can chain: if A overlaps B and B overlaps C, all three become one range, even when A and C never meet.</li>
+          <li>A merged range runs from the smallest start in its group to the largest end.</li>
+        </ul>
+      </li>
+      <li>
+        <h3>Try it by hand</h3>
+        <dl class="pb-io"><dt>Input</dt><dd>[[6,8], [1,3], [2,4], [9,12], [10,11]]</dd><dt>Output</dt><dd>[[1,4], [6,8], [9,12]]</dd></dl>
+        <div class="pb-figs" aria-hidden="true">
+          <figure class="pb-fig wide">
+            <div class="pb-line">
+              <div style="--s:6;--e:8"><i></i><em>[6,8]</em></div>
+              <div style="--s:1;--e:3"><i></i><em>[1,3]</em></div>
+              <div style="--s:2;--e:4"><i></i><em>[2,4]</em></div>
+              <div style="--s:9;--e:12"><i></i><em>[9,12]</em></div>
+              <div style="--s:10;--e:11"><i></i><em>[10,11]</em></div>
+              <div class="ax"><span style="left:0">0</span><span style="left:25%">4</span><span style="left:50%">8</span><span style="left:75%">12</span></div>
+            </div>
+            <figcaption>the input on a number line</figcaption>
+          </figure>
+          <figure class="pb-fig wide">
+            <div class="pb-line out">
+              <div style="--s:1;--e:4"><i></i><em>[1,4]</em></div>
+              <div style="--s:6;--e:8"><i></i><em>[6,8]</em></div>
+              <div style="--s:9;--e:12"><i></i><em>[9,12]</em></div>
+              <div class="ax"><span style="left:0">0</span><span style="left:25%">4</span><span style="left:50%">8</span><span style="left:75%">12</span></div>
+            </div>
+            <figcaption>the answer</figcaption>
+          </figure>
+        </div>
+        <ol class="pb-steps">
+          <li>Draw every range on a number line. Once they are drawn, the order of the list no longer matters.</li>
+          <li><code>[1,3]</code> and <code>[2,4]</code> share the stretch from 2 to 3, so they become one block from 1 to 4.</li>
+          <li><code>[6,8]</code> touches nothing: the block before it ends at 4, and the next range starts at 9. It stays as it is.</li>
+          <li><code>[10,11]</code> lies completely inside <code>[9,12]</code>, so it adds nothing. The block stays <code>[9,12]</code>.</li>
+          <li>Read the blocks from left to right: <code>[[1,4], [6,8], [9,12]]</code>.</li>
+        </ol>
+      </li>
+      <li>
+        <h3>Edge cases to check</h3>
+        <ul class="pb-list">
+          <li>Touching ends merge: <code>[[1,4],[4,5]]</code> gives <code>[[1,5]]</code>.</li>
+          <li>A range inside another keeps the larger end: <code>[[1,10],[2,3]]</code> gives <code>[[1,10]]</code>, not <code>[[1,3]]</code>.</li>
+          <li>A chain becomes one range: <code>[[1,3],[2,5],[4,8]]</code> gives <code>[[1,8]]</code>.</li>
+          <li>No overlap at all: <code>[[8,9],[1,2]]</code> gives both ranges back.</li>
+          <li>A single range comes back unchanged.</li>
+        </ul>
+      </li>
+      <li>
+        <h3>The question behind the solutions</h3>
+        <p class="pb-key">On paper the number line sorts the ranges for you. In code the list arrives shuffled, and comparing every range with every other one costs n² comparisons, while a merged range can grow and start to overlap new ones. In what order should you look at the ranges, so that each one is decided once?</p>
+      </li>
+    </ol>
+  </section>
+
+  <h2 class="pb-solve-h" id="solve">Three ways to solve it, step by step</h2>
 
   <div class="pickers">
     <span class="pick-label">Algorithm</span>

@@ -22,6 +22,7 @@
 <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="../apple-touch-icon.png">
 <script src="../assets/theme.js"></script>
+<link rel="stylesheet" href="../assets/problem.css">
 <style>
 /* armantik.com bar: links this guide back to the site */
 .aa-labbar { --aa-ink: #16211F; --aa-muted: #4A5855; --aa-line: #DCE3E0; --aa-accent: #0F5C55;
@@ -199,6 +200,59 @@
     <h1>Logger Rate Limiter Visualizer</h1>
     <p class="lede">LeetCode 359: print a message only if the same message was not printed in the last 10 seconds. <code>LoggerHashMap</code>, <code>LoggerQueue</code> and <code>LoggerTwoMaps</code> get the same calls; watch how much each one keeps in memory.</p>
   </header>
+
+  <section class="pb" id="problem" aria-labelledby="pb-h">
+    <div class="pb-top">
+      <p class="pb-kicker">The problem, step by step</p>
+      <a class="pb-skip" href="#solve">Skip to the visualizer ↓</a>
+    </div>
+    <h2 id="pb-h">Print a message only if it was not printed in the last 10 seconds</h2>
+    <p class="pb-lede">Log messages arrive one by one, each with a timestamp. Print each message, unless the same message was printed less than 10 seconds ago. Decide for every call.</p>
+    <ol class="pb-flow">
+      <li>
+        <h3>What you get</h3>
+        <p>A stream of calls to <code>shouldPrintMessage(timestamp, message)</code>. Timestamps are whole seconds and never go backwards. Several calls can share a timestamp.</p>
+      </li>
+      <li>
+        <h3>What you return</h3>
+        <p>For every call, <code>true</code> when the message should be printed now, <code>false</code> when it should be suppressed.</p>
+      </li>
+      <li>
+        <h3>The rules</h3>
+        <ul class="pb-list">
+          <li>A message printed at time t may be printed again at t + 10 or later. At t + 9 it is still suppressed.</li>
+          <li>Only a printed call starts the 10 second wait. A suppressed call does not restart it.</li>
+          <li>Every message text has its own wait. Different messages never block each other.</li>
+        </ul>
+      </li>
+      <li>
+        <h3>Try it by hand</h3>
+        <dl class="pb-io"><dt>Calls</dt><dd>(1, "disk full"), (2, "timeout"), (5, "disk full"), (11, "disk full"), (12, "timeout"), (15, "disk full")</dd><dt>Output</dt><dd>true, true, false, true, true, false</dd></dl>
+        <ol class="pb-steps">
+          <li>t = 1, "disk full": never printed before, so <code>true</code>. It may print again from t = 11.</li>
+          <li>t = 2, "timeout": a different message with its own wait, so <code>true</code>. Next allowed at 12.</li>
+          <li>t = 5, "disk full": 5 is before 11, so <code>false</code>. The wait still ends at 11, not at 15.</li>
+          <li>t = 11, "disk full": exactly 10 seconds after it was printed at 1, so <code>true</code>. Next allowed at 21.</li>
+          <li>t = 12, "timeout": 12 is not before 12, so <code>true</code>. Next allowed at 22.</li>
+          <li>t = 15, "disk full": before 21, so <code>false</code>.</li>
+        </ol>
+      </li>
+      <li>
+        <h3>Edge cases to check</h3>
+        <ul class="pb-list">
+          <li>Exactly 10 seconds later is allowed: the check is a difference of at least 10, not more than 10.</li>
+          <li>The same message twice in the same second: the first call prints, the second does not.</li>
+          <li>Memory: remembering every message ever seen grows without limit. With millions of distinct messages, old ones have to be dropped.</li>
+        </ul>
+      </li>
+      <li>
+        <h3>The question behind the solutions</h3>
+        <p class="pb-key">Remembering the last print time of every message answers each call in O(1), but that memory only grows. Which messages can you safely forget, and how do you find them cheaply?</p>
+      </li>
+    </ol>
+  </section>
+
+  <h2 class="pb-solve-h" id="solve">Three ways to solve it, step by step</h2>
 
   <div class="bar">
     <div class="row">
